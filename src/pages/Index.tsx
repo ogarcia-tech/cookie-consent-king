@@ -150,14 +150,24 @@ const Index = () => {
                     </div>
                   </div>
 
-                  <Button 
-                    onClick={resetConsent} 
-                    variant="outline" 
-                    size="sm"
-                    className="w-full mt-4"
-                  >
-                    Restablecer Consentimiento
-                  </Button>
+                  <div className="flex gap-2 w-full mt-4">
+                    <Button 
+                      onClick={resetConsent} 
+                      variant="outline" 
+                      size="sm"
+                      className="flex-1"
+                    >
+                      Restablecer Consentimiento
+                    </Button>
+                    <Button 
+                      onClick={() => setShowDemo(true)} 
+                      variant="cookie"
+                      size="sm"
+                      className="flex-1"
+                    >
+                      Mostrar Banner de Cookies
+                    </Button>
+                  </div>
                 </div>
               ) : (
                 <div className="text-center space-y-3">
