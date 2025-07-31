@@ -18,6 +18,7 @@ interface ConsentSettings {
 interface CookieBannerProps {
   onConsentUpdate?: (consent: ConsentSettings) => void;
   forceShow?: boolean; // Nueva prop para forzar mostrar el banner en demo
+  cookiePolicyUrl?: string; // URL personalizable para la política de cookies
 }
 
 // Consent Mode v2 integration
@@ -28,7 +29,7 @@ declare global {
   }
 }
 
-const CookieBanner: React.FC<CookieBannerProps> = ({ onConsentUpdate, forceShow = false }) => {
+const CookieBanner: React.FC<CookieBannerProps> = ({ onConsentUpdate, forceShow = false, cookiePolicyUrl }) => {
   const [showBanner, setShowBanner] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [consent, setConsent] = useState<ConsentSettings>({
@@ -271,7 +272,21 @@ const CookieBanner: React.FC<CookieBannerProps> = ({ onConsentUpdate, forceShow 
                     </p>
                     <p className="text-sm text-muted-foreground">
                       Puedes aceptar todas las cookies pulsando el botón "Aceptar", rechazar todas las cookies pulsando sobre el botón "Rechazar" o 
-                      configurarlas su uso pulsando el botón "Configuración de cookies".
+                      configurarlas su uso pulsando el botón "Configuración de cookies". 
+                      {cookiePolicyUrl && (
+                        <>
+                          Si deseas más información pulsa en{' '}
+                          <a 
+                            href={cookiePolicyUrl} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="text-primary hover:underline font-medium"
+                          >
+                            Política de Cookies
+                          </a>
+                          .
+                        </>
+                      )}
                     </p>
                   </div>
 
@@ -422,27 +437,25 @@ const CookieBanner: React.FC<CookieBannerProps> = ({ onConsentUpdate, forceShow 
                 <TabsContent value="acerca" className="space-y-4 mt-4">
                   <div className="space-y-4 text-sm text-muted-foreground">
                     <p>
-                      Las cookies son ficheros que se almacenan en los dispositivos que utilizan los usuarios, como un ordenador, un teléfono 
-                      móvil o una tableta, cuando se accede desde éstos a una plataforma, aplicación informática ("app") o una página web, y 
-                      sirven para almacenar y recuperar información relativa a la navegación de los usuarios a través de sus dispositivos para 
-                      después utilizarla con distintas finalidades.
+                      Las cookies son pequeños archivos de texto que se almacenan en el dispositivo del usuario cuando visita un sitio web. 
+                      Estas cookies contienen información sobre la navegación del usuario y se utilizan para mejorar la funcionalidad del sitio web, 
+                      personalizar la experiencia del usuario y proporcionar información analítica a los propietarios del sitio.
                     </p>
                     <p>
-                      Las referencias realizadas en la presente Política de Cookies al término "cookies" deben entenderse hechas a cualquier tipo 
-                      de dispositivo de almacenamiento y recuperación de datos que se utilice en el equipo terminal de los usuarios, abarcando, 
-                      por tanto, tanto las cookies como cualquier otro tipo de tecnología similar.
+                      <strong>Tipos de cookies que utilizamos:</strong>
+                    </p>
+                    <ul className="list-disc pl-5 space-y-1">
+                      <li><strong>Cookies técnicas o necesarias:</strong> Son esenciales para el funcionamiento básico del sitio web y no se pueden desactivar.</li>
+                      <li><strong>Cookies de preferencias:</strong> Permiten recordar las configuraciones y preferencias del usuario para mejorar su experiencia.</li>
+                      <li><strong>Cookies estadísticas:</strong> Recopilan información de forma anónima sobre cómo los usuarios interactúan con el sitio web para mejorar su rendimiento.</li>
+                      <li><strong>Cookies de marketing:</strong> Se utilizan para mostrar publicidad relevante y medir la efectividad de las campañas publicitarias.</li>
+                    </ul>
+                    <p>
+                      En cumplimiento del Reglamento General de Protección de Datos (RGPD), solicitamos su consentimiento para el uso de cookies no esenciales. 
+                      Puede gestionar sus preferencias de cookies en cualquier momento accediendo a la configuración de privacidad de nuestro sitio web.
                     </p>
                     <p>
-                      El uso de esta tecnología conlleva el tratamiento de datos personales cuando: (i) el usuario esté identificado por un nombre o 
-                      dirección de email (habitualmente, por tratarse de un usuario registrado en una página web a la que accede), (ii) almacenen 
-                      la dirección IP del dispositivo desde el que se accede, o (iii) en aquellos casos en los que se utilicen identificadores únicos 
-                      que permitan distinguir a unos usuarios de otros y realizar un seguimiento individualizado de los mismos (por ejemplo, un ID 
-                      de publicidad).
-                    </p>
-                    <p>
-                      En la página web <span className="text-primary font-medium">www.laboralkutxa.com</span> utilizamos cookies propias y de terceros según la descripción que se realiza a 
-                      continuación, siempre que nos lo hayas permitido o resulte necesario para que esta página web pueda funcionar 
-                      correctamente.
+                      Para más información sobre nuestra política de privacidad y el tratamiento de datos personales, consulte nuestra política de privacidad completa.
                     </p>
                   </div>
 

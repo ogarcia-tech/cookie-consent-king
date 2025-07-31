@@ -197,6 +197,7 @@ const Index = () => {
           <CookieBanner 
             onConsentUpdate={handleConsentUpdate} 
             forceShow={showDemo}
+            cookiePolicyUrl="https://ejemplo.com/politica-cookies"
           />
         </div>
       </div>
