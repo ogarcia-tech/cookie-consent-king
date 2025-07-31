@@ -180,7 +180,7 @@ const CookieBanner: React.FC<CookieBannerProps> = ({ onConsentUpdate }) => {
                     size="sm"
                     onClick={acceptNecessary}
                   >
-                    Solo necesarias
+                    Rechazar todas
                   </Button>
                   <Button
                     variant="cookie"
@@ -286,7 +286,7 @@ const CookieBanner: React.FC<CookieBannerProps> = ({ onConsentUpdate }) => {
                   size="sm"
                   onClick={acceptNecessary}
                 >
-                  Solo necesarias
+                  Rechazar todas
                 </Button>
                 
                 <div className="flex gap-2">
