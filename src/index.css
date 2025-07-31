@@ -36,6 +36,22 @@ All colors MUST be HSL.
     --input: 214.3 31.8% 91.4%;
     --ring: 222.2 84% 4.9%;
 
+    /* Cookie banner specific colors */
+    --cookie-banner-bg: 0 0% 98%;
+    --cookie-banner-border: 214.3 31.8% 85%;
+    --success: 142.1 76.2% 36.3%;
+    --success-foreground: 355.7 100% 97.3%;
+    --warning: 32.9 94.6% 43.7%;
+    --warning-foreground: 0 0% 100%;
+
+    /* Gradients and effects */
+    --gradient-primary: linear-gradient(135deg, hsl(222.2 47.4% 11.2%), hsl(222.2 47.4% 25%));
+    --shadow-elegant: 0 10px 30px -10px hsl(222.2 47.4% 11.2% / 0.1);
+    --shadow-floating: 0 20px 40px -10px hsl(222.2 47.4% 11.2% / 0.15);
+    
+    /* Transitions */
+    --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
     --radius: 0.5rem;
 
     --sidebar-background: 0 0% 98%;
