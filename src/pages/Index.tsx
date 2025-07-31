@@ -198,6 +198,7 @@ const Index = () => {
             onConsentUpdate={handleConsentUpdate} 
             forceShow={showDemo}
             cookiePolicyUrl="https://ejemplo.com/politica-cookies"
+            aboutCookiesUrl="https://ejemplo.com/acerca-cookies"
           />
         </div>
       </div>

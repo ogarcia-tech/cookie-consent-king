@@ -19,6 +19,7 @@ interface CookieBannerProps {
   onConsentUpdate?: (consent: ConsentSettings) => void;
   forceShow?: boolean; // Nueva prop para forzar mostrar el banner en demo
   cookiePolicyUrl?: string; // URL personalizable para la política de cookies
+  aboutCookiesUrl?: string; // URL personalizable para información detallada sobre cookies
 }
 
 // Consent Mode v2 integration
@@ -29,7 +30,7 @@ declare global {
   }
 }
 
-const CookieBanner: React.FC<CookieBannerProps> = ({ onConsentUpdate, forceShow = false, cookiePolicyUrl }) => {
+const CookieBanner: React.FC<CookieBannerProps> = ({ onConsentUpdate, forceShow = false, cookiePolicyUrl, aboutCookiesUrl }) => {
   const [showBanner, setShowBanner] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [consent, setConsent] = useState<ConsentSettings>({
@@ -456,6 +457,20 @@ const CookieBanner: React.FC<CookieBannerProps> = ({ onConsentUpdate, forceShow 
                     </p>
                     <p>
                       Para más información sobre nuestra política de privacidad y el tratamiento de datos personales, consulte nuestra política de privacidad completa.
+                      {aboutCookiesUrl && (
+                        <>
+                          {' '}Para información detallada sobre cookies, visite{' '}
+                          <a 
+                            href={aboutCookiesUrl} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="text-primary hover:underline font-medium"
+                          >
+                            Acerca de las Cookies
+                          </a>
+                          .
+                        </>
+                      )}
                     </p>
                   </div>
 
