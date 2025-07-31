@@ -15,6 +15,7 @@ interface ConsentSettings {
 
 interface CookieBannerProps {
   onConsentUpdate?: (consent: ConsentSettings) => void;
+  forceShow?: boolean; // Nueva prop para forzar mostrar el banner en demo
 }
 
 // Consent Mode v2 integration
@@ -25,7 +26,7 @@ declare global {
   }
 }
 
-const CookieBanner: React.FC<CookieBannerProps> = ({ onConsentUpdate }) => {
+const CookieBanner: React.FC<CookieBannerProps> = ({ onConsentUpdate, forceShow = false }) => {
   const [showBanner, setShowBanner] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [consent, setConsent] = useState<ConsentSettings>({
@@ -38,14 +39,19 @@ const CookieBanner: React.FC<CookieBannerProps> = ({ onConsentUpdate }) => {
   useEffect(() => {
     // Check if user has already made a choice
     const savedConsent = localStorage.getItem('cookieConsent');
+    console.log('CookieBanner: checking saved consent', savedConsent);
+    
     if (!savedConsent) {
+      console.log('CookieBanner: No saved consent, showing banner');
       setShowBanner(true);
       // Initialize Google Consent Mode v2 with default values
       initializeConsentMode();
     } else {
+      console.log('CookieBanner: Found saved consent, parsing and applying');
       const parsedConsent = JSON.parse(savedConsent);
       setConsent(parsedConsent);
       updateConsentMode(parsedConsent);
+      setShowBanner(false); // Explicitly set to false when consent exists
     }
   }, []);
 
@@ -151,7 +157,8 @@ const CookieBanner: React.FC<CookieBannerProps> = ({ onConsentUpdate }) => {
     }));
   };
 
-  if (!showBanner) {
+  // Show banner if forceShow is true OR if showBanner state is true
+  if (!forceShow && !showBanner) {
     return null;
   }
 

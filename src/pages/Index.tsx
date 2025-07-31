@@ -13,6 +13,7 @@ const Index = () => {
 
   const handleConsentUpdate = (newConsent: any) => {
     console.log('Consent updated:', newConsent);
+    setShowDemo(false); // Cerrar el banner demo cuando se actualice el consentimiento
     // Aquí puedes agregar lógica adicional cuando se actualice el consentimiento
   };
 
@@ -163,21 +164,30 @@ const Index = () => {
                   <p className="text-muted-foreground">
                     No se ha otorgado consentimiento aún
                   </p>
-                  <Button 
-                    onClick={() => setShowDemo(true)} 
-                    variant="cookie"
-                  >
-                    Mostrar Banner de Cookies
-                  </Button>
+                  <div className="flex gap-2 justify-center">
+                    <Button 
+                      onClick={() => setShowDemo(true)} 
+                      variant="cookie"
+                    >
+                      Mostrar Banner de Cookies
+                    </Button>
+                    <Button 
+                      onClick={resetConsent} 
+                      variant="outline"
+                    >
+                      Limpiar y Probar
+                    </Button>
+                  </div>
                 </div>
               )}
             </CardContent>
           </Card>
 
           {/* Demo Banner - Force show for testing */}
-          {(showDemo || !isConsentGiven()) && (
-            <CookieBanner onConsentUpdate={handleConsentUpdate} />
-          )}
+          <CookieBanner 
+            onConsentUpdate={handleConsentUpdate} 
+            forceShow={showDemo}
+          />
         </div>
       </div>
     </>
