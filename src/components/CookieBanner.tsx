@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -83,6 +84,31 @@ const CookieBanner: React.FC<CookieBannerProps> = ({ onConsentUpdate, forceShow 
     }
   };
 
+  const pushDataLayerEvent = (consentSettings: ConsentSettings, action: string) => {
+    // Ensure dataLayer exists
+    if (typeof window !== 'undefined') {
+      window.dataLayer = window.dataLayer || [];
+      
+      const eventData = {
+        'event': 'consent_update',
+        'consent': {
+          'ad_storage': consentSettings.marketing ? 'granted' : 'denied',
+          'analytics_storage': consentSettings.analytics ? 'granted' : 'denied',
+          'functionality_storage': consentSettings.preferences ? 'granted' : 'denied',
+          'personalization_storage': consentSettings.preferences ? 'granted' : 'denied',
+          'security_storage': 'granted', // Always granted
+          'ad_user_data': consentSettings.marketing ? 'granted' : 'denied',
+          'ad_personalization': consentSettings.marketing ? 'granted' : 'denied'
+        },
+        'consent_action': action,
+        'timestamp': new Date().toISOString()
+      };
+
+      console.log('Pushing to dataLayer:', eventData);
+      window.dataLayer.push(eventData);
+    }
+  };
+
   const updateConsentMode = (consentSettings: ConsentSettings, action?: string) => {
     if (typeof window !== 'undefined' && window.gtag) {
       window.gtag('consent', 'update', {
@@ -96,30 +122,22 @@ const CookieBanner: React.FC<CookieBannerProps> = ({ onConsentUpdate, forceShow 
     }
 
     // Push consent_update event to dataLayer
-    if (typeof window !== 'undefined' && window.dataLayer) {
-      window.dataLayer.push({
-        'event': 'consent_update',
-        'consent': {
-          'ad_storage': consentSettings.marketing ? 'granted' : 'denied',
-          'analytics_storage': consentSettings.analytics ? 'granted' : 'denied',
-          'functionality_storage': consentSettings.preferences ? 'granted' : 'denied',
-          'personalization_storage': consentSettings.preferences ? 'granted' : 'denied',
-          'security_storage': 'granted', // Always granted
-          'ad_user_data': consentSettings.marketing ? 'granted' : 'denied',
-          'ad_personalization': consentSettings.marketing ? 'granted' : 'denied'
-        },
-        'consent_action': action || getConsentAction(consentSettings),
-        'timestamp': new Date().toISOString()
-      });
+    if (action) {
+      pushDataLayerEvent(consentSettings, action);
     }
 
     onConsentUpdate?.(consentSettings);
   };
 
-  const saveConsent = (consentSettings: ConsentSettings, action?: string) => {
+  const saveConsent = (consentSettings: ConsentSettings, action: string) => {
+    console.log('Saving consent:', consentSettings, 'Action:', action);
+    
     localStorage.setItem('cookieConsent', JSON.stringify(consentSettings));
     localStorage.setItem('cookieConsentDate', new Date().toISOString());
+    
+    // Update consent mode and push dataLayer event
     updateConsentMode(consentSettings, action);
+    
     setConsent(consentSettings);
     setShowBanner(false);
     setShowSettings(false);
