@@ -328,11 +328,8 @@ const CookieBanner: React.FC<CookieBannerProps> = ({ onConsentUpdate, forceShow 
                     <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
                       <div className="flex items-start gap-3 flex-1">
                         <Shield className="w-5 h-5 text-success mt-0.5" />
-                        <div className="space-y-1">
-                          <div className="flex items-center gap-2">
+                          <div className="space-y-1">
                             <h4 className="font-medium text-sm">Necesario</h4>
-                            <Badge variant="secondary" className="text-xs">55</Badge>
-                          </div>
                           <p className="text-xs text-muted-foreground">
                             Las cookies necesarias ayudan a hacer una página web utilizable activando funciones básicas como la navegación en 
                             la página y el acceso a áreas seguras de la página web. La página web no puede funcionar adecuadamente sin estas cookies.
@@ -346,11 +343,8 @@ const CookieBanner: React.FC<CookieBannerProps> = ({ onConsentUpdate, forceShow 
                     <div className="flex items-center justify-between p-3 rounded-lg border">
                       <div className="flex items-start gap-3 flex-1">
                         <Settings className="w-5 h-5 text-muted-foreground mt-0.5" />
-                        <div className="space-y-1">
-                          <div className="flex items-center gap-2">
+                          <div className="space-y-1">
                             <h4 className="font-medium text-sm">Preferencias</h4>
-                            <Badge variant="outline" className="text-xs">13</Badge>
-                          </div>
                           <p className="text-xs text-muted-foreground">
                             Las cookies de preferencias permiten a la página web recordar información que cambia la forma en que la página se 
                             comporta o el aspecto que tiene, como su idioma preferido o la región en la que usted se encuentra.
@@ -367,11 +361,8 @@ const CookieBanner: React.FC<CookieBannerProps> = ({ onConsentUpdate, forceShow 
                     <div className="flex items-center justify-between p-3 rounded-lg border">
                       <div className="flex items-start gap-3 flex-1">
                         <BarChart3 className="w-5 h-5 text-primary mt-0.5" />
-                        <div className="space-y-1">
-                          <div className="flex items-center gap-2">
+                          <div className="space-y-1">
                             <h4 className="font-medium text-sm">Estadística</h4>
-                            <Badge variant="outline" className="text-xs">39</Badge>
-                          </div>
                           <p className="text-xs text-muted-foreground">
                             Las cookies estadísticas ayudan a los propietarios de páginas web a comprender cómo interactúan los visitantes con las páginas web reuniendo y proporcionando información de forma anónima.
                           </p>
@@ -387,11 +378,8 @@ const CookieBanner: React.FC<CookieBannerProps> = ({ onConsentUpdate, forceShow 
                     <div className="flex items-center justify-between p-3 rounded-lg border">
                       <div className="flex items-start gap-3 flex-1">
                         <Target className="w-5 h-5 text-warning mt-0.5" />
-                        <div className="space-y-1">
-                          <div className="flex items-center gap-2">
+                          <div className="space-y-1">
                             <h4 className="font-medium text-sm">Marketing</h4>
-                            <Badge variant="outline" className="text-xs">25</Badge>
-                          </div>
                           <p className="text-xs text-muted-foreground">
                             Las cookies de marketing se utilizan para rastrear a los visitantes en las páginas web. La intención es mostrar anuncios relevantes y atractivos para el usuario individual.
                           </p>
