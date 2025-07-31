@@ -1,0 +1,113 @@
+# English Translation for Cookie Banner GDPR
+msgid ""
+msgstr ""
+"Project-Id-Version: Cookie Banner GDPR 1.0.0\n"
+"Language: en_US\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+msgid "Cookie Banner Settings"
+msgstr "Cookie Banner Settings"
+
+msgid "Cookie Banner"
+msgstr "Cookie Banner"
+
+msgid "Configuración Principal"
+msgstr "Main Configuration"
+
+msgid "URL Política de Cookies"
+msgstr "Cookie Policy URL"
+
+msgid "URL a tu página de Política de Cookies. Aparecerá en la pestaña \"Consentimiento\"."
+msgstr "URL to your Cookie Policy page. It will appear in the \"Consent\" tab."
+
+msgid "URL Acerca de las Cookies"
+msgstr "About Cookies URL"
+
+msgid "URL con información detallada sobre cookies. Aparecerá en la pestaña \"Acerca de las cookies\"."
+msgstr "URL with detailed information about cookies. It will appear in the \"About cookies\" tab."
+
+msgid "Google Tag Manager ID"
+msgstr "Google Tag Manager ID"
+
+msgid "Tu ID de Google Tag Manager para integración con Consent Mode v2."
+msgstr "Your Google Tag Manager ID for Consent Mode v2 integration."
+
+msgid "Configuración Cookie Banner GDPR"
+msgstr "Cookie Banner GDPR Settings"
+
+msgid "Este plugin proporciona un banner de cookies compatible con GDPR y Google Consent Mode v2."
+msgstr "This plugin provides a GDPR-compliant cookie banner with Google Consent Mode v2."
+
+msgid "Características:"
+msgstr "Features:"
+
+msgid "✓ Compatible con GDPR"
+msgstr "✓ GDPR Compliant"
+
+msgid "✓ Google Consent Mode v2"
+msgstr "✓ Google Consent Mode v2"
+
+msgid "✓ Soporte multiidioma"
+msgstr "✓ Multi-language Support"
+
+msgid "✓ Enlaces personalizables"
+msgstr "✓ Customizable Links"
+
+msgid "✓ Configuración granular de cookies"
+msgstr "✓ Granular Cookie Configuration"
+
+msgid "Idiomas soportados:"
+msgstr "Supported Languages:"
+
+msgid "Español, Inglés, Francés, Italiano, Alemán"
+msgstr "Spanish, English, French, Italian, German"
+
+msgid "Gestión de Cookies"
+msgstr "Cookie Management"
+
+msgid "Utilizamos cookies para mejorar tu experiencia de navegación, personalizar contenido y anuncios, proporcionar funciones de redes sociales y analizar nuestro tráfico."
+msgstr "We use cookies to improve your browsing experience, personalize content and ads, provide social media features and analyze our traffic."
+
+msgid "Personalizar"
+msgstr "Customize"
+
+msgid "Aceptar todas"
+msgstr "Accept All"
+
+msgid "Rechazar todas"
+msgstr "Reject All"
+
+msgid "Configuración de Cookies"
+msgstr "Cookie Settings"
+
+msgid "Consentimiento"
+msgstr "Consent"
+
+msgid "Detalles"
+msgstr "Details"
+
+msgid "Acerca de las cookies"
+msgstr "About Cookies"
+
+msgid "Necesario"
+msgstr "Necessary"
+
+msgid "Preferencias"
+msgstr "Preferences"
+
+msgid "Estadística"
+msgstr "Statistics"
+
+msgid "Marketing"
+msgstr "Marketing"
+
+msgid "Permitir selección"
+msgstr "Allow Selection"
+
+msgid "Política de Cookies"
+msgstr "Cookie Policy"
+
+msgid "Acerca de las Cookies"
+msgstr "About Cookies"

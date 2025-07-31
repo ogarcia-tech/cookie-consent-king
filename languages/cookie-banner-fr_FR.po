@@ -1,0 +1,113 @@
+# French Translation for Cookie Banner GDPR
+msgid ""
+msgstr ""
+"Project-Id-Version: Cookie Banner GDPR 1.0.0\n"
+"Language: fr_FR\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+msgid "Cookie Banner Settings"
+msgstr "Paramètres Bannière Cookies"
+
+msgid "Cookie Banner"
+msgstr "Bannière Cookies"
+
+msgid "Configuración Principal"
+msgstr "Configuration Principale"
+
+msgid "URL Política de Cookies"
+msgstr "URL Politique des Cookies"
+
+msgid "URL a tu página de Política de Cookies. Aparecerá en la pestaña \"Consentimiento\"."
+msgstr "URL vers votre page de Politique des Cookies. Elle apparaîtra dans l'onglet \"Consentement\"."
+
+msgid "URL Acerca de las Cookies"
+msgstr "URL À propos des Cookies"
+
+msgid "URL con información detallada sobre cookies. Aparecerá en la pestaña \"Acerca de las cookies\"."
+msgstr "URL avec des informations détaillées sur les cookies. Elle apparaîtra dans l'onglet \"À propos des cookies\"."
+
+msgid "Google Tag Manager ID"
+msgstr "ID Google Tag Manager"
+
+msgid "Tu ID de Google Tag Manager para integración con Consent Mode v2."
+msgstr "Votre ID Google Tag Manager pour l'intégration avec Consent Mode v2."
+
+msgid "Configuración Cookie Banner GDPR"
+msgstr "Configuration Bannière Cookies RGPD"
+
+msgid "Este plugin proporciona un banner de cookies compatible con GDPR y Google Consent Mode v2."
+msgstr "Ce plugin fournit une bannière de cookies conforme au RGPD avec Google Consent Mode v2."
+
+msgid "Características:"
+msgstr "Caractéristiques :"
+
+msgid "✓ Compatible con GDPR"
+msgstr "✓ Conforme RGPD"
+
+msgid "✓ Google Consent Mode v2"
+msgstr "✓ Google Consent Mode v2"
+
+msgid "✓ Soporte multiidioma"
+msgstr "✓ Support Multilingue"
+
+msgid "✓ Enlaces personalizables"
+msgstr "✓ Liens Personnalisables"
+
+msgid "✓ Configuración granular de cookies"
+msgstr "✓ Configuration Granulaire des Cookies"
+
+msgid "Idiomas soportados:"
+msgstr "Langues supportées :"
+
+msgid "Español, Inglés, Francés, Italiano, Alemán"
+msgstr "Espagnol, Anglais, Français, Italien, Allemand"
+
+msgid "Gestión de Cookies"
+msgstr "Gestion des Cookies"
+
+msgid "Utilizamos cookies para mejorar tu experiencia de navegación, personalizar contenido y anuncios, proporcionar funciones de redes sociales y analizar nuestro tráfico."
+msgstr "Nous utilisons des cookies pour améliorer votre expérience de navigation, personnaliser le contenu et les annonces, fournir des fonctionnalités de médias sociaux et analyser notre trafic."
+
+msgid "Personalizar"
+msgstr "Personnaliser"
+
+msgid "Aceptar todas"
+msgstr "Tout Accepter"
+
+msgid "Rechazar todas"
+msgstr "Tout Refuser"
+
+msgid "Configuración de Cookies"
+msgstr "Paramètres des Cookies"
+
+msgid "Consentimiento"
+msgstr "Consentement"
+
+msgid "Detalles"
+msgstr "Détails"
+
+msgid "Acerca de las cookies"
+msgstr "À propos des cookies"
+
+msgid "Necesario"
+msgstr "Nécessaire"
+
+msgid "Preferencias"
+msgstr "Préférences"
+
+msgid "Estadística"
+msgstr "Statistiques"
+
+msgid "Marketing"
+msgstr "Marketing"
+
+msgid "Permitir selección"
+msgstr "Autoriser la Sélection"
+
+msgid "Política de Cookies"
+msgstr "Politique des Cookies"
+
+msgid "Acerca de las Cookies"
+msgstr "À propos des Cookies"
