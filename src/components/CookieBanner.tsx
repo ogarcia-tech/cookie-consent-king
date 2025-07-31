@@ -254,7 +254,7 @@ const CookieBanner: React.FC<CookieBannerProps> = ({ onConsentUpdate, forceShow 
                 </Button>
               </div>
 
-              <Tabs defaultValue="consentimiento" className="w-full">
+              <Tabs defaultValue="detalles" className="w-full">
                 <TabsList className="grid w-full grid-cols-3">
                   <TabsTrigger value="consentimiento">Consentimiento</TabsTrigger>
                   <TabsTrigger value="detalles">Detalles</TabsTrigger>
