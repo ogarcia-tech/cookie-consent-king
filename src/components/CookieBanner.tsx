@@ -65,7 +65,19 @@ const CookieBanner: React.FC<CookieBannerProps> = ({ onConsentUpdate }) => {
     }
   };
 
-  const updateConsentMode = (consentSettings: ConsentSettings) => {
+  const getConsentAction = (consentSettings: ConsentSettings): string => {
+    const { analytics, marketing, preferences } = consentSettings;
+    
+    if (analytics && marketing && preferences) {
+      return 'accept_all';
+    } else if (!analytics && !marketing && !preferences) {
+      return 'reject_all';
+    } else {
+      return 'custom_selection';
+    }
+  };
+
+  const updateConsentMode = (consentSettings: ConsentSettings, action?: string) => {
     if (typeof window !== 'undefined' && window.gtag) {
       window.gtag('consent', 'update', {
         'ad_storage': consentSettings.marketing ? 'granted' : 'denied',
@@ -77,13 +89,31 @@ const CookieBanner: React.FC<CookieBannerProps> = ({ onConsentUpdate }) => {
       });
     }
 
+    // Push consent_update event to dataLayer
+    if (typeof window !== 'undefined' && window.dataLayer) {
+      window.dataLayer.push({
+        'event': 'consent_update',
+        'consent': {
+          'ad_storage': consentSettings.marketing ? 'granted' : 'denied',
+          'analytics_storage': consentSettings.analytics ? 'granted' : 'denied',
+          'functionality_storage': consentSettings.preferences ? 'granted' : 'denied',
+          'personalization_storage': consentSettings.preferences ? 'granted' : 'denied',
+          'security_storage': 'granted', // Always granted
+          'ad_user_data': consentSettings.marketing ? 'granted' : 'denied',
+          'ad_personalization': consentSettings.marketing ? 'granted' : 'denied'
+        },
+        'consent_action': action || getConsentAction(consentSettings),
+        'timestamp': new Date().toISOString()
+      });
+    }
+
     onConsentUpdate?.(consentSettings);
   };
 
-  const saveConsent = (consentSettings: ConsentSettings) => {
+  const saveConsent = (consentSettings: ConsentSettings, action?: string) => {
     localStorage.setItem('cookieConsent', JSON.stringify(consentSettings));
     localStorage.setItem('cookieConsentDate', new Date().toISOString());
-    updateConsentMode(consentSettings);
+    updateConsentMode(consentSettings, action);
     setConsent(consentSettings);
     setShowBanner(false);
     setShowSettings(false);
@@ -96,7 +126,7 @@ const CookieBanner: React.FC<CookieBannerProps> = ({ onConsentUpdate }) => {
       marketing: true,
       preferences: true,
     };
-    saveConsent(allAccepted);
+    saveConsent(allAccepted, 'accept_all');
   };
 
   const acceptNecessary = () => {
@@ -106,11 +136,11 @@ const CookieBanner: React.FC<CookieBannerProps> = ({ onConsentUpdate }) => {
       marketing: false,
       preferences: false,
     };
-    saveConsent(necessaryOnly);
+    saveConsent(necessaryOnly, 'reject_all');
   };
 
   const saveCustomSettings = () => {
-    saveConsent(consent);
+    saveConsent(consent, 'custom_selection');
   };
 
   const toggleConsent = (type: keyof ConsentSettings) => {
