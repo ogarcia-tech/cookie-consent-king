@@ -203,16 +203,6 @@ const CookieBanner: React.FC<CookieBannerProps> = ({ onConsentUpdate, forceShow 
                       de nuestro sitio con nuestros socios de análisis y publicidad.
                     </p>
                   </div>
-                  
-                  <div className="flex flex-wrap gap-2">
-                    <Badge variant="secondary" className="flex items-center gap-1">
-                      <Shield className="w-3 h-3" />
-                      Cumple GDPR
-                    </Badge>
-                    <Badge variant="outline" className="text-xs">
-                      Consent Mode v2
-                    </Badge>
-                  </div>
                 </div>
               </div>
 
