@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
@@ -24,10 +24,27 @@ interface CookieBannerProps {
 }
 
 // Consent Mode v2 integration
+interface Gtag {
+  (
+    command: 'consent' | 'config' | 'event',
+    action: string,
+    params?: Record<string, unknown>
+  ): void;
+  (...args: unknown[]): void;
+}
+
+type DataLayerEvent = Record<string, unknown>;
+
+interface DataLayer extends Array<DataLayerEvent> {
+  push: (...args: DataLayerEvent[]) => number;
+}
+
 declare global {
   interface Window {
+
     gtag?: (...args: unknown[]) => void;
     dataLayer?: any[];
+
   }
 }
 
@@ -61,7 +78,7 @@ const CookieBanner: React.FC<CookieBannerProps> = ({ onConsentUpdate, forceShow 
       setShowBanner(false);
       setShowMiniBanner(true); // Show mini banner when consent exists
     }
-  }, []);
+  }, [updateConsentMode]);
 
   const initializeConsentMode = () => {
     if (typeof window !== 'undefined' && window.gtag) {
@@ -116,25 +133,28 @@ const CookieBanner: React.FC<CookieBannerProps> = ({ onConsentUpdate, forceShow 
     }
   };
 
-  const updateConsentMode = (consentSettings: ConsentSettings, action?: string) => {
-    if (typeof window !== 'undefined' && window.gtag) {
-      window.gtag('consent', 'update', {
-        'ad_storage': consentSettings.marketing ? 'granted' : 'denied',
-        'ad_user_data': consentSettings.marketing ? 'granted' : 'denied',
-        'ad_personalization': consentSettings.marketing ? 'granted' : 'denied',
-        'analytics_storage': consentSettings.analytics ? 'granted' : 'denied',
-        'functionality_storage': consentSettings.preferences ? 'granted' : 'denied',
-        'personalization_storage': consentSettings.preferences ? 'granted' : 'denied',
-      });
-    }
+  const updateConsentMode = useCallback(
+    (consentSettings: ConsentSettings, action?: string) => {
+      if (typeof window !== 'undefined' && window.gtag) {
+        window.gtag('consent', 'update', {
+          'ad_storage': consentSettings.marketing ? 'granted' : 'denied',
+          'ad_user_data': consentSettings.marketing ? 'granted' : 'denied',
+          'ad_personalization': consentSettings.marketing ? 'granted' : 'denied',
+          'analytics_storage': consentSettings.analytics ? 'granted' : 'denied',
+          'functionality_storage': consentSettings.preferences ? 'granted' : 'denied',
+          'personalization_storage': consentSettings.preferences ? 'granted' : 'denied',
+        });
+      }
 
-    // Push consent_update event to dataLayer
-    if (action) {
-      pushDataLayerEvent(consentSettings, action);
-    }
+      // Push consent_update event to dataLayer
+      if (action) {
+        pushDataLayerEvent(consentSettings, action);
+      }
 
-    onConsentUpdate?.(consentSettings);
-  };
+      onConsentUpdate?.(consentSettings);
+    },
+    [onConsentUpdate]
+  );
 
   const saveConsent = (consentSettings: ConsentSettings, action: string) => {
     console.log('Saving consent:', consentSettings, 'Action:', action);
