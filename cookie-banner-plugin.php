@@ -27,7 +27,7 @@ class CookieBannerPlugin {
         add_action('init', array($this, 'load_textdomain'));
         add_action('wp_enqueue_scripts', array($this, 'enqueue_scripts'));
         add_action('wp_head', array($this, 'inject_early_script'), 1); // Prioridad alta para cargar antes
-        add_action('wp_footer', array($this, 'render_banner'));
+        add_action('wp_head', array($this, 'render_banner'), 99); // Renderizar en header al final
         add_action('wp_footer', array($this, 'add_manual_trigger'));
         
         // Admin
@@ -203,52 +203,65 @@ class CookieBannerPlugin {
     }
     
     /**
-     * Renderizar el banner en el footer
+     * Renderizar el banner en el header (automáticamente)
      */
     public function render_banner() {
         ?>
-        <!-- Contenedor principal del banner -->
-        <div id="cookie-banner-container"></div>
+        <!-- Contenedor principal del banner en header -->
+        <div id="cookie-banner-container" style="position:fixed;top:0;left:0;width:100%;z-index:999999;"></div>
         
-        <!-- Script de inicialización robusto -->
+        <!-- Script de inicialización e inyección automática del banner -->
         <script>
+        window.cookieBannerAutoRender = true; // Flag para renderizado automático
         (function() {
-            // Inicialización múltiple para compatibilidad con Elementor
-            function initCookieBanner() {
+            // Función para inicializar y mostrar automáticamente el banner
+            function autoInitCookieBanner() {
                 if (window.cookieBannerInitialized) return;
                 
-                // Verificar si el contenedor existe, si no, crearlo
+                console.log('CookieBanner: Inicialización automática desde header...');
+                
+                // Verificar si el contenedor existe
                 let container = document.getElementById('cookie-banner-container');
                 if (!container) {
                     container = document.createElement('div');
                     container.id = 'cookie-banner-container';
+                    container.style.cssText = 'position:fixed;top:0;left:0;width:100%;z-index:999999;';
                     document.body.appendChild(container);
                 }
                 
-                // Asegurar que los estilos estén cargados
-                if (!document.querySelector('link[href*="cookie-banner.css"]')) {
-                    const link = document.createElement('link');
-                    link.rel = 'stylesheet';
-                    link.href = '<?php echo COOKIE_BANNER_PLUGIN_URL; ?>assets/css/cookie-banner.css';
-                    document.head.appendChild(link);
+                // Verificar consentimiento existente
+                const savedConsent = localStorage.getItem('cookieConsent');
+                const shouldShowBanner = !savedConsent;
+                
+                if (shouldShowBanner) {
+                    console.log('CookieBanner: No hay consentimiento guardado, mostrando banner automáticamente');
+                    
+                    // Inicializar banner directamente si la clase está disponible
+                    if (typeof CookieBanner !== 'undefined') {
+                        if (!window.cookieBannerInstance) {
+                            window.cookieBannerInstance = new CookieBanner();
+                            window.cookieBannerInstance.showBanner = true;
+                            window.cookieBannerInstance.render();
+                        }
+                    } else {
+                        // Esperar a que se cargue la clase
+                        setTimeout(autoInitCookieBanner, 200);
+                        return;
+                    }
                 }
                 
                 window.cookieBannerInitialized = true;
-                console.log('CookieBanner: Contenedor inicializado');
             }
             
-            // Múltiples intentos de inicialización
-            if (document.readyState === 'loading') {
-                document.addEventListener('DOMContentLoaded', initCookieBanner);
-            } else {
-                initCookieBanner();
-            }
+            // Inicialización inmediata
+            autoInitCookieBanner();
             
-            // Backup para Elementor
-            window.addEventListener('load', initCookieBanner);
-            setTimeout(initCookieBanner, 100);
-            setTimeout(initCookieBanner, 500);
-            setTimeout(initCookieBanner, 2000);
+            // Múltiples intentos para asegurar compatibilidad
+            document.addEventListener('DOMContentLoaded', autoInitCookieBanner);
+            window.addEventListener('load', autoInitCookieBanner);
+            setTimeout(autoInitCookieBanner, 100);
+            setTimeout(autoInitCookieBanner, 500);
+            setTimeout(autoInitCookieBanner, 1000);
         })();
         </script>
         <?php
