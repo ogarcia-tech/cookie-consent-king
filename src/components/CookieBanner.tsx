@@ -62,16 +62,22 @@ const CookieBanner: React.FC<CookieBannerProps> = ({ onConsentUpdate, forceShow 
   useEffect(() => {
     // Check if user has already made a choice
     const savedConsent = localStorage.getItem('cookieConsent');
-    console.log('CookieBanner: checking saved consent', savedConsent);
+    if (import.meta.env.DEV) {
+      console.log('CookieBanner: checking saved consent', savedConsent);
+    }
     
     if (!savedConsent) {
-      console.log('CookieBanner: No saved consent, showing banner');
+      if (import.meta.env.DEV) {
+        console.log('CookieBanner: No saved consent, showing banner');
+      }
       setShowBanner(true);
       setShowMiniBanner(false);
       // Initialize Google Consent Mode v2 with default values
       initializeConsentMode();
     } else {
-      console.log('CookieBanner: Found saved consent, parsing and applying');
+      if (import.meta.env.DEV) {
+        console.log('CookieBanner: Found saved consent, parsing and applying');
+      }
       const parsedConsent = JSON.parse(savedConsent);
       setConsent(parsedConsent);
       updateConsentMode(parsedConsent);
@@ -128,7 +134,9 @@ const CookieBanner: React.FC<CookieBannerProps> = ({ onConsentUpdate, forceShow 
         'timestamp': new Date().toISOString()
       };
 
-      console.log('Pushing to dataLayer:', eventData);
+      if (import.meta.env.DEV) {
+        console.log('Pushing to dataLayer:', eventData);
+      }
       window.dataLayer.push(eventData);
     }
   };
@@ -157,7 +165,9 @@ const CookieBanner: React.FC<CookieBannerProps> = ({ onConsentUpdate, forceShow 
   );
 
   const saveConsent = (consentSettings: ConsentSettings, action: string) => {
-    console.log('Saving consent:', consentSettings, 'Action:', action);
+    if (import.meta.env.DEV) {
+      console.log('Saving consent:', consentSettings, 'Action:', action);
+    }
     
     localStorage.setItem('cookieConsent', JSON.stringify(consentSettings));
     localStorage.setItem('cookieConsentDate', new Date().toISOString());
