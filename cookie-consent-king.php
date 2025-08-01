@@ -6,6 +6,7 @@
  * Version: 1.0.0
  * Author: Your Name
  * License: GPL2
+ * Text Domain: cookie-banner
  */
 
 if (!defined('ABSPATH')) {
@@ -39,6 +40,15 @@ function cck_enqueue_assets() {
     }
 }
 add_action('wp_enqueue_scripts', 'cck_enqueue_assets');
+
+function cck_load_textdomain() {
+    load_plugin_textdomain(
+        'cookie-banner',
+        false,
+        dirname(plugin_basename(__FILE__)) . '/languages'
+    );
+}
+add_action('init', 'cck_load_textdomain');
 
 function cck_activate() {
     // Placeholder for activation logic.
