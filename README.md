@@ -81,14 +81,47 @@ To connect a domain, navigate to Project > Settings > Domains and click Connect 
 
 Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
 
-## WordPress Installation
+## Quick start
 
-1. Run `npm install` to install dependencies.
-2. Build the React app with `npm run build`. This creates a `dist/` directory containing the final JavaScript and CSS assets.
-3. Copy the repository (or just the `cookie-consent-king.php` file and the `dist/` directory) into your WordPress `wp-content/plugins/` folder.
-4. Activate **Cookie Consent King** from the Plugins menu in WordPress.
+```sh
+# Install dependencies and start developing
+npm i
+npm run dev
 
-## Usage
+# Build optimized assets
+npm run build
+```
 
-Once activated, the plugin automatically enqueues the built assets on the front end. After building the React project, you should see the cookie consent banner appear on your site.
+The build command generates production files in the `dist/` directory. CSS and JavaScript are placed inside `dist/assets/`.
+
+## Enqueuing in WordPress
+
+Use the plugin wrapper (`cookie-banner-plugin.php`) to load the build output:
+
+```php
+function cck_enqueue_assets() {
+    $plugin_url = plugin_dir_url(__FILE__);
+    wp_enqueue_style('cck-style', $plugin_url . 'dist/assets/index.css', [], COOKIE_BANNER_VERSION);
+    wp_enqueue_script('cck-script', $plugin_url . 'dist/assets/index.js', [], COOKIE_BANNER_VERSION, true);
+}
+add_action('wp_enqueue_scripts', 'cck_enqueue_assets');
+```
+
+The wrapper also loads translations via `load_plugin_textdomain()` so WordPress can read the files under `languages/`.
+
+## Translations
+
+Available `.po` files are located in `languages/`:
+
+- `cookie-banner-en_US.po`
+- `cookie-banner-de_DE.po`
+- `cookie-banner-es_ES.po`
+- `cookie-banner-fr_FR.po`
+- `cookie-banner-it_IT.po`
+
+Load them in the plugin wrapper with:
+
+```php
+load_plugin_textdomain('cookie-banner', false, dirname(plugin_basename(__FILE__)) . '/languages');
+```
 
