@@ -111,3 +111,9 @@ msgstr "Política de Cookies"
 
 msgid "Acerca de las Cookies"
 msgstr "Acerca de las Cookies"
+
+msgid "Banner de cookies moderno con soporte completo para Google Consent Mode v2"
+msgstr "Banner de cookies moderno con soporte completo para Google Consent Mode v2"
+
+msgid "Cumplimiento GDPR"
+msgstr "Cumplimiento GDPR"
