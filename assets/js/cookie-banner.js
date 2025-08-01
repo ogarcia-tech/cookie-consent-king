@@ -45,6 +45,12 @@ class CookieBanner {
     }
     
     blockScripts() {
+        // Evitar múltiples interceptaciones
+        if (window.cookieBannerScriptInterceptionActive) {
+            return;
+        }
+        window.cookieBannerScriptInterceptionActive = true;
+        
         // Bloquear scripts de terceros antes de que se ejecuten
         const scriptsToBlock = [
             'googletagmanager.com',
@@ -74,25 +80,37 @@ class CookieBanner {
             const element = originalCreateElement.call(document, tagName);
             
             if (tagName.toLowerCase() === 'script') {
-                const originalSetSrc = Object.getOwnPropertyDescriptor(HTMLScriptElement.prototype, 'src').set;
-                Object.defineProperty(element, 'src', {
-                    set: function(value) {
-                        const shouldBlock = scriptsToBlock.some(domain => value.includes(domain));
-                        const hasConsent = self.hasAnalyticsConsent() || self.hasMarketingConsent();
-                        
-                        if (shouldBlock && !hasConsent) {
-                            console.log('CookieBanner: Bloqueando script:', value);
-                            element.setAttribute('data-blocked-src', value);
-                            element.setAttribute('data-cookie-consent', 'required');
-                            return;
-                        }
-                        
-                        originalSetSrc.call(element, value);
-                    },
-                    get: function() {
-                        return element.getAttribute('src');
+                // Solo redefinir src si no se ha hecho ya para este elemento
+                if (!element.__cookieBannerSrcIntercepted) {
+                    element.__cookieBannerSrcIntercepted = true;
+                    
+                    const originalSetSrc = Object.getOwnPropertyDescriptor(HTMLScriptElement.prototype, 'src').set;
+                    
+                    try {
+                        Object.defineProperty(element, 'src', {
+                            set: function(value) {
+                                const shouldBlock = scriptsToBlock.some(domain => value.includes(domain));
+                                const hasConsent = self.hasAnalyticsConsent() || self.hasMarketingConsent();
+                                
+                                if (shouldBlock && !hasConsent) {
+                                    console.log('CookieBanner: Bloqueando script:', value);
+                                    element.setAttribute('data-blocked-src', value);
+                                    element.setAttribute('data-cookie-consent', 'required');
+                                    return;
+                                }
+                                
+                                originalSetSrc.call(element, value);
+                            },
+                            get: function() {
+                                return element.getAttribute('src');
+                            },
+                            configurable: true
+                        });
+                    } catch (e) {
+                        // Si ya existe la propiedad, simplemente usarla
+                        console.warn('CookieBanner: No se pudo redefinir src para el script:', e.message);
                     }
-                });
+                }
             }
             
             return element;
@@ -311,12 +329,12 @@ class CookieBanner {
         // Desbloquear scripts según el consentimiento dado
         this.unblockScripts();
         
+        this.render();
+        
         // Mostrar el mini banner después de dar consentimiento
         setTimeout(() => {
             this.showMiniBanner();
         }, 1000);
-        
-        this.render();
     }
     
     showMinimizedBanner() {
