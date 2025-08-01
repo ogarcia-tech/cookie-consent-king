@@ -185,6 +185,10 @@ const CookieBanner: React.FC<CookieBannerProps> = ({ onConsentUpdate, forceShow 
     }));
   };
 
+  const isAllAccepted = () => {
+    return consent.necessary && consent.analytics && consent.marketing && consent.preferences;
+  };
+
   const reopenBanner = () => {
     setShowBanner(true);
     setShowMiniBanner(false);
@@ -255,13 +259,15 @@ const CookieBanner: React.FC<CookieBannerProps> = ({ onConsentUpdate, forceShow 
                   >
                     Rechazar todas
                   </Button>
-                  <Button
-                    variant="cookie"
-                    size="sm"
-                    onClick={acceptAll}
-                  >
-                    Aceptar todas
-                  </Button>
+                  {!isAllAccepted() && (
+                    <Button
+                      variant="cookie"
+                      size="sm"
+                      onClick={acceptAll}
+                    >
+                      Aceptar todas
+                    </Button>
+                  )}
                 </div>
               </div>
             </div>
@@ -328,13 +334,15 @@ const CookieBanner: React.FC<CookieBannerProps> = ({ onConsentUpdate, forceShow 
                     </Button>
                     
                     <div className="flex gap-2">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={acceptAll}
-                      >
-                        Aceptar todas
-                      </Button>
+                      {!isAllAccepted() && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={acceptAll}
+                        >
+                          Aceptar todas
+                        </Button>
+                      )}
                       <Button
                         variant="cookie"
                         size="sm"
@@ -432,13 +440,15 @@ const CookieBanner: React.FC<CookieBannerProps> = ({ onConsentUpdate, forceShow 
                     </Button>
                     
                     <div className="flex gap-2">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={acceptAll}
-                      >
-                        Aceptar todas
-                      </Button>
+                      {!isAllAccepted() && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={acceptAll}
+                        >
+                          Aceptar todas
+                        </Button>
+                      )}
                       <Button
                         variant="cookie"
                         size="sm"
