@@ -47,8 +47,8 @@ class CookieBannerAdmin {
             return;
         }
         
-        wp_enqueue_script('cookie-banner-admin', COOKIE_BANNER_URL . 'assets/js/cookie-banner-admin.js', array('jquery'), COOKIE_BANNER_VERSION, true);
-        wp_enqueue_style('cookie-banner-admin', COOKIE_BANNER_URL . 'assets/css/cookie-banner-admin.css', array(), COOKIE_BANNER_VERSION);
+        wp_enqueue_script('cookie-banner-admin', COOKIE_BANNER_PLUGIN_URL . 'assets/js/cookie-banner-admin.js', array('jquery'), COOKIE_BANNER_VERSION, true);
+        wp_enqueue_style('cookie-banner-admin', COOKIE_BANNER_PLUGIN_URL . 'assets/css/cookie-banner-admin.css', array(), COOKIE_BANNER_VERSION);
         
         wp_localize_script('cookie-banner-admin', 'cookieBannerAdmin', array(
             'ajax_url' => admin_url('admin-ajax.php'),
