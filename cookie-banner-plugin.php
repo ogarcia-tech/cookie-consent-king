@@ -27,7 +27,7 @@ class CookieBannerPlugin {
         add_action('init', array($this, 'load_textdomain'));
         add_action('wp_enqueue_scripts', array($this, 'enqueue_scripts'));
         add_action('wp_head', array($this, 'inject_early_script'), 1); // Prioridad alta para cargar antes
-        add_action('wp_head', array($this, 'render_banner'), 99); // Renderizar en header al final
+        add_action('wp_footer', array($this, 'render_banner'), 99); // Volver a footer pero con alta prioridad
         add_action('wp_footer', array($this, 'add_manual_trigger'));
         
         // Admin
@@ -200,65 +200,120 @@ class CookieBannerPlugin {
     }
     
     /**
-     * Renderizar el banner en el header (automáticamente)
+     * Renderizar el banner (estrategia robusta para Elementor)
      */
     public function render_banner() {
         ?>
-        <!-- Contenedor principal del banner en header -->
-        <div id="cookie-banner-container" style="position:fixed;top:0;left:0;width:100%;z-index:999999;"></div>
+        <!-- Contenedor principal del banner -->
+        <div id="cookie-banner-container"></div>
         
-        <!-- Script de inicialización e inyección automática del banner -->
+        <!-- Script de inicialización ultra robusta para Elementor -->
         <script>
-        window.cookieBannerAutoRender = true; // Flag para renderizado automático
+        console.log('CookieBanner: Script de inicialización cargado');
+        
         (function() {
-            // Función para inicializar y mostrar automáticamente el banner
-            function autoInitCookieBanner() {
-                if (window.cookieBannerInitialized) return;
+            let initAttempts = 0;
+            const maxAttempts = 20;
+            
+            function forceInitCookieBanner() {
+                initAttempts++;
+                console.log('CookieBanner: Intento de inicialización #' + initAttempts);
                 
-                console.log('CookieBanner: Inicialización automática desde header...');
+                if (window.cookieBannerInitialized) {
+                    console.log('CookieBanner: Ya inicializado');
+                    return;
+                }
                 
                 // Verificar si el contenedor existe
                 let container = document.getElementById('cookie-banner-container');
                 if (!container) {
+                    console.log('CookieBanner: Creando contenedor...');
                     container = document.createElement('div');
                     container.id = 'cookie-banner-container';
-                    container.style.cssText = 'position:fixed;top:0;left:0;width:100%;z-index:999999;';
-                    document.body.appendChild(container);
-                }
-                
-                // Verificar consentimiento existente
-                const savedConsent = localStorage.getItem('cookieConsent');
-                const shouldShowBanner = !savedConsent;
-                
-                if (shouldShowBanner) {
-                    console.log('CookieBanner: No hay consentimiento guardado, mostrando banner automáticamente');
+                    container.style.cssText = 'position:fixed;top:0;left:0;width:100%;z-index:999999;pointer-events:none;';
                     
-                    // Inicializar banner directamente si la clase está disponible
-                    if (typeof CookieBanner !== 'undefined') {
-                        if (!window.cookieBannerInstance) {
-                            window.cookieBannerInstance = new CookieBanner();
-                            window.cookieBannerInstance.showBanner = true;
-                            window.cookieBannerInstance.render();
-                        }
-                    } else {
-                        // Esperar a que se cargue la clase
-                        setTimeout(autoInitCookieBanner, 200);
-                        return;
+                    // Intentar múltiples ubicaciones
+                    if (document.body) {
+                        document.body.appendChild(container);
+                        console.log('CookieBanner: Contenedor agregado al body');
+                    } else if (document.documentElement) {
+                        document.documentElement.appendChild(container);
+                        console.log('CookieBanner: Contenedor agregado al documentElement');
                     }
                 }
                 
-                window.cookieBannerInitialized = true;
+                // Verificar si tenemos consentimiento
+                const savedConsent = localStorage.getItem('cookieConsent');
+                console.log('CookieBanner: Consentimiento guardado:', savedConsent);
+                
+                if (!savedConsent) {
+                    console.log('CookieBanner: No hay consentimiento, intentando mostrar banner...');
+                    
+                    // Verificar si la clase CookieBanner está disponible
+                    if (typeof CookieBanner !== 'undefined') {
+                        console.log('CookieBanner: Clase disponible, creando instancia...');
+                        
+                        if (!window.cookieBannerInstance) {
+                            try {
+                                window.cookieBannerInstance = new CookieBanner();
+                                window.cookieBannerInstance.showBanner = true;
+                                window.cookieBannerInstance.render();
+                                window.cookieBannerInitialized = true;
+                                console.log('CookieBanner: Banner inicializado exitosamente');
+                                return;
+                            } catch (error) {
+                                console.error('CookieBanner: Error al crear instancia:', error);
+                            }
+                        }
+                    } else {
+                        console.log('CookieBanner: Clase no disponible aún, reintentando...');
+                        if (initAttempts < maxAttempts) {
+                            setTimeout(forceInitCookieBanner, 500);
+                        }
+                    }
+                } else {
+                    console.log('CookieBanner: Consentimiento ya existe, no mostrando banner');
+                    window.cookieBannerInitialized = true;
+                }
             }
             
-            // Inicialización inmediata
-            autoInitCookieBanner();
+            // Múltiples estrategias de inicialización
+            console.log('CookieBanner: Estado del documento:', document.readyState);
             
-            // Múltiples intentos para asegurar compatibilidad
-            document.addEventListener('DOMContentLoaded', autoInitCookieBanner);
-            window.addEventListener('load', autoInitCookieBanner);
-            setTimeout(autoInitCookieBanner, 100);
-            setTimeout(autoInitCookieBanner, 500);
-            setTimeout(autoInitCookieBanner, 1000);
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', forceInitCookieBanner);
+            } else {
+                forceInitCookieBanner();
+            }
+            
+            // Intentos adicionales para Elementor
+            window.addEventListener('load', forceInitCookieBanner);
+            document.addEventListener('elementor/frontend/init', forceInitCookieBanner);
+            
+            // Timeouts escalonados
+            setTimeout(forceInitCookieBanner, 100);
+            setTimeout(forceInitCookieBanner, 500);
+            setTimeout(forceInitCookieBanner, 1000);
+            setTimeout(forceInitCookieBanner, 2000);
+            setTimeout(forceInitCookieBanner, 5000);
+            
+            // Observer para detectar cambios en el DOM (para Elementor)
+            if (window.MutationObserver) {
+                const observer = new MutationObserver(function(mutations) {
+                    mutations.forEach(function(mutation) {
+                        if (mutation.type === 'childList' && mutation.addedNodes.length > 0) {
+                            setTimeout(forceInitCookieBanner, 100);
+                        }
+                    });
+                });
+                
+                observer.observe(document.documentElement, {
+                    childList: true,
+                    subtree: true
+                });
+                
+                setTimeout(() => observer.disconnect(), 10000); // Desconectar después de 10s
+            }
         })();
         </script>
         <?php
