@@ -434,6 +434,56 @@ class CookieBanner {
         this.attachEventListeners();
     }
     
+    attachEventListeners() {
+        const container = document.getElementById('cookie-banner-container');
+        if (!container) return;
+        
+        // Botones principales
+        const acceptAllBtn = container.querySelector('.cookie-banner-accept-all');
+        const rejectAllBtn = container.querySelector('.cookie-banner-reject-all');
+        const customizeBtn = container.querySelector('.cookie-banner-customize');
+        const closeBtn = container.querySelector('.cookie-banner-close');
+        const saveBtn = container.querySelector('.cookie-banner-save');
+        
+        if (acceptAllBtn) {
+            acceptAllBtn.addEventListener('click', () => this.acceptAll());
+        }
+        
+        if (rejectAllBtn) {
+            rejectAllBtn.addEventListener('click', () => this.acceptNecessary());
+        }
+        
+        if (customizeBtn) {
+            customizeBtn.addEventListener('click', () => this.showSettingsPanel());
+        }
+        
+        if (closeBtn) {
+            closeBtn.addEventListener('click', () => this.hideSettingsPanel());
+        }
+        
+        if (saveBtn) {
+            saveBtn.addEventListener('click', () => this.saveCustomSettings());
+        }
+        
+        // Tabs
+        const tabButtons = container.querySelectorAll('.cookie-banner-tab-trigger');
+        tabButtons.forEach(button => {
+            button.addEventListener('click', (e) => {
+                const tab = e.target.getAttribute('data-tab');
+                if (tab) this.setActiveTab(tab);
+            });
+        });
+        
+        // Toggles de categorías
+        const toggles = container.querySelectorAll('.cookie-banner-toggle');
+        toggles.forEach(toggle => {
+            toggle.addEventListener('click', (e) => {
+                const category = e.target.getAttribute('data-category');
+                if (category) this.toggleConsent(category);
+            });
+        });
+    }
+    
     renderMain() {
         return `
             <div>
@@ -454,16 +504,16 @@ class CookieBanner {
                 <div class="cookie-banner-separator"></div>
                 
                 <div class="cookie-banner-actions">
-                    <button class="cookie-banner-btn cookie-banner-btn-outline" onclick="cookieBanner.showSettingsPanel()">
+                    <button class="cookie-banner-btn cookie-banner-btn-outline cookie-banner-customize">
                         ${this.createIcon('settings')}
                         ${this.translations.customize || 'Personalizar'}
                     </button>
                     
                     <div class="cookie-banner-actions-right">
-                        <button class="cookie-banner-btn cookie-banner-btn-ghost" onclick="cookieBanner.acceptNecessary()">
+                        <button class="cookie-banner-btn cookie-banner-btn-ghost cookie-banner-reject-all">
                             ${this.translations.rejectAll || 'Rechazar todas'}
                         </button>
-                        <button class="cookie-banner-btn cookie-banner-btn-primary" onclick="cookieBanner.acceptAll()">
+                        <button class="cookie-banner-btn cookie-banner-btn-primary cookie-banner-accept-all">
                             ${this.translations.acceptAll || 'Aceptar todas'}
                         </button>
                     </div>
@@ -479,20 +529,20 @@ class CookieBanner {
                     <h3 class="cookie-banner-settings-title">
                         ${this.translations.settings || 'Configuración de Cookies'}
                     </h3>
-                    <button class="cookie-banner-btn cookie-banner-btn-ghost cookie-banner-btn-icon" onclick="cookieBanner.hideSettingsPanel()">
+                    <button class="cookie-banner-btn cookie-banner-btn-ghost cookie-banner-btn-icon cookie-banner-close">
                         ${this.createIcon('x')}
                     </button>
                 </div>
                 
                 <div class="cookie-banner-tabs">
                     <div class="cookie-banner-tabs-list">
-                        <button class="cookie-banner-tab-trigger ${this.currentTab === 'consentimiento' ? 'active' : ''}" onclick="cookieBanner.setActiveTab('consentimiento')">
+                        <button class="cookie-banner-tab-trigger ${this.currentTab === 'consentimiento' ? 'active' : ''}" data-tab="consentimiento">
                             ${this.translations.consentTab || 'Consentimiento'}
                         </button>
-                        <button class="cookie-banner-tab-trigger ${this.currentTab === 'detalles' ? 'active' : ''}" onclick="cookieBanner.setActiveTab('detalles')">
+                        <button class="cookie-banner-tab-trigger ${this.currentTab === 'detalles' ? 'active' : ''}" data-tab="detalles">
                             ${this.translations.detailsTab || 'Detalles'}
                         </button>
-                        <button class="cookie-banner-tab-trigger ${this.currentTab === 'acerca' ? 'active' : ''}" onclick="cookieBanner.setActiveTab('acerca')">
+                        <button class="cookie-banner-tab-trigger ${this.currentTab === 'acerca' ? 'active' : ''}" data-tab="acerca">
                             ${this.translations.aboutTab || 'Acerca de las cookies'}
                         </button>
                     </div>
@@ -534,15 +584,15 @@ class CookieBanner {
                 <div class="cookie-banner-separator"></div>
                 
                 <div class="cookie-banner-actions">
-                    <button class="cookie-banner-btn cookie-banner-btn-outline" onclick="cookieBanner.acceptNecessary()">
+                    <button class="cookie-banner-btn cookie-banner-btn-outline cookie-banner-reject-all">
                         ${this.translations.rejectAll || 'Rechazar todas'}
                     </button>
                     
                     <div class="cookie-banner-actions-right">
-                        <button class="cookie-banner-btn cookie-banner-btn-ghost" onclick="cookieBanner.acceptAll()">
+                        <button class="cookie-banner-btn cookie-banner-btn-ghost cookie-banner-accept-all">
                             ${this.translations.acceptAll || 'Aceptar todas'}
                         </button>
-                        <button class="cookie-banner-btn cookie-banner-btn-primary" onclick="cookieBanner.saveCustomSettings()">
+                        <button class="cookie-banner-btn cookie-banner-btn-primary cookie-banner-save">
                             ${this.translations.allowSelection || 'Permitir selección'}
                         </button>
                     </div>
@@ -564,15 +614,15 @@ class CookieBanner {
                 <div class="cookie-banner-separator"></div>
                 
                 <div class="cookie-banner-actions">
-                    <button class="cookie-banner-btn cookie-banner-btn-outline" onclick="cookieBanner.acceptNecessary()">
+                    <button class="cookie-banner-btn cookie-banner-btn-outline cookie-banner-reject-all">
                         ${this.translations.rejectAll || 'Rechazar todas'}
                     </button>
                     
                     <div class="cookie-banner-actions-right">
-                        <button class="cookie-banner-btn cookie-banner-btn-ghost" onclick="cookieBanner.acceptAll()">
+                        <button class="cookie-banner-btn cookie-banner-btn-ghost cookie-banner-accept-all">
                             ${this.translations.acceptAll || 'Aceptar todas'}
                         </button>
-                        <button class="cookie-banner-btn cookie-banner-btn-primary" onclick="cookieBanner.saveCustomSettings()">
+                        <button class="cookie-banner-btn cookie-banner-btn-primary cookie-banner-save">
                             ${this.translations.allowSelection || 'Permitir selección'}
                         </button>
                     </div>
@@ -612,11 +662,11 @@ class CookieBanner {
                 <div class="cookie-banner-separator"></div>
                 
                 <div class="cookie-banner-actions">
-                    <button class="cookie-banner-btn cookie-banner-btn-outline" onclick="cookieBanner.acceptNecessary()">
+                    <button class="cookie-banner-btn cookie-banner-btn-outline cookie-banner-reject-all">
                         ${this.translations.rejectAll || 'Rechazar'}
                     </button>
                     
-                    <button class="cookie-banner-btn cookie-banner-btn-primary" onclick="cookieBanner.acceptAll()">
+                    <button class="cookie-banner-btn cookie-banner-btn-primary cookie-banner-accept-all">
                         ${this.translations.acceptAll || 'Aceptar'}
                     </button>
                 </div>
@@ -637,16 +687,11 @@ class CookieBanner {
                         <p>${description}</p>
                     </div>
                 </div>
-                <button class="cookie-switch ${checked ? 'checked' : ''}" ${disabled ? 'disabled' : ''} onclick="cookieBanner.toggleConsent('${type}')">
+                <button class="cookie-switch ${checked ? 'checked' : ''} cookie-banner-toggle" ${disabled ? 'disabled' : ''} data-category="${type}">
                     <div class="cookie-switch-thumb"></div>
                 </button>
             </div>
         `;
-    }
-    
-    attachEventListeners() {
-        // Los event listeners se manejan a través de onclick en el HTML para simplicidad
-        // En una implementación más robusta, se podrían usar addEventListener
     }
 }
 
