@@ -198,16 +198,16 @@ const CookieBanner: React.FC<CookieBannerProps> = ({ onConsentUpdate, forceShow 
   // Show banner if forceShow is true OR if showBanner state is true
   if (!forceShow && !showBanner) {
     return showMiniBanner ? (
-      // Mini floating cookie button
-      <div className="fixed bottom-4 left-4 z-50">
-        <Button
+      // Mini floating cookie icon - simple and fixed positioning
+      <div className="fixed bottom-6 left-6 z-[9999]">
+        <button
           onClick={reopenBanner}
-          size="icon"
-          className="w-12 h-12 rounded-full bg-primary shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-105"
+          className="w-14 h-14 bg-primary hover:bg-primary/90 text-primary-foreground rounded-full shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-105 flex items-center justify-center border-2 border-white/20"
           title="Gestionar cookies"
+          aria-label="Abrir configuración de cookies"
         >
-          <Cookie className="w-6 h-6" />
-        </Button>
+          <Cookie className="w-7 h-7" />
+        </button>
       </div>
     ) : null;
   }

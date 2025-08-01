@@ -310,9 +310,9 @@ class CookieBanner {
         // Desbloquear scripts según el consentimiento dado
         this.unblockScripts();
         
-        // Mostrar el banner minimizado después de dar consentimiento
+        // Mostrar el mini banner después de dar consentimiento
         setTimeout(() => {
-            this.showMinimizedBanner();
+            this.showMiniBanner();
         }, 1000);
         
         this.render();
@@ -685,25 +685,73 @@ class CookieBanner {
                     <div class="cookie-switch-thumb"></div>
                 </button>
             </div>
+    }
+    
+    createMiniBanner() {
+        if (this.miniBanner) return;
+        
+        this.miniBanner = document.createElement('div');
+        this.miniBanner.className = 'cookie-banner-minimized';
+        this.miniBanner.innerHTML = `
+            <div class="cookie-banner-minimized-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 2a10 10 0 1 0 10 10 4 4 0 0 1-5-5 4 4 0 0 1-5-5"/>
+                    <path d="M8.5 8.5v.01"/>
+                    <path d="M16 15.5v.01"/>
+                    <path d="M12 12v.01"/>
+                    <path d="M11 17v.01"/>
+                    <path d="M7 14v.01"/>
+                </svg>
+            </div>
         `;
+        this.miniBanner.title = 'Gestionar cookies';
+        this.miniBanner.setAttribute('aria-label', 'Abrir configuración de cookies');
+        this.miniBanner.addEventListener('click', () => this.reopenBanner());
+        
+        document.body.appendChild(this.miniBanner);
+    }
+    
+    showMiniBanner() {
+        if (!this.miniBanner) {
+            this.createMiniBanner();
+        }
+        this.miniBanner.style.display = 'flex';
+    }
+    
+    hideMiniBanner() {
+        if (this.miniBanner) {
+            this.miniBanner.style.display = 'none';
+        }
+    }
+    
+    reopenBanner() {
+        this.showBanner = true;
+        this.hideMiniBanner();
+        this.render();
     }
 }
 
 // Inicialización robusta para compatibilidad con todos los builders
-let cookieBanner;
+// Variables globales para evitar múltiples inicializaciones
+let cookieBanner = null;
+let initializationAttempted = false;
 
 function initializeCookieBanner() {
-    if (cookieBanner) {
-        console.log('CookieBanner: Ya inicializado, saltando instancia múltiple...');
-        return; // Evitar inicialización múltiple
+    // Protección absoluta contra múltiples inicializaciones
+    if (initializationAttempted) {
+        console.log('CookieBanner: Inicialización ya intentada, saltando...');
+        return;
     }
-    console.log('CookieBanner: Inicializando instancia principal...');
+    
+    initializationAttempted = true;
+    console.log('CookieBanner: Inicializando una sola vez...');
+    
     cookieBanner = new CookieBanner();
 }
 
 // Una sola inicialización controlada
 if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initializeCookieBanner);
+    document.addEventListener('DOMContentLoaded', initializeCookieBanner, { once: true });
 } else {
     initializeCookieBanner();
 }
