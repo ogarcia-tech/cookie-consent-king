@@ -57,14 +57,14 @@ class CookieBannerPlugin {
     public function enqueue_scripts() {
         wp_enqueue_style(
             'cookie-banner-style',
-            COOKIE_BANNER_PLUGIN_URL . 'assets/css/cookie-banner.css',
+            COOKIE_BANNER_PLUGIN_URL . 'assets/css/cookie-banner-optimized.css',
             array(),
             COOKIE_BANNER_VERSION
         );
         
         wp_enqueue_script(
             'cookie-banner-script',
-            COOKIE_BANNER_PLUGIN_URL . 'assets/js/cookie-banner.js',
+            COOKIE_BANNER_PLUGIN_URL . 'assets/js/cookie-banner-unified.js',
             array(),
             COOKIE_BANNER_VERSION,
             true
@@ -114,88 +114,8 @@ class CookieBannerPlugin {
      */
     public function inject_early_script() {
         ?>
-        <script>
-        // Script de bloqueo temprano - ejecuta antes que cualquier otro script
-        (function() {
-            // Verificar si ya tenemos consentimiento
-            const savedConsent = localStorage.getItem('cookieConsent');
-            let hasAnalyticsConsent = false;
-            let hasMarketingConsent = false;
-            
-            if (savedConsent) {
-                try {
-                    const consent = JSON.parse(savedConsent);
-                    hasAnalyticsConsent = consent.analytics === true;
-                    hasMarketingConsent = consent.marketing === true;
-                } catch (e) {
-                    console.log('Error parsing consent:', e);
-                }
-            }
-            
-            // Si no hay consentimiento, bloquear scripts
-            if (!hasAnalyticsConsent && !hasMarketingConsent) {
-                console.log('CookieBanner: Bloqueando scripts de terceros...');
-                
-                // Lista de dominios a bloquear
-                const blockedDomains = [
-                    'googletagmanager.com',
-                    'google-analytics.com',
-                    'facebook.net',
-                    'doubleclick.net',
-                    'googlesyndication.com',
-                    'youtube.com',
-                    'twitter.com',
-                    'linkedin.com',
-                    'instagram.com',
-                    'tiktok.com',
-                    'pinterest.com',
-                    'hotjar.com',
-                    'clarity.ms',
-                    'mixpanel.com',
-                    'intercom.io',
-                    'zendesk.com',
-                    'drift.com',
-                    'hubspot.com'
-                ];
-                
-                // Interceptar createElement
-                const originalCreateElement = document.createElement;
-                document.createElement = function(tagName) {
-                    const element = originalCreateElement.call(document, tagName);
-                    
-                    if (tagName.toLowerCase() === 'script') {
-                        const originalSetAttribute = element.setAttribute;
-                        element.setAttribute = function(name, value) {
-                            if (name === 'src') {
-                                const shouldBlock = blockedDomains.some(domain => value.includes(domain));
-                                if (shouldBlock) {
-                                    console.log('CookieBanner: Bloqueando script:', value);
-                                    element.setAttribute('data-blocked-src', value);
-                                    element.setAttribute('data-cookie-consent', 'required');
-                                    return;
-                                }
-                            }
-                            originalSetAttribute.call(this, name, value);
-                        };
-                    }
-                    
-                    return element;
-                };
-                
-                // Inyectar contenedor del banner inmediatamente
-                document.addEventListener('DOMContentLoaded', function() {
-                    if (!document.getElementById('cookie-banner-container')) {
-                        const container = document.createElement('div');
-                        container.id = 'cookie-banner-container';
-                        document.body.appendChild(container);
-                    }
-                });
-            }
-        })();
-        </script>
-        
-        <!-- Inyectar CSS del banner temprano -->
-        <link rel="stylesheet" href="<?php echo COOKIE_BANNER_PLUGIN_URL; ?>assets/css/cookie-banner.css" />
+        <!-- CSS optimizado del banner -->
+        <link rel="stylesheet" href="<?php echo COOKIE_BANNER_PLUGIN_URL; ?>assets/css/cookie-banner-optimized.css" />
         <?php
     }
     
@@ -206,39 +126,6 @@ class CookieBannerPlugin {
         ?>
         <!-- Contenedor principal del banner -->
         <div id="cookie-banner-container"></div>
-        
-        <!-- Script de inicialización ultra robusta para Elementor -->
-        <script>
-        (function() {
-            if (window.cookieBannerInitialized) return;
-            
-            function initBanner() {
-                if (window.cookieBannerInitialized) return;
-                
-                const savedConsent = localStorage.getItem('cookieConsent');
-                if (savedConsent) {
-                    window.cookieBannerInitialized = true;
-                    return;
-                }
-                
-                if (typeof CookieBanner === 'undefined') {
-                    setTimeout(initBanner, 200);
-                    return;
-                }
-                
-                if (!window.cookieBannerInstance) {
-                    window.cookieBannerInstance = new CookieBanner();
-                    window.cookieBannerInitialized = true;
-                }
-            }
-            
-            if (document.readyState === 'loading') {
-                document.addEventListener('DOMContentLoaded', initBanner);
-            } else {
-                initBanner();
-            }
-        })();
-        </script>
         <?php
     }
     
@@ -300,21 +187,14 @@ class CookieBannerPlugin {
     public function add_manual_trigger() {
         ?>
         <script>
-            function showCookieBanner() {
-                if (typeof cookieBanner !== 'undefined') {
-                    cookieBanner.showBanner = true;
-                    cookieBanner.render();
-                }
-            }
+            // Funciones globales para compatibilidad
+            window.showCookieBanner = function() {
+                CookieBanner.showBanner();
+            };
             
-            function resetCookieConsent() {
-                localStorage.removeItem('cookieConsent');
-                localStorage.removeItem('cookieConsentDate');
-                if (typeof cookieBanner !== 'undefined') {
-                    cookieBanner.showBanner = true;
-                    cookieBanner.render();
-                }
-            }
+            window.resetCookieConsent = function() {
+                CookieBanner.resetConsent();
+            };
         </script>
         <?php
     }
