@@ -6,6 +6,7 @@ import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Label } from '@/components/ui/label';
 import { Cookie, Settings, Shield, BarChart3, Target, X } from 'lucide-react';
 
 interface ConsentSettings {
@@ -362,14 +363,21 @@ const CookieBanner: React.FC<CookieBannerProps> = ({ onConsentUpdate, forceShow 
                       <div className="flex items-start gap-3 flex-1">
                         <Shield className="w-5 h-5 text-success mt-0.5" />
                           <div className="space-y-1">
-                            <h4 className="font-medium text-sm">Necesario</h4>
+                            <Label htmlFor="necessary-cookies" className="font-medium text-sm cursor-pointer">
+                              Necesario
+                            </Label>
                           <p className="text-xs text-muted-foreground">
                             Las cookies necesarias ayudan a hacer una página web utilizable activando funciones básicas como la navegación en 
                             la página y el acceso a áreas seguras de la página web. La página web no puede funcionar adecuadamente sin estas cookies.
                           </p>
                         </div>
                       </div>
-                      <Switch id="necessary-cookies" checked={true} disabled />
+                      <Switch 
+                        id="necessary-cookies" 
+                        checked={true} 
+                        disabled 
+                        aria-describedby="necessary-cookies-description"
+                      />
                     </div>
 
                     {/* Preferences Cookies */}
@@ -377,8 +385,10 @@ const CookieBanner: React.FC<CookieBannerProps> = ({ onConsentUpdate, forceShow 
                       <div className="flex items-start gap-3 flex-1">
                         <Settings className="w-5 h-5 text-muted-foreground mt-0.5" />
                           <div className="space-y-1">
-                            <h4 className="font-medium text-sm">Preferencias</h4>
-                          <p className="text-xs text-muted-foreground">
+                            <Label htmlFor="preferences-cookies" className="font-medium text-sm cursor-pointer">
+                              Preferencias
+                            </Label>
+                          <p id="preferences-cookies-description" className="text-xs text-muted-foreground">
                             Las cookies de preferencias permiten a la página web recordar información que cambia la forma en que la página se 
                             comporta o el aspecto que tiene, como su idioma preferido o la región en la que usted se encuentra.
                           </p>
@@ -388,6 +398,7 @@ const CookieBanner: React.FC<CookieBannerProps> = ({ onConsentUpdate, forceShow 
                         id="preferences-cookies"
                         checked={consent.preferences}
                         onCheckedChange={() => toggleConsent('preferences')}
+                        aria-describedby="preferences-cookies-description"
                       />
                     </div>
 
@@ -396,8 +407,10 @@ const CookieBanner: React.FC<CookieBannerProps> = ({ onConsentUpdate, forceShow 
                       <div className="flex items-start gap-3 flex-1">
                         <BarChart3 className="w-5 h-5 text-primary mt-0.5" />
                           <div className="space-y-1">
-                            <h4 className="font-medium text-sm">Estadística</h4>
-                          <p className="text-xs text-muted-foreground">
+                            <Label htmlFor="analytics-cookies" className="font-medium text-sm cursor-pointer">
+                              Estadística
+                            </Label>
+                          <p id="analytics-cookies-description" className="text-xs text-muted-foreground">
                             Las cookies estadísticas ayudan a los propietarios de páginas web a comprender cómo interactúan los visitantes con las páginas web reuniendo y proporcionando información de forma anónima.
                           </p>
                         </div>
@@ -406,6 +419,7 @@ const CookieBanner: React.FC<CookieBannerProps> = ({ onConsentUpdate, forceShow 
                         id="analytics-cookies"
                         checked={consent.analytics}
                         onCheckedChange={() => toggleConsent('analytics')}
+                        aria-describedby="analytics-cookies-description"
                       />
                     </div>
 
@@ -414,8 +428,10 @@ const CookieBanner: React.FC<CookieBannerProps> = ({ onConsentUpdate, forceShow 
                       <div className="flex items-start gap-3 flex-1">
                         <Target className="w-5 h-5 text-warning mt-0.5" />
                           <div className="space-y-1">
-                            <h4 className="font-medium text-sm">Marketing</h4>
-                          <p className="text-xs text-muted-foreground">
+                            <Label htmlFor="marketing-cookies" className="font-medium text-sm cursor-pointer">
+                              Marketing
+                            </Label>
+                          <p id="marketing-cookies-description" className="text-xs text-muted-foreground">
                             Las cookies de marketing se utilizan para rastrear a los visitantes en las páginas web. La intención es mostrar anuncios relevantes y atractivos para el usuario individual.
                           </p>
                         </div>
@@ -424,6 +440,7 @@ const CookieBanner: React.FC<CookieBannerProps> = ({ onConsentUpdate, forceShow 
                         id="marketing-cookies"
                         checked={consent.marketing}
                         onCheckedChange={() => toggleConsent('marketing')}
+                        aria-describedby="marketing-cookies-description"
                       />
                     </div>
                   </div>
