@@ -316,7 +316,43 @@ class CookieBanner {
         // Desbloquear scripts según el consentimiento dado
         this.unblockScripts();
         
+        // Mostrar el banner minimizado después de dar consentimiento
+        setTimeout(() => {
+            this.showMinimizedBanner();
+        }, 1000);
+        
         this.render();
+    }
+    
+    showMinimizedBanner() {
+        const container = document.getElementById('cookie-banner-container');
+        if (!container) return;
+        
+        container.innerHTML = `
+            <div class="cookie-banner-minimized" id="cookie-banner-minimized">
+                <div class="cookie-banner-minimized-content">
+                    <div class="cookie-banner-minimized-icon">
+                        ${this.createIcon('cookie')}
+                    </div>
+                    <span class="cookie-banner-minimized-text">${this.translations.title || 'Cookies'}</span>
+                </div>
+            </div>
+        `;
+        
+        // Añadir eventos de hover y click
+        const minimizedBanner = document.getElementById('cookie-banner-minimized');
+        if (minimizedBanner) {
+            minimizedBanner.addEventListener('mouseenter', () => {
+                this.showBanner = true;
+                this.render();
+            });
+            
+            minimizedBanner.addEventListener('click', () => {
+                this.showBanner = true;
+                this.showSettings = true;
+                this.render();
+            });
+        }
     }
     
     acceptAll() {

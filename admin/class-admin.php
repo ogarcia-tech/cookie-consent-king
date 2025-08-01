@@ -159,7 +159,7 @@ class CookieBannerAdmin {
         $settings = get_option('cookie_banner_settings');
         $value = isset($settings['cookie_policy_url']) ? $settings['cookie_policy_url'] : '';
         ?>
-        <input type="url" name="cookie_banner_settings[cookie_policy_url]" value="<?php echo esc_attr($value); ?>" class="regular-text" />
+        <input type="url" id="cookie_policy_url" name="cookie_banner_settings[cookie_policy_url]" value="<?php echo esc_attr($value); ?>" class="regular-text" />
         <p class="description"><?php _e('URL a tu página de Política de Cookies. Aparecerá en la pestaña "Consentimiento".', 'cookie-banner'); ?></p>
         <?php
     }
@@ -171,7 +171,7 @@ class CookieBannerAdmin {
         $settings = get_option('cookie_banner_settings');
         $value = isset($settings['about_cookies_url']) ? $settings['about_cookies_url'] : '';
         ?>
-        <input type="url" name="cookie_banner_settings[about_cookies_url]" value="<?php echo esc_attr($value); ?>" class="regular-text" />
+        <input type="url" id="about_cookies_url" name="cookie_banner_settings[about_cookies_url]" value="<?php echo esc_attr($value); ?>" class="regular-text" />
         <p class="description"><?php _e('URL con información detallada sobre cookies. Aparecerá en la pestaña "Acerca de las cookies".', 'cookie-banner'); ?></p>
         <?php
     }

@@ -8,6 +8,7 @@
     const CookieBannerAdmin = {
         
         init: function() {
+            console.log('CookieBannerAdmin initialized');
             this.bindEvents();
             this.loadStats();
             this.initColorPickers();
@@ -249,9 +250,23 @@
         }
     };
     
+    // Variable para evitar inicialización múltiple
+    let adminInitialized = false;
+    
+    function initializeAdmin() {
+        if (adminInitialized) return;
+        adminInitialized = true;
+        console.log('Initializing CookieBannerAdmin...');
+        CookieBannerAdmin.init();
+    }
+    
     // Inicializar cuando el DOM esté listo
     $(document).ready(function() {
-        CookieBannerAdmin.init();
+        console.log('jQuery ready, page:', window.location.href);
+        if (window.location.href.includes('cookie-banner-settings')) {
+            console.log('On cookie banner settings page');
+            initializeAdmin();
+        }
     });
     
 })(jQuery);
