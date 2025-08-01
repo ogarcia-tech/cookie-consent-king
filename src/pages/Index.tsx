@@ -5,13 +5,14 @@ import { Badge } from '@/components/ui/badge';
 import CookieBanner from '@/components/CookieBanner';
 import ConsentModeScript from '@/components/ConsentModeScript';
 import { useConsentMode } from '@/hooks/useConsentMode';
+import type { ConsentSettings } from '@/utils/cookieManager';
 import { Cookie, Shield, CheckCircle, Settings } from 'lucide-react';
 
 const Index = () => {
   const { consent, isConsentGiven, resetConsent, getConsentDate } = useConsentMode();
   const [showDemo, setShowDemo] = useState(false);
 
-  const handleConsentUpdate = (newConsent: any) => {
+  const handleConsentUpdate = (newConsent: ConsentSettings) => {
     console.log('Consent updated:', newConsent);
     setShowDemo(false); // Cerrar el banner demo cuando se actualice el consentimiento
     // Aquí puedes agregar lógica adicional cuando se actualice el consentimiento

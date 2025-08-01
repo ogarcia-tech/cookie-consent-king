@@ -7,10 +7,25 @@ interface ConsentSettings {
   preferences: boolean;
 }
 
+interface Gtag {
+  (
+    command: 'consent' | 'config' | 'event',
+    action: string,
+    params?: Record<string, unknown>
+  ): void;
+  (...args: unknown[]): void;
+}
+
+type DataLayerEvent = Record<string, unknown>;
+
+interface DataLayer extends Array<DataLayerEvent> {
+  push: (...args: DataLayerEvent[]) => number;
+}
+
 declare global {
   interface Window {
-    gtag?: (...args: any[]) => void;
-    dataLayer?: any[];
+    gtag?: Gtag;
+    dataLayer?: DataLayer;
   }
 }
 
