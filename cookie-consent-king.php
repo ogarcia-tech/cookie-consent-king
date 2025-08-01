@@ -1,10 +1,10 @@
 <?php
 /**
  * Plugin Name: Cookie Consent King
- * Plugin URI: https://example.com
+ * Plugin URI: https://www.metricaweb.es
  * Description: Provides a React-powered cookie consent banner.
- * Version: 1.0.0
- * Author: Your Name
+ * Version: 2.0
+ * Author: David Adell (Metricaweb) & Oscar Garcia
  * License: GPL2
 
 */
