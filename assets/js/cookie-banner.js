@@ -695,8 +695,43 @@ class CookieBanner {
     }
 }
 
-// Inicializar el banner cuando se carga la página
+// Inicialización robusta para compatibilidad con todos los builders
 let cookieBanner;
-document.addEventListener('DOMContentLoaded', function() {
+
+function initializeCookieBanner() {
+    if (cookieBanner) return; // Evitar inicialización múltiple
+    console.log('CookieBanner: Inicializando instancia principal...');
     cookieBanner = new CookieBanner();
-});
+}
+
+// Múltiples puntos de inicialización para máxima compatibilidad
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initializeCookieBanner);
+} else {
+    initializeCookieBanner();
+}
+
+// Backup para diferentes estados de carga
+window.addEventListener('load', initializeCookieBanner);
+setTimeout(initializeCookieBanner, 100);
+setTimeout(initializeCookieBanner, 500);
+setTimeout(initializeCookieBanner, 2000);
+
+// Funciones globales para control manual
+window.showCookieBanner = function() {
+    if (cookieBanner) {
+        localStorage.removeItem('cookieConsent');
+        cookieBanner.showBanner = true;
+        cookieBanner.render();
+    } else {
+        setTimeout(() => window.showCookieBanner(), 100);
+    }
+};
+
+window.resetCookieConsent = function() {
+    localStorage.removeItem('cookieConsent');
+    if (cookieBanner) {
+        cookieBanner.showBanner = true;
+        cookieBanner.render();
+    }
+};
