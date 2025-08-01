@@ -8,6 +8,7 @@ import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Label } from '@/components/ui/label';
 import { Cookie, Settings, Shield, BarChart3, Target, X } from 'lucide-react';
+import { t } from '@/utils/i18n';
 
 interface ConsentSettings {
   necessary: boolean;
@@ -234,8 +235,8 @@ const CookieBanner: React.FC<CookieBannerProps> = ({ onConsentUpdate, forceShow 
         <button
           onClick={reopenBanner}
           className="w-14 h-14 bg-primary hover:bg-primary/90 text-primary-foreground rounded-full shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-105 flex items-center justify-center border-2 border-white/20"
-          title="Gestionar cookies"
-          aria-label="Abrir configuración de cookies"
+          title={t('Gestionar cookies')}
+          aria-label={t('Abrir configuración de cookies')}
         >
           <Cookie className="w-7 h-7" />
         </button>
@@ -257,13 +258,10 @@ const CookieBanner: React.FC<CookieBannerProps> = ({ onConsentUpdate, forceShow 
                 <div className="flex-1 space-y-3">
                   <div>
                     <h3 className="text-lg font-semibold text-foreground mb-2">
-                      Gestión de Cookies
+                      {t('Gestión de Cookies')}
                     </h3>
                     <p className="text-sm text-muted-foreground leading-relaxed">
-                      Utilizamos cookies para mejorar tu experiencia de navegación, 
-                      personalizar contenido y anuncios, proporcionar funciones de redes sociales 
-                      y analizar nuestro tráfico. También compartimos información sobre tu uso 
-                      de nuestro sitio con nuestros socios de análisis y publicidad.
+                      {t('Utilizamos cookies para mejorar tu experiencia de navegación, personalizar contenido y anuncios, proporcionar funciones de redes sociales y analizar nuestro tráfico. También compartimos información sobre tu uso de nuestro sitio con nuestros socios de análisis y publicidad.')}
                     </p>
                   </div>
                 </div>
@@ -279,7 +277,7 @@ const CookieBanner: React.FC<CookieBannerProps> = ({ onConsentUpdate, forceShow 
                   className="flex items-center gap-2"
                 >
                   <Settings className="w-4 h-4" />
-                  Personalizar
+                  {t('Personalizar')}
                 </Button>
                 
                 <div className="flex gap-2">
@@ -288,7 +286,7 @@ const CookieBanner: React.FC<CookieBannerProps> = ({ onConsentUpdate, forceShow 
                     size="sm"
                     onClick={acceptNecessary}
                   >
-                    Rechazar todas
+                    {t('Rechazar todas')}
                   </Button>
                   {!isAllAccepted() && (
                     <Button
@@ -296,7 +294,7 @@ const CookieBanner: React.FC<CookieBannerProps> = ({ onConsentUpdate, forceShow 
                       size="sm"
                       onClick={acceptAll}
                     >
-                      Aceptar todas
+                      {t('Aceptar todas')}
                     </Button>
                   )}
                 </div>
@@ -307,7 +305,7 @@ const CookieBanner: React.FC<CookieBannerProps> = ({ onConsentUpdate, forceShow 
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <h3 className="text-lg font-semibold text-foreground">
-                  Configuración de Cookies
+                  {t('Configuración de Cookies')}
                 </h3>
                 <Button
                   variant="ghost"
@@ -320,32 +318,29 @@ const CookieBanner: React.FC<CookieBannerProps> = ({ onConsentUpdate, forceShow 
 
               <Tabs defaultValue="detalles" className="w-full">
                 <TabsList className="grid w-full grid-cols-3">
-                  <TabsTrigger value="consentimiento">Consentimiento</TabsTrigger>
-                  <TabsTrigger value="detalles">Detalles</TabsTrigger>
-                  <TabsTrigger value="acerca">Acerca de las cookies</TabsTrigger>
+                  <TabsTrigger value="consentimiento">{t('Consentimiento')}</TabsTrigger>
+                  <TabsTrigger value="detalles">{t('Detalles')}</TabsTrigger>
+                  <TabsTrigger value="acerca">{t('Acerca de las cookies')}</TabsTrigger>
                 </TabsList>
 
                 {/* Tab Content: Consentimiento */}
                 <TabsContent value="consentimiento" className="space-y-4 mt-4">
                   <div className="space-y-3">
                     <p className="text-sm text-muted-foreground">
-                      Utilizamos cookies propias y de terceros con el fin de analizar y comprender el uso que haces de nuestro sitio web para 
-                      hacerlo más intuitivo y para mostrarte publicidad personalizada con base en un perfil elaborado a partir las páginas 
-                      webs que visitas y los productos y servicios por los que te interesas.
+                      {t('Utilizamos cookies propias y de terceros con el fin de analizar y comprender el uso que haces de nuestro sitio web para hacerlo más intuitivo y para mostrarte publicidad personalizada con base en un perfil elaborado a partir las páginas webs que visitas y los productos y servicios por los que te interesas.')}
                     </p>
                     <p className="text-sm text-muted-foreground">
-                      Puedes aceptar todas las cookies pulsando el botón "Aceptar", rechazar todas las cookies pulsando sobre el botón "Rechazar" o 
-                      configurarlas su uso pulsando el botón "Configuración de cookies". 
+                      {t('Puedes aceptar todas las cookies pulsando el botón "Aceptar", rechazar todas las cookies pulsando sobre el botón "Rechazar" o configurarlas su uso pulsando el botón "Configuración de cookies".')}
                       {cookiePolicyUrl && (
                         <>
-                          Si deseas más información pulsa en{' '}
-                          <a 
-                            href={cookiePolicyUrl} 
-                            target="_blank" 
+                          {t('Si deseas más información pulsa en')}{' '}
+                          <a
+                            href={cookiePolicyUrl}
+                            target="_blank"
                             rel="noopener noreferrer"
                             className="text-primary hover:underline font-medium"
                           >
-                            Política de Cookies
+                            {t('Política de Cookies')}
                           </a>
                           .
                         </>
@@ -361,7 +356,7 @@ const CookieBanner: React.FC<CookieBannerProps> = ({ onConsentUpdate, forceShow 
                       size="sm"
                       onClick={acceptNecessary}
                     >
-                      Rechazar todas
+                      {t('Rechazar todas')}
                     </Button>
                     
                     <div className="flex gap-2">
@@ -371,7 +366,7 @@ const CookieBanner: React.FC<CookieBannerProps> = ({ onConsentUpdate, forceShow 
                           size="sm"
                           onClick={acceptAll}
                         >
-                          Aceptar todas
+                          {t('Aceptar todas')}
                         </Button>
                       )}
                       <Button
@@ -379,7 +374,7 @@ const CookieBanner: React.FC<CookieBannerProps> = ({ onConsentUpdate, forceShow 
                         size="sm"
                         onClick={saveCustomSettings}
                       >
-                        Permitir selección
+                        {t('Permitir selección')}
                       </Button>
                     </div>
                   </div>
@@ -393,17 +388,16 @@ const CookieBanner: React.FC<CookieBannerProps> = ({ onConsentUpdate, forceShow 
                       <div className="flex items-start gap-3 flex-1">
                         <Shield className="w-5 h-5 text-success mt-0.5" />
                           <div className="space-y-1">
-                            <h4 className="font-medium text-sm">Necesario</h4>
+                            <h4 className="font-medium text-sm">{t('Necesario')}</h4>
                           <p id="necessary-cookies-description" className="text-xs text-muted-foreground">
-                            Las cookies necesarias ayudan a hacer una página web utilizable activando funciones básicas como la navegación en 
-                            la página y el acceso a áreas seguras de la página web. La página web no puede funcionar adecuadamente sin estas cookies.
+                            {t('Las cookies necesarias ayudan a hacer una página web utilizable activando funciones básicas como la navegación en la página y el acceso a áreas seguras de la página web. La página web no puede funcionar adecuadamente sin estas cookies.')}
                           </p>
                         </div>
                       </div>
                       <Switch 
                         checked={true} 
                         disabled 
-                        aria-label="Cookies necesarias (siempre activadas)"
+                        aria-label={t('Cookies necesarias (siempre activadas)')}
                         aria-describedby="necessary-cookies-description"
                       />
                     </div>
@@ -413,17 +407,16 @@ const CookieBanner: React.FC<CookieBannerProps> = ({ onConsentUpdate, forceShow 
                       <div className="flex items-start gap-3 flex-1">
                         <Settings className="w-5 h-5 text-muted-foreground mt-0.5" />
                           <div className="space-y-1">
-                            <h4 className="font-medium text-sm">Preferencias</h4>
+                            <h4 className="font-medium text-sm">{t('Preferencias')}</h4>
                           <p id="preferences-cookies-description" className="text-xs text-muted-foreground">
-                            Las cookies de preferencias permiten a la página web recordar información que cambia la forma en que la página se 
-                            comporta o el aspecto que tiene, como su idioma preferido o la región en la que usted se encuentra.
+                            {t('Las cookies de preferencias permiten a la página web recordar información que cambia la forma en que la página se comporta o el aspecto que tiene, como su idioma preferido o la región en la que usted se encuentra.')}
                           </p>
                         </div>
                       </div>
                       <Switch
                         checked={consent.preferences}
                         onCheckedChange={() => toggleConsent('preferences')}
-                        aria-label="Cookies de preferencias"
+                        aria-label={t('Cookies de preferencias')}
                         aria-describedby="preferences-cookies-description"
                       />
                     </label>
@@ -433,16 +426,16 @@ const CookieBanner: React.FC<CookieBannerProps> = ({ onConsentUpdate, forceShow 
                       <div className="flex items-start gap-3 flex-1">
                         <BarChart3 className="w-5 h-5 text-primary mt-0.5" />
                           <div className="space-y-1">
-                            <h4 className="font-medium text-sm">Estadística</h4>
+                            <h4 className="font-medium text-sm">{t('Estadística')}</h4>
                           <p id="analytics-cookies-description" className="text-xs text-muted-foreground">
-                            Las cookies estadísticas ayudan a los propietarios de páginas web a comprender cómo interactúan los visitantes con las páginas web reuniendo y proporcionando información de forma anónima.
+                            {t('Las cookies estadísticas ayudan a los propietarios de páginas web a comprender cómo interactúan los visitantes con las páginas web reuniendo y proporcionando información de forma anónima.')}
                           </p>
                         </div>
                       </div>
                       <Switch
                         checked={consent.analytics}
                         onCheckedChange={() => toggleConsent('analytics')}
-                        aria-label="Cookies estadísticas"
+                        aria-label={t('Cookies estadísticas')}
                         aria-describedby="analytics-cookies-description"
                       />
                     </label>
@@ -452,16 +445,16 @@ const CookieBanner: React.FC<CookieBannerProps> = ({ onConsentUpdate, forceShow 
                       <div className="flex items-start gap-3 flex-1">
                         <Target className="w-5 h-5 text-warning mt-0.5" />
                           <div className="space-y-1">
-                            <h4 className="font-medium text-sm">Marketing</h4>
+                            <h4 className="font-medium text-sm">{t('Marketing')}</h4>
                           <p id="marketing-cookies-description" className="text-xs text-muted-foreground">
-                            Las cookies de marketing se utilizan para rastrear a los visitantes en las páginas web. La intención es mostrar anuncios relevantes y atractivos para el usuario individual.
+                            {t('Las cookies de marketing se utilizan para rastrear a los visitantes en las páginas web. La intención es mostrar anuncios relevantes y atractivos para el usuario individual.')}
                           </p>
                         </div>
                       </div>
                       <Switch
                         checked={consent.marketing}
                         onCheckedChange={() => toggleConsent('marketing')}
-                        aria-label="Cookies de marketing"
+                        aria-label={t('Cookies de marketing')}
                         aria-describedby="marketing-cookies-description"
                       />
                     </label>
@@ -475,7 +468,7 @@ const CookieBanner: React.FC<CookieBannerProps> = ({ onConsentUpdate, forceShow 
                       size="sm"
                       onClick={acceptNecessary}
                     >
-                      Rechazar todas
+                      {t('Rechazar todas')}
                     </Button>
                     
                     <div className="flex gap-2">
@@ -485,7 +478,7 @@ const CookieBanner: React.FC<CookieBannerProps> = ({ onConsentUpdate, forceShow 
                           size="sm"
                           onClick={acceptAll}
                         >
-                          Aceptar todas
+                          {t('Aceptar todas')}
                         </Button>
                       )}
                       <Button
@@ -493,7 +486,7 @@ const CookieBanner: React.FC<CookieBannerProps> = ({ onConsentUpdate, forceShow 
                         size="sm"
                         onClick={saveCustomSettings}
                       >
-                        Permitir selección
+                        {t('Permitir selección')}
                       </Button>
                     </div>
                   </div>
@@ -503,35 +496,32 @@ const CookieBanner: React.FC<CookieBannerProps> = ({ onConsentUpdate, forceShow 
                 <TabsContent value="acerca" className="space-y-4 mt-4">
                   <div className="space-y-4 text-sm text-muted-foreground">
                     <p>
-                      Las cookies son pequeños archivos de texto que se almacenan en el dispositivo del usuario cuando visita un sitio web. 
-                      Estas cookies contienen información sobre la navegación del usuario y se utilizan para mejorar la funcionalidad del sitio web, 
-                      personalizar la experiencia del usuario y proporcionar información analítica a los propietarios del sitio.
+                      {t('Las cookies son pequeños archivos de texto que se almacenan en el dispositivo del usuario cuando visita un sitio web. Estas cookies contienen información sobre la navegación del usuario y se utilizan para mejorar la funcionalidad del sitio web, personalizar la experiencia del usuario y proporcionar información analítica a los propietarios del sitio.')}
                     </p>
                     <p>
-                      <strong>Tipos de cookies que utilizamos:</strong>
+                      <strong>{t('Tipos de cookies que utilizamos:')}</strong>
                     </p>
                     <ul className="list-disc pl-5 space-y-1">
-                      <li><strong>Cookies técnicas o necesarias:</strong> Son esenciales para el funcionamiento básico del sitio web y no se pueden desactivar.</li>
-                      <li><strong>Cookies de preferencias:</strong> Permiten recordar las configuraciones y preferencias del usuario para mejorar su experiencia.</li>
-                      <li><strong>Cookies estadísticas:</strong> Recopilan información de forma anónima sobre cómo los usuarios interactúan con el sitio web para mejorar su rendimiento.</li>
-                      <li><strong>Cookies de marketing:</strong> Se utilizan para mostrar publicidad relevante y medir la efectividad de las campañas publicitarias.</li>
+                      <li><strong>{t('Cookies técnicas o necesarias:')}</strong> {t('Son esenciales para el funcionamiento básico del sitio web y no se pueden desactivar.')}</li>
+                      <li><strong>{t('Cookies de preferencias:')}</strong> {t('Permiten recordar las configuraciones y preferencias del usuario para mejorar su experiencia.')}</li>
+                      <li><strong>{t('Cookies estadísticas:')}</strong> {t('Recopilan información de forma anónima sobre cómo los usuarios interactúan con el sitio web para mejorar su rendimiento.')}</li>
+                      <li><strong>{t('Cookies de marketing:')}</strong> {t('Se utilizan para mostrar publicidad relevante y medir la efectividad de las campañas publicitarias.')}</li>
                     </ul>
                     <p>
-                      En cumplimiento del Reglamento General de Protección de Datos (RGPD), solicitamos su consentimiento para el uso de cookies no esenciales. 
-                      Puede gestionar sus preferencias de cookies en cualquier momento accediendo a la configuración de privacidad de nuestro sitio web.
+                      {t('En cumplimiento del Reglamento General de Protección de Datos (RGPD), solicitamos su consentimiento para el uso de cookies no esenciales. Puede gestionar sus preferencias de cookies en cualquier momento accediendo a la configuración de privacidad de nuestro sitio web.')}
                     </p>
                     <p>
-                      Para más información sobre nuestra política de privacidad y el tratamiento de datos personales, consulte nuestra política de privacidad completa.
+                      {t('Para más información sobre nuestra política de privacidad y el tratamiento de datos personales, consulte nuestra política de privacidad completa.')}
                       {aboutCookiesUrl && (
                         <>
-                          {' '}Para información detallada sobre cookies, visite{' '}
-                          <a 
-                            href={aboutCookiesUrl} 
-                            target="_blank" 
+                          {' '}{t('Para información detallada sobre cookies, visite')}{' '}
+                          <a
+                            href={aboutCookiesUrl}
+                            target="_blank"
                             rel="noopener noreferrer"
                             className="text-primary hover:underline font-medium"
                           >
-                            Acerca de las Cookies
+                            {t('Acerca de las Cookies')}
                           </a>
                           .
                         </>
@@ -547,7 +537,7 @@ const CookieBanner: React.FC<CookieBannerProps> = ({ onConsentUpdate, forceShow 
                       size="sm"
                       onClick={acceptNecessary}
                     >
-                      Rechazar
+                      {t('Rechazar')}
                     </Button>
                     
                     <Button
@@ -555,7 +545,7 @@ const CookieBanner: React.FC<CookieBannerProps> = ({ onConsentUpdate, forceShow 
                       size="sm"
                       onClick={acceptAll}
                     >
-                      Aceptar
+                      {t('Aceptar')}
                     </Button>
                   </div>
                 </TabsContent>

@@ -7,6 +7,7 @@ import ConsentModeScript from '@/components/ConsentModeScript';
 import { useConsentMode } from '@/hooks/useConsentMode';
 import type { ConsentSettings } from '@/utils/cookieManager';
 import { Cookie, Shield, CheckCircle, Settings } from 'lucide-react';
+import { t } from '@/utils/i18n';
 
 const Index = () => {
   const { consent, isConsentGiven, resetConsent, getConsentDate } = useConsentMode();
@@ -39,7 +40,7 @@ const Index = () => {
               </h1>
             </div>
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              Banner de cookies moderno con soporte completo para Google Consent Mode v2
+              {t('Banner de cookies moderno con soporte completo para Google Consent Mode v2')}
             </p>
             <div className="flex justify-center gap-2">
               <Badge variant="secondary" className="flex items-center gap-1">
@@ -57,12 +58,12 @@ const Index = () => {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Shield className="w-5 h-5 text-success" />
-                  Cumplimiento GDPR
+                  {t('Cumplimiento GDPR')}
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <CardDescription>
-                  Cumple totalmente con las regulaciones GDPR y otras leyes de privacidad internacionales.
+                  {t('Cumple totalmente con las regulaciones GDPR y otras leyes de privacidad internacionales.')}
                 </CardDescription>
               </CardContent>
             </Card>
@@ -76,7 +77,7 @@ const Index = () => {
               </CardHeader>
               <CardContent>
                 <CardDescription>
-                  Integración nativa con Google Consent Mode v2 para una gestión avanzada de consentimientos.
+                  {t('Integración nativa con Google Consent Mode v2 para una gestión avanzada de consentimientos.')}
                 </CardDescription>
               </CardContent>
             </Card>
@@ -85,12 +86,12 @@ const Index = () => {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <CheckCircle className="w-5 h-5 text-success" />
-                  Fácil Configuración
+                  {t('Fácil Configuración')}
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <CardDescription>
-                  Configuración granular de diferentes tipos de cookies con interfaz intuitiva.
+                  {t('Configuración granular de diferentes tipos de cookies con interfaz intuitiva.')}
                 </CardDescription>
               </CardContent>
             </Card>
@@ -99,9 +100,9 @@ const Index = () => {
           {/* Status Card */}
           <Card className="max-w-2xl mx-auto">
             <CardHeader>
-              <CardTitle>Estado del Consentimiento</CardTitle>
+              <CardTitle>{t('Estado del Consentimiento')}</CardTitle>
               <CardDescription>
-                Información actual sobre las preferencias de cookies
+                {t('Información actual sobre las preferencias de cookies')}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -109,12 +110,12 @@ const Index = () => {
                 <div className="space-y-3">
                   <div className="flex items-center gap-2">
                     <CheckCircle className="w-5 h-5 text-success" />
-                    <span className="font-medium">Consentimiento otorgado</span>
+                    <span className="font-medium">{t('Consentimiento otorgado')}</span>
                   </div>
                   
                   {consentDate && (
                     <p className="text-sm text-muted-foreground">
-                      Fecha: {consentDate.toLocaleDateString('es-ES', {
+                      {t('Fecha:')} {consentDate.toLocaleDateString('es-ES', {
                         year: 'numeric',
                         month: 'long',
                         day: 'numeric',
@@ -126,27 +127,27 @@ const Index = () => {
 
                   <div className="grid grid-cols-2 gap-2 mt-4">
                     <div className="flex justify-between">
-                      <span className="text-sm">Necesarias:</span>
+                      <span className="text-sm">{t('Necesarias:')}</span>
                       <Badge variant={consent?.necessary ? "success" : "destructive"} className="text-xs">
-                        {consent?.necessary ? "Activo" : "Inactivo"}
+                        {consent?.necessary ? t('Activo') : t('Inactivo')}
                       </Badge>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-sm">Análisis:</span>
+                      <span className="text-sm">{t('Análisis:')}</span>
                       <Badge variant={consent?.analytics ? "success" : "destructive"} className="text-xs">
-                        {consent?.analytics ? "Activo" : "Inactivo"}
+                        {consent?.analytics ? t('Activo') : t('Inactivo')}
                       </Badge>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-sm">Marketing:</span>
+                      <span className="text-sm">{t('Marketing:')}</span>
                       <Badge variant={consent?.marketing ? "success" : "destructive"} className="text-xs">
-                        {consent?.marketing ? "Activo" : "Inactivo"}
+                        {consent?.marketing ? t('Activo') : t('Inactivo')}
                       </Badge>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-sm">Preferencias:</span>
+                      <span className="text-sm">{t('Preferencias:')}</span>
                       <Badge variant={consent?.preferences ? "success" : "destructive"} className="text-xs">
-                        {consent?.preferences ? "Activo" : "Inactivo"}
+                        {consent?.preferences ? t('Activo') : t('Inactivo')}
                       </Badge>
                     </div>
                   </div>
@@ -158,7 +159,7 @@ const Index = () => {
                       size="sm"
                       className="flex-1"
                     >
-                      Restablecer Consentimiento
+                      {t('Restablecer Consentimiento')}
                     </Button>
                     <Button 
                       onClick={() => setShowDemo(true)} 
@@ -166,27 +167,27 @@ const Index = () => {
                       size="sm"
                       className="flex-1"
                     >
-                      Mostrar Banner de Cookies
+                      {t('Mostrar Banner de Cookies')}
                     </Button>
                   </div>
                 </div>
               ) : (
                 <div className="text-center space-y-3">
                   <p className="text-muted-foreground">
-                    No se ha otorgado consentimiento aún
+                    {t('No se ha otorgado consentimiento aún')}
                   </p>
                   <div className="flex gap-2 justify-center">
                     <Button 
                       onClick={() => setShowDemo(true)} 
                       variant="cookie"
                     >
-                      Mostrar Banner de Cookies
+                      {t('Mostrar Banner de Cookies')}
                     </Button>
                     <Button 
                       onClick={resetConsent} 
                       variant="outline"
                     >
-                      Limpiar y Probar
+                      {t('Limpiar y Probar')}
                     </Button>
                   </div>
                 </div>
