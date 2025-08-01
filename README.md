@@ -71,3 +71,47 @@ Yes, you can!
 To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
 
 Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+
+## Quick start
+
+```sh
+# Install dependencies and start developing
+npm i
+npm run dev
+
+# Build optimized assets
+npm run build
+```
+
+The build command generates production files in the `dist/` directory. CSS and JavaScript are placed inside `dist/assets/`.
+
+## Enqueuing in WordPress
+
+Use the plugin wrapper (`cookie-banner-plugin.php`) to load the build output:
+
+```php
+function cck_enqueue_assets() {
+    $plugin_url = plugin_dir_url(__FILE__);
+    wp_enqueue_style('cck-style', $plugin_url . 'dist/assets/index.css', [], COOKIE_BANNER_VERSION);
+    wp_enqueue_script('cck-script', $plugin_url . 'dist/assets/index.js', [], COOKIE_BANNER_VERSION, true);
+}
+add_action('wp_enqueue_scripts', 'cck_enqueue_assets');
+```
+
+The wrapper also loads translations via `load_plugin_textdomain()` so WordPress can read the files under `languages/`.
+
+## Translations
+
+Available `.po` files are located in `languages/`:
+
+- `cookie-banner-en_US.po`
+- `cookie-banner-de_DE.po`
+- `cookie-banner-es_ES.po`
+- `cookie-banner-fr_FR.po`
+- `cookie-banner-it_IT.po`
+
+Load them in the plugin wrapper with:
+
+```php
+load_plugin_textdomain('cookie-banner', false, dirname(plugin_basename(__FILE__)) . '/languages');
+```
