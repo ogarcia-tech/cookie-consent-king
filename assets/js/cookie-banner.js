@@ -193,13 +193,17 @@ class CookieBanner {
             
             if (shouldUnblock) {
                 console.log('CookieBanner: Desbloqueando script:', src);
-                script.setAttribute('src', src);
-                script.removeAttribute('data-blocked-src');
-                script.removeAttribute('data-cookie-consent');
                 
-                // Recargar el script
+                // Crear un nuevo script en lugar de modificar el existente
                 const newScript = document.createElement('script');
                 newScript.src = src;
+                
+                // Copiar atributos relevantes
+                if (script.type) newScript.type = script.type;
+                if (script.async) newScript.async = script.async;
+                if (script.defer) newScript.defer = script.defer;
+                
+                // Reemplazar el script bloqueado
                 script.parentNode.replaceChild(newScript, script);
             }
         });
@@ -217,6 +221,13 @@ class CookieBanner {
             console.log('CookieBanner: Found saved consent, parsing and applying');
             this.consent = JSON.parse(savedConsent);
             this.updateConsentMode(this.consent);
+            this.showBanner = false;
+            this.showSettings = false;
+            
+            // Mostrar mini banner si ya hay consentimiento guardado
+            setTimeout(() => {
+                this.showMiniBanner();
+            }, 500);
         }
     }
     
