@@ -9,7 +9,7 @@ interface ConsentSettings {
 
 declare global {
   interface Window {
-    gtag?: (...args: any[]) => void;
+    gtag?: (...args: unknown[]) => void;
     dataLayer?: any[];
   }
 }

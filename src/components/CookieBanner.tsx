@@ -26,7 +26,7 @@ interface CookieBannerProps {
 // Consent Mode v2 integration
 declare global {
   interface Window {
-    gtag?: (...args: any[]) => void;
+    gtag?: (...args: unknown[]) => void;
     dataLayer?: any[];
   }
 }
