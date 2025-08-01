@@ -122,7 +122,7 @@ class CookieBannerAdmin {
                 </a>
                 <a href="?page=cookie-banner-settings&tab=dashboard" class="nav-tab <?php echo $active_tab == 'dashboard' ? 'nav-tab-active' : ''; ?>">
                     <span class="dashicons dashicons-dashboard"></span>
-                    <?php _e('Dashboard Test', 'cookie-banner'); ?>
+                    <?php _e('Dashboard', 'cookie-banner'); ?>
                 </a>
                 <a href="?page=cookie-banner-settings&tab=stats" class="nav-tab <?php echo $active_tab == 'stats' ? 'nav-tab-active' : ''; ?>">
                     <span class="dashicons dashicons-chart-bar"></span>
@@ -500,7 +500,7 @@ class CookieBannerAdmin {
         ?>
         <div class="tab-pane">
             <div class="cookie-banner-dashboard">
-                <h3><?php _e('Dashboard de Pruebas - Cookie Banner', 'cookie-banner'); ?></h3>
+                <h3><?php _e('Dashboard - Cookie Banner', 'cookie-banner'); ?></h3>
                 <p><?php _e('Utiliza esta interfaz para probar el banner de cookies en tiempo real y verificar el estado del consentimiento.', 'cookie-banner'); ?></p>
                 
                 <!-- Contenedor para la aplicación React -->
