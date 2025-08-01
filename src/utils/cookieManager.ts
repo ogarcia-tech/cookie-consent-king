@@ -1,0 +1,190 @@
+/**
+ * Cookie Manager - Sistema unificado de gestión de cookies
+ * Compatible con GDPR y Google Consent Mode v2
+ */
+
+export interface ConsentSettings {
+  necessary: boolean;
+  analytics: boolean;
+  marketing: boolean;
+  preferences: boolean;
+}
+
+export interface CookieManagerConfig {
+  cookiePolicyUrl?: string;
+  aboutCookiesUrl?: string;
+  gtmId?: string;
+  position?: 'bottom' | 'top' | 'modal';
+  primaryColor?: string;
+  secondaryColor?: string;
+}
+
+declare global {
+  interface Window {
+    gtag?: (...args: any[]) => void;
+    dataLayer?: any[];
+  }
+}
+
+export class CookieManager {
+  private static instance: CookieManager;
+  private consent: ConsentSettings | null = null;
+  private config: CookieManagerConfig;
+  private listeners: Array<(consent: ConsentSettings) => void> = [];
+  
+  private constructor(config: CookieManagerConfig = {}) {
+    this.config = config;
+    this.loadSavedConsent();
+  }
+
+  public static getInstance(config?: CookieManagerConfig): CookieManager {
+    if (!CookieManager.instance) {
+      CookieManager.instance = new CookieManager(config);
+    }
+    return CookieManager.instance;
+  }
+
+  private loadSavedConsent(): void {
+    try {
+      const savedConsent = localStorage.getItem('cookieConsent');
+      if (savedConsent) {
+        this.consent = JSON.parse(savedConsent);
+        this.updateGoogleConsentMode(this.consent!);
+      }
+    } catch (error) {
+      console.error('Error loading saved consent:', error);
+    }
+  }
+
+  public getConsent(): ConsentSettings | null {
+    return this.consent;
+  }
+
+  public hasConsent(): boolean {
+    return this.consent !== null;
+  }
+
+  public hasConsentType(type: keyof ConsentSettings): boolean {
+    return this.consent ? this.consent[type] : false;
+  }
+
+  public updateConsent(newConsent: ConsentSettings, action: string = 'custom'): void {
+    this.consent = newConsent;
+    
+    // Guardar en localStorage
+    localStorage.setItem('cookieConsent', JSON.stringify(newConsent));
+    localStorage.setItem('cookieConsentDate', new Date().toISOString());
+    
+    // Actualizar Google Consent Mode
+    this.updateGoogleConsentMode(newConsent);
+    
+    // Enviar evento al dataLayer
+    this.pushDataLayerEvent(newConsent, action);
+    
+    // Notificar a los listeners
+    this.notifyListeners(newConsent);
+    
+    // Disparar evento personalizado
+    window.dispatchEvent(new CustomEvent('consentUpdated', { 
+      detail: { consent: newConsent, action } 
+    }));
+  }
+
+  public resetConsent(): void {
+    localStorage.removeItem('cookieConsent');
+    localStorage.removeItem('cookieConsentDate');
+    this.consent = null;
+    
+    // Notificar reset
+    window.dispatchEvent(new CustomEvent('consentReset'));
+  }
+
+  public onConsentChange(listener: (consent: ConsentSettings) => void): () => void {
+    this.listeners.push(listener);
+    
+    // Devolver función para desuscribirse
+    return () => {
+      const index = this.listeners.indexOf(listener);
+      if (index > -1) {
+        this.listeners.splice(index, 1);
+      }
+    };
+  }
+
+  private notifyListeners(consent: ConsentSettings): void {
+    this.listeners.forEach(listener => {
+      try {
+        listener(consent);
+      } catch (error) {
+        console.error('Error in consent listener:', error);
+      }
+    });
+  }
+
+  private updateGoogleConsentMode(consent: ConsentSettings): void {
+    if (typeof window !== 'undefined' && window.gtag) {
+      window.gtag('consent', 'update', {
+        'ad_storage': consent.marketing ? 'granted' : 'denied',
+        'ad_user_data': consent.marketing ? 'granted' : 'denied',
+        'ad_personalization': consent.marketing ? 'granted' : 'denied',
+        'analytics_storage': consent.analytics ? 'granted' : 'denied',
+        'functionality_storage': consent.preferences ? 'granted' : 'denied',
+        'personalization_storage': consent.preferences ? 'granted' : 'denied',
+      });
+    }
+  }
+
+  private pushDataLayerEvent(consent: ConsentSettings, action: string): void {
+    if (typeof window !== 'undefined') {
+      window.dataLayer = window.dataLayer || [];
+      
+      const eventData = {
+        'event': 'consent_update',
+        'consent': {
+          'ad_storage': consent.marketing ? 'granted' : 'denied',
+          'analytics_storage': consent.analytics ? 'granted' : 'denied',
+          'functionality_storage': consent.preferences ? 'granted' : 'denied',
+          'personalization_storage': consent.preferences ? 'granted' : 'denied',
+          'security_storage': 'granted',
+          'ad_user_data': consent.marketing ? 'granted' : 'denied',
+          'ad_personalization': consent.marketing ? 'granted' : 'denied'
+        },
+        'consent_action': action,
+        'timestamp': new Date().toISOString()
+      };
+
+      window.dataLayer.push(eventData);
+    }
+  }
+
+  public initializeConsentMode(): void {
+    if (typeof window !== 'undefined' && window.gtag) {
+      window.gtag('consent', 'default', {
+        'ad_storage': 'denied',
+        'ad_user_data': 'denied',
+        'ad_personalization': 'denied',
+        'analytics_storage': 'denied',
+        'functionality_storage': 'denied',
+        'personalization_storage': 'denied',
+        'security_storage': 'granted',
+        'wait_for_update': 500,
+      });
+    }
+  }
+
+  public getConsentDate(): Date | null {
+    const dateString = localStorage.getItem('cookieConsentDate');
+    return dateString ? new Date(dateString) : null;
+  }
+
+  public updateConfig(newConfig: Partial<CookieManagerConfig>): void {
+    this.config = { ...this.config, ...newConfig };
+  }
+
+  public getConfig(): CookieManagerConfig {
+    return { ...this.config };
+  }
+}
+
+// Export para uso directo
+export const cookieManager = CookieManager.getInstance();
