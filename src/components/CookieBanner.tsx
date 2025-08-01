@@ -33,6 +33,7 @@ declare global {
 const CookieBanner: React.FC<CookieBannerProps> = ({ onConsentUpdate, forceShow = false, cookiePolicyUrl, aboutCookiesUrl }) => {
   const [showBanner, setShowBanner] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+  const [showMiniBanner, setShowMiniBanner] = useState(false);
   const [consent, setConsent] = useState<ConsentSettings>({
     necessary: true, // Always true
     analytics: false,
@@ -48,6 +49,7 @@ const CookieBanner: React.FC<CookieBannerProps> = ({ onConsentUpdate, forceShow 
     if (!savedConsent) {
       console.log('CookieBanner: No saved consent, showing banner');
       setShowBanner(true);
+      setShowMiniBanner(false);
       // Initialize Google Consent Mode v2 with default values
       initializeConsentMode();
     } else {
@@ -55,7 +57,8 @@ const CookieBanner: React.FC<CookieBannerProps> = ({ onConsentUpdate, forceShow 
       const parsedConsent = JSON.parse(savedConsent);
       setConsent(parsedConsent);
       updateConsentMode(parsedConsent);
-      setShowBanner(false); // Explicitly set to false when consent exists
+      setShowBanner(false);
+      setShowMiniBanner(true); // Show mini banner when consent exists
     }
   }, []);
 
@@ -147,6 +150,7 @@ const CookieBanner: React.FC<CookieBannerProps> = ({ onConsentUpdate, forceShow 
     setConsent(consentSettings);
     setShowBanner(false);
     setShowSettings(false);
+    setShowMiniBanner(true); // Show mini banner after consent
   };
 
   const acceptAll = () => {
@@ -181,9 +185,27 @@ const CookieBanner: React.FC<CookieBannerProps> = ({ onConsentUpdate, forceShow 
     }));
   };
 
+  const reopenBanner = () => {
+    setShowBanner(true);
+    setShowMiniBanner(false);
+    setShowSettings(false);
+  };
+
   // Show banner if forceShow is true OR if showBanner state is true
   if (!forceShow && !showBanner) {
-    return null;
+    return showMiniBanner ? (
+      // Mini floating cookie button
+      <div className="fixed bottom-4 left-4 z-50">
+        <Button
+          onClick={reopenBanner}
+          size="icon"
+          className="w-12 h-12 rounded-full bg-primary shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-105"
+          title="Gestionar cookies"
+        >
+          <Cookie className="w-6 h-6" />
+        </Button>
+      </div>
+    ) : null;
   }
 
   return (
@@ -339,7 +361,7 @@ const CookieBanner: React.FC<CookieBannerProps> = ({ onConsentUpdate, forceShow 
                           </p>
                         </div>
                       </div>
-                      <Switch checked={true} disabled />
+                      <Switch id="necessary-cookies" checked={true} disabled />
                     </div>
 
                     {/* Preferences Cookies */}
@@ -355,6 +377,7 @@ const CookieBanner: React.FC<CookieBannerProps> = ({ onConsentUpdate, forceShow 
                         </div>
                       </div>
                       <Switch
+                        id="preferences-cookies"
                         checked={consent.preferences}
                         onCheckedChange={() => toggleConsent('preferences')}
                       />
@@ -372,6 +395,7 @@ const CookieBanner: React.FC<CookieBannerProps> = ({ onConsentUpdate, forceShow 
                         </div>
                       </div>
                       <Switch
+                        id="analytics-cookies"
                         checked={consent.analytics}
                         onCheckedChange={() => toggleConsent('analytics')}
                       />
@@ -389,6 +413,7 @@ const CookieBanner: React.FC<CookieBannerProps> = ({ onConsentUpdate, forceShow 
                         </div>
                       </div>
                       <Switch
+                        id="marketing-cookies"
                         checked={consent.marketing}
                         onCheckedChange={() => toggleConsent('marketing')}
                       />
