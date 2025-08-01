@@ -12,8 +12,8 @@ const ConsentModeScript: React.FC<ConsentModeScriptProps> = ({ gtmId, gaId }) =>
       window.dataLayer = window.dataLayer || [];
       
       // gtag function
-      window.gtag = function() {
-        window.dataLayer!.push(arguments);
+      window.gtag = (...args: unknown[]) => {
+        window.dataLayer!.push(args);
       };
 
       // Set default consent mode before any tags load

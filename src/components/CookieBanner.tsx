@@ -41,8 +41,10 @@ interface DataLayer extends Array<DataLayerEvent> {
 
 declare global {
   interface Window {
-    gtag?: Gtag;
-    dataLayer?: DataLayer;
+
+    gtag?: (...args: unknown[]) => void;
+    dataLayer?: any[];
+
   }
 }
 
