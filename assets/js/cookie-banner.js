@@ -84,7 +84,8 @@ class CookieBanner {
                 if (!element.__cookieBannerSrcIntercepted) {
                     element.__cookieBannerSrcIntercepted = true;
                     
-                    const originalSetSrc = Object.getOwnPropertyDescriptor(HTMLScriptElement.prototype, 'src').set;
+                    const originalDescriptor = Object.getOwnPropertyDescriptor(HTMLScriptElement.prototype, 'src');
+                    const originalSetSrc = originalDescriptor ? originalDescriptor.set : null;
                     
                     try {
                         Object.defineProperty(element, 'src', {
@@ -99,7 +100,11 @@ class CookieBanner {
                                     return;
                                 }
                                 
-                                originalSetSrc.call(element, value);
+                                if (originalSetSrc) {
+                                    originalSetSrc.call(element, value);
+                                } else {
+                                    element.setAttribute('src', value);
+                                }
                             },
                             get: function() {
                                 return element.getAttribute('src');
@@ -107,6 +112,7 @@ class CookieBanner {
                             configurable: true
                         });
                     } catch (e) {
+                        console.log('CookieBanner: Error definiendo propiedad src:', e.message);
                         // Si ya existe la propiedad, simplemente usarla
                         console.warn('CookieBanner: No se pudo redefinir src para el script:', e.message);
                     }
@@ -718,6 +724,7 @@ class CookieBanner {
                     <div class="cookie-switch-thumb"></div>
                 </button>
             </div>
+        `;
     }
     
     createMiniBanner() {
