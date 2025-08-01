@@ -196,9 +196,6 @@ class CookieBannerPlugin {
         
         <!-- Inyectar CSS del banner temprano -->
         <link rel="stylesheet" href="<?php echo COOKIE_BANNER_PLUGIN_URL; ?>assets/css/cookie-banner.css" />
-        
-        <!-- Forzar contenedor del banner -->
-        <div id="cookie-banner-container-early" style="display:none;"></div>
         <?php
     }
     
