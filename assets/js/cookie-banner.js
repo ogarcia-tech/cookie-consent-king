@@ -68,6 +68,7 @@ class CookieBanner {
         ];
         
         // Interceptar nuevos scripts
+        const self = this;
         const originalCreateElement = document.createElement;
         document.createElement = function(tagName) {
             const element = originalCreateElement.call(document, tagName);
@@ -77,7 +78,7 @@ class CookieBanner {
                 Object.defineProperty(element, 'src', {
                     set: function(value) {
                         const shouldBlock = scriptsToBlock.some(domain => value.includes(domain));
-                        const hasConsent = this.hasAnalyticsConsent() || this.hasMarketingConsent();
+                        const hasConsent = self.hasAnalyticsConsent() || self.hasMarketingConsent();
                         
                         if (shouldBlock && !hasConsent) {
                             console.log('CookieBanner: Bloqueando script:', value);
@@ -86,8 +87,8 @@ class CookieBanner {
                             return;
                         }
                         
-                        originalSetSrc.call(this, value);
-                    }.bind(this),
+                        originalSetSrc.call(element, value);
+                    },
                     get: function() {
                         return element.getAttribute('src');
                     }
@@ -95,7 +96,7 @@ class CookieBanner {
             }
             
             return element;
-        }.bind(this);
+        };
         
         // Bloquear scripts existentes
         this.blockExistingScripts();

@@ -209,110 +209,33 @@ class CookieBannerPlugin {
         
         <!-- Script de inicialización ultra robusta para Elementor -->
         <script>
-        console.log('CookieBanner: Script de inicialización cargado');
-        
         (function() {
-            let initAttempts = 0;
-            const maxAttempts = 20;
+            if (window.cookieBannerInitialized) return;
             
-            function forceInitCookieBanner() {
-                initAttempts++;
-                console.log('CookieBanner: Intento de inicialización #' + initAttempts);
+            function initBanner() {
+                if (window.cookieBannerInitialized) return;
                 
-                if (window.cookieBannerInitialized) {
-                    console.log('CookieBanner: Ya inicializado');
+                const savedConsent = localStorage.getItem('cookieConsent');
+                if (savedConsent) {
+                    window.cookieBannerInitialized = true;
                     return;
                 }
                 
-                // Verificar si el contenedor existe
-                let container = document.getElementById('cookie-banner-container');
-                if (!container) {
-                    console.log('CookieBanner: Creando contenedor...');
-                    container = document.createElement('div');
-                    container.id = 'cookie-banner-container';
-                    container.style.cssText = 'position:fixed;top:0;left:0;width:100%;z-index:999999;pointer-events:none;';
-                    
-                    // Intentar múltiples ubicaciones
-                    if (document.body) {
-                        document.body.appendChild(container);
-                        console.log('CookieBanner: Contenedor agregado al body');
-                    } else if (document.documentElement) {
-                        document.documentElement.appendChild(container);
-                        console.log('CookieBanner: Contenedor agregado al documentElement');
-                    }
+                if (typeof CookieBanner === 'undefined') {
+                    setTimeout(initBanner, 200);
+                    return;
                 }
                 
-                // Verificar si tenemos consentimiento
-                const savedConsent = localStorage.getItem('cookieConsent');
-                console.log('CookieBanner: Consentimiento guardado:', savedConsent);
-                
-                if (!savedConsent) {
-                    console.log('CookieBanner: No hay consentimiento, intentando mostrar banner...');
-                    
-                    // Verificar si la clase CookieBanner está disponible
-                    if (typeof CookieBanner !== 'undefined') {
-                        console.log('CookieBanner: Clase disponible, creando instancia...');
-                        
-                        if (!window.cookieBannerInstance) {
-                            try {
-                                window.cookieBannerInstance = new CookieBanner();
-                                window.cookieBannerInstance.showBanner = true;
-                                window.cookieBannerInstance.render();
-                                window.cookieBannerInitialized = true;
-                                console.log('CookieBanner: Banner inicializado exitosamente');
-                                return;
-                            } catch (error) {
-                                console.error('CookieBanner: Error al crear instancia:', error);
-                            }
-                        }
-                    } else {
-                        console.log('CookieBanner: Clase no disponible aún, reintentando...');
-                        if (initAttempts < maxAttempts) {
-                            setTimeout(forceInitCookieBanner, 500);
-                        }
-                    }
-                } else {
-                    console.log('CookieBanner: Consentimiento ya existe, no mostrando banner');
+                if (!window.cookieBannerInstance) {
+                    window.cookieBannerInstance = new CookieBanner();
                     window.cookieBannerInitialized = true;
                 }
             }
             
-            // Múltiples estrategias de inicialización
-            console.log('CookieBanner: Estado del documento:', document.readyState);
-            
             if (document.readyState === 'loading') {
-                document.addEventListener('DOMContentLoaded', forceInitCookieBanner);
+                document.addEventListener('DOMContentLoaded', initBanner);
             } else {
-                forceInitCookieBanner();
-            }
-            
-            // Intentos adicionales para Elementor
-            window.addEventListener('load', forceInitCookieBanner);
-            document.addEventListener('elementor/frontend/init', forceInitCookieBanner);
-            
-            // Timeouts escalonados
-            setTimeout(forceInitCookieBanner, 100);
-            setTimeout(forceInitCookieBanner, 500);
-            setTimeout(forceInitCookieBanner, 1000);
-            setTimeout(forceInitCookieBanner, 2000);
-            setTimeout(forceInitCookieBanner, 5000);
-            
-            // Observer para detectar cambios en el DOM (para Elementor)
-            if (window.MutationObserver) {
-                const observer = new MutationObserver(function(mutations) {
-                    mutations.forEach(function(mutation) {
-                        if (mutation.type === 'childList' && mutation.addedNodes.length > 0) {
-                            setTimeout(forceInitCookieBanner, 100);
-                        }
-                    });
-                });
-                
-                observer.observe(document.documentElement, {
-                    childList: true,
-                    subtree: true
-                });
-                
-                setTimeout(() => observer.disconnect(), 10000); // Desconectar después de 10s
+                initBanner();
             }
         })();
         </script>
