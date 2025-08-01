@@ -22,9 +22,173 @@ class CookieBanner {
     }
     
     init() {
-        document.addEventListener('DOMContentLoaded', () => {
-            this.checkExistingConsent();
-            this.initializeConsentMode();
+        // Múltiples puntos de inicialización para garantizar carga
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', () => this.start());
+        } else {
+            this.start();
+        }
+        
+        // Backup para Elementor y otros builders
+        window.addEventListener('load', () => this.start());
+        
+        // Inicialización inmediata si el DOM ya está listo
+        setTimeout(() => this.start(), 100);
+        
+        // Backup adicional para builders pesados
+        setTimeout(() => this.start(), 1000);
+        setTimeout(() => this.start(), 3000);
+    }
+    
+    start() {
+        if (this.initialized) return;
+        this.initialized = true;
+        
+        console.log('CookieBanner: Iniciando...');
+        this.blockScripts();
+        this.checkExistingConsent();
+        this.initializeConsentMode();
+    }
+    
+    blockScripts() {
+        // Bloquear scripts de terceros antes de que se ejecuten
+        const scriptsToBlock = [
+            'googletagmanager.com',
+            'google-analytics.com',
+            'facebook.net',
+            'doubleclick.net',
+            'googlesyndication.com',
+            'youtube.com',
+            'twitter.com',
+            'linkedin.com',
+            'instagram.com',
+            'tiktok.com',
+            'pinterest.com',
+            'hotjar.com',
+            'clarity.ms',
+            'mixpanel.com',
+            'intercom.io',
+            'zendesk.com',
+            'drift.com',
+            'hubspot.com'
+        ];
+        
+        // Interceptar nuevos scripts
+        const originalCreateElement = document.createElement;
+        document.createElement = function(tagName) {
+            const element = originalCreateElement.call(document, tagName);
+            
+            if (tagName.toLowerCase() === 'script') {
+                const originalSetSrc = Object.getOwnPropertyDescriptor(HTMLScriptElement.prototype, 'src').set;
+                Object.defineProperty(element, 'src', {
+                    set: function(value) {
+                        const shouldBlock = scriptsToBlock.some(domain => value.includes(domain));
+                        const hasConsent = this.hasAnalyticsConsent() || this.hasMarketingConsent();
+                        
+                        if (shouldBlock && !hasConsent) {
+                            console.log('CookieBanner: Bloqueando script:', value);
+                            element.setAttribute('data-blocked-src', value);
+                            element.setAttribute('data-cookie-consent', 'required');
+                            return;
+                        }
+                        
+                        originalSetSrc.call(this, value);
+                    }.bind(this),
+                    get: function() {
+                        return element.getAttribute('src');
+                    }
+                });
+            }
+            
+            return element;
+        }.bind(this);
+        
+        // Bloquear scripts existentes
+        this.blockExistingScripts();
+    }
+    
+    blockExistingScripts() {
+        const scripts = document.querySelectorAll('script[src]');
+        scripts.forEach(script => {
+            const src = script.getAttribute('src');
+            if (!src) return;
+            
+            const scriptsToBlock = [
+                'googletagmanager.com',
+                'google-analytics.com',
+                'facebook.net',
+                'doubleclick.net',
+                'googlesyndication.com',
+                'youtube.com',
+                'twitter.com',
+                'linkedin.com',
+                'instagram.com',
+                'tiktok.com',
+                'pinterest.com',
+                'hotjar.com',
+                'clarity.ms',
+                'mixpanel.com',
+                'intercom.io',
+                'zendesk.com',
+                'drift.com',
+                'hubspot.com'
+            ];
+            
+            const shouldBlock = scriptsToBlock.some(domain => src.includes(domain));
+            const hasConsent = this.hasAnalyticsConsent() || this.hasMarketingConsent();
+            
+            if (shouldBlock && !hasConsent) {
+                console.log('CookieBanner: Bloqueando script existente:', src);
+                script.setAttribute('data-blocked-src', src);
+                script.setAttribute('data-cookie-consent', 'required');
+                script.removeAttribute('src');
+            }
+        });
+    }
+    
+    hasAnalyticsConsent() {
+        const savedConsent = localStorage.getItem('cookieConsent');
+        if (!savedConsent) return false;
+        const consent = JSON.parse(savedConsent);
+        return consent.analytics === true;
+    }
+    
+    hasMarketingConsent() {
+        const savedConsent = localStorage.getItem('cookieConsent');
+        if (!savedConsent) return false;
+        const consent = JSON.parse(savedConsent);
+        return consent.marketing === true;
+    }
+    
+    unblockScripts() {
+        // Reactivar scripts bloqueados según el consentimiento
+        const blockedScripts = document.querySelectorAll('script[data-blocked-src]');
+        blockedScripts.forEach(script => {
+            const src = script.getAttribute('data-blocked-src');
+            const requiresAnalytics = src.includes('google-analytics') || src.includes('googletagmanager') || src.includes('hotjar') || src.includes('clarity');
+            const requiresMarketing = src.includes('facebook') || src.includes('doubleclick') || src.includes('googlesyndication');
+            
+            let shouldUnblock = false;
+            
+            if (requiresAnalytics && this.hasAnalyticsConsent()) {
+                shouldUnblock = true;
+            }
+            
+            if (requiresMarketing && this.hasMarketingConsent()) {
+                shouldUnblock = true;
+            }
+            
+            if (shouldUnblock) {
+                console.log('CookieBanner: Desbloqueando script:', src);
+                script.setAttribute('src', src);
+                script.removeAttribute('data-blocked-src');
+                script.removeAttribute('data-cookie-consent');
+                
+                // Recargar el script
+                const newScript = document.createElement('script');
+                newScript.src = src;
+                script.parentNode.replaceChild(newScript, script);
+            }
         });
     }
     
@@ -148,6 +312,10 @@ class CookieBanner {
         this.consent = consentSettings;
         this.showBanner = false;
         this.showSettings = false;
+        
+        // Desbloquear scripts según el consentimiento dado
+        this.unblockScripts();
+        
         this.render();
     }
     
