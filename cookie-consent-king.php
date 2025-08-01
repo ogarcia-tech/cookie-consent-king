@@ -6,10 +6,14 @@
  * Version: 1.0.0
  * Author: Your Name
  * License: GPL2
- */
+*/
 
 if (!defined('ABSPATH')) {
     exit; // Exit if accessed directly.
+}
+
+if (!defined('COOKIE_CONSENT_KING_VERSION')) {
+    define('COOKIE_CONSENT_KING_VERSION', '1.0.0');
 }
 
 function cck_enqueue_assets() {
@@ -22,7 +26,7 @@ function cck_enqueue_assets() {
             'cookie-consent-king-js',
             plugin_dir_url(__FILE__) . 'dist/assets/' . $js_file,
             [],
-            null,
+            COOKIE_CONSENT_KING_VERSION,
             true
         );
     }
@@ -34,7 +38,7 @@ function cck_enqueue_assets() {
             'cookie-consent-king-css',
             plugin_dir_url(__FILE__) . 'dist/assets/' . $css_file,
             [],
-            null
+            COOKIE_CONSENT_KING_VERSION
         );
     }
 }
