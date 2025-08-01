@@ -413,8 +413,11 @@ class CookieBanner {
         
         if (!this.showBanner) {
             container.innerHTML = '';
+            container.style.display = 'none';
             return;
         }
+        
+        container.style.display = 'block';
         
         container.innerHTML = `
             <div class="cookie-banner-overlay">
