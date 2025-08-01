@@ -50,6 +50,12 @@ class CookieBannerAdmin {
         wp_enqueue_script('cookie-banner-admin', COOKIE_BANNER_PLUGIN_URL . 'assets/js/cookie-banner-admin.js', array('jquery'), COOKIE_BANNER_VERSION, true);
         wp_enqueue_style('cookie-banner-admin', COOKIE_BANNER_PLUGIN_URL . 'assets/css/cookie-banner-admin.css', array(), COOKIE_BANNER_VERSION);
         
+        // Cargar React para el dashboard si estamos en esa pestaña
+        if (isset($_GET['tab']) && $_GET['tab'] === 'dashboard') {
+            wp_enqueue_script('react', 'https://unpkg.com/react@18/umd/react.development.js', array(), '18', true);
+            wp_enqueue_script('react-dom', 'https://unpkg.com/react-dom@18/umd/react-dom.development.js', array('react'), '18', true);
+        }
+        
         wp_localize_script('cookie-banner-admin', 'cookieBannerAdmin', array(
             'ajax_url' => admin_url('admin-ajax.php'),
             'nonce' => wp_create_nonce('cookie_banner_admin')
@@ -114,6 +120,10 @@ class CookieBannerAdmin {
                     <span class="dashicons dashicons-edit"></span>
                     <?php _e('Textos', 'cookie-banner'); ?>
                 </a>
+                <a href="?page=cookie-banner-settings&tab=dashboard" class="nav-tab <?php echo $active_tab == 'dashboard' ? 'nav-tab-active' : ''; ?>">
+                    <span class="dashicons dashicons-dashboard"></span>
+                    <?php _e('Dashboard Test', 'cookie-banner'); ?>
+                </a>
                 <a href="?page=cookie-banner-settings&tab=stats" class="nav-tab <?php echo $active_tab == 'stats' ? 'nav-tab-active' : ''; ?>">
                     <span class="dashicons dashicons-chart-bar"></span>
                     <?php _e('Estadísticas', 'cookie-banner'); ?>
@@ -135,6 +145,9 @@ class CookieBannerAdmin {
                         break;
                     case 'texts':
                         $this->render_texts_tab($texts);
+                        break;
+                    case 'dashboard':
+                        $this->render_dashboard_tab();
                         break;
                     case 'stats':
                         $this->render_stats_tab();
@@ -478,5 +491,241 @@ class CookieBannerAdmin {
         delete_option('cookie_banner_stats');
         
         wp_send_json_success(__('Configuración reseteada correctamente.', 'cookie-banner'));
+    }
+    
+    /**
+     * Renderizar pestaña del dashboard de pruebas
+     */
+    public function render_dashboard_tab() {
+        ?>
+        <div class="tab-pane">
+            <div class="cookie-banner-dashboard">
+                <h3><?php _e('Dashboard de Pruebas - Cookie Banner', 'cookie-banner'); ?></h3>
+                <p><?php _e('Utiliza esta interfaz para probar el banner de cookies en tiempo real y verificar el estado del consentimiento.', 'cookie-banner'); ?></p>
+                
+                <!-- Contenedor para la aplicación React -->
+                <div id="cookie-banner-react-dashboard" style="margin-top: 30px; border: 1px solid #ddd; border-radius: 8px; padding: 20px; background: #fff;">
+                    <div class="loading-placeholder" style="text-align: center; padding: 40px;">
+                        <p><?php _e('Cargando dashboard de pruebas...', 'cookie-banner'); ?></p>
+                        <div class="spinner is-active" style="float: none; margin: 0 auto;"></div>
+                    </div>
+                </div>
+                
+                <!-- Scripts para renderizar el dashboard React -->
+                <script type="text/babel">
+                const { useState, useEffect } = React;
+
+                // Hook para gestionar el consentimiento
+                const useConsentMode = () => {
+                    const [consent, setConsent] = useState(null);
+                    const [isLoaded, setIsLoaded] = useState(false);
+
+                    useEffect(() => {
+                        const loadConsent = () => {
+                            const savedConsent = localStorage.getItem('cookieConsent');
+                            if (savedConsent) {
+                                try {
+                                    const parsedConsent = JSON.parse(savedConsent);
+                                    setConsent(parsedConsent);
+                                } catch (error) {
+                                    console.error('Error parsing saved consent:', error);
+                                }
+                            }
+                            setIsLoaded(true);
+                        };
+
+                        loadConsent();
+
+                        const handleStorageChange = (e) => {
+                            if (e.key === 'cookieConsent') {
+                                loadConsent();
+                            }
+                        };
+
+                        const handleConsentUpdate = () => {
+                            loadConsent();
+                        };
+
+                        window.addEventListener('storage', handleStorageChange);
+                        window.addEventListener('consentUpdated', handleConsentUpdate);
+
+                        return () => {
+                            window.removeEventListener('storage', handleStorageChange);
+                            window.removeEventListener('consentUpdated', handleConsentUpdate);
+                        };
+                    }, []);
+
+                    const resetConsent = () => {
+                        localStorage.removeItem('cookieConsent');
+                        localStorage.removeItem('cookieConsentDate');
+                        setConsent(null);
+                    };
+
+                    const isConsentGiven = () => consent !== null;
+
+                    const getConsentDate = () => {
+                        const dateString = localStorage.getItem('cookieConsentDate');
+                        return dateString ? new Date(dateString) : null;
+                    };
+
+                    return {
+                        consent,
+                        isLoaded,
+                        resetConsent,
+                        isConsentGiven,
+                        getConsentDate,
+                    };
+                };
+
+                // Componente principal del dashboard
+                const CookieBannerDashboard = () => {
+                    const { consent, isLoaded, resetConsent, isConsentGiven, getConsentDate } = useConsentMode();
+                    const [showDemo, setShowDemo] = useState(false);
+
+                    const showCookieBanner = () => {
+                        if (typeof window.showCookieBanner === 'function') {
+                            window.showCookieBanner();
+                        } else {
+                            // Fallback para crear banner si no existe la función global
+                            if (typeof CookieBanner !== 'undefined') {
+                                const banner = new CookieBanner();
+                                banner.showBanner = true;
+                                banner.render();
+                            }
+                        }
+                    };
+
+                    const clearAndTest = () => {
+                        resetConsent();
+                        setTimeout(() => {
+                            showCookieBanner();
+                        }, 100);
+                    };
+
+                    if (!isLoaded) {
+                        return React.createElement('div', { style: { textAlign: 'center', padding: '20px' } }, 
+                            React.createElement('p', null, 'Cargando estado del consentimiento...')
+                        );
+                    }
+
+                    const consentDate = getConsentDate();
+
+                    return React.createElement('div', { className: 'dashboard-content' },
+                        React.createElement('div', { 
+                            style: { 
+                                display: 'grid', 
+                                gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', 
+                                gap: '20px',
+                                marginBottom: '30px'
+                            } 
+                        },
+                            // Estado del Consentimiento
+                            React.createElement('div', { 
+                                style: { 
+                                    background: '#f8f9fa', 
+                                    border: '1px solid #dee2e6', 
+                                    borderRadius: '8px', 
+                                    padding: '20px' 
+                                } 
+                            },
+                                React.createElement('h4', { style: { marginTop: 0 } }, '🍪 Estado del Consentimiento'),
+                                React.createElement('div', { style: { marginBottom: '15px' } },
+                                    React.createElement('strong', null, 'Estado: '),
+                                    React.createElement('span', { 
+                                        style: { 
+                                            color: isConsentGiven() ? '#28a745' : '#dc3545',
+                                            fontWeight: 'bold'
+                                        } 
+                                    }, isConsentGiven() ? 'Consentimiento Otorgado' : 'Sin Consentimiento')
+                                ),
+                                consentDate && React.createElement('div', { style: { marginBottom: '15px' } },
+                                    React.createElement('strong', null, 'Fecha: '),
+                                    React.createElement('span', null, consentDate.toLocaleString('es-ES'))
+                                ),
+                                consent && React.createElement('div', null,
+                                    React.createElement('h5', null, 'Tipos de Cookie:'),
+                                    React.createElement('ul', { style: { listStyle: 'none', padding: 0 } },
+                                        React.createElement('li', null, `✅ Necesarias: ${consent.necessary ? 'Aceptadas' : 'Rechazadas'}`),
+                                        React.createElement('li', null, `📊 Analíticas: ${consent.analytics ? 'Aceptadas' : 'Rechazadas'}`),
+                                        React.createElement('li', null, `🎯 Marketing: ${consent.marketing ? 'Aceptadas' : 'Rechazadas'}`),
+                                        React.createElement('li', null, `⚙️ Preferencias: ${consent.preferences ? 'Aceptadas' : 'Rechazadas'}`)
+                                    )
+                                )
+                            ),
+
+                            // Controles de Prueba
+                            React.createElement('div', { 
+                                style: { 
+                                    background: '#f8f9fa', 
+                                    border: '1px solid #dee2e6', 
+                                    borderRadius: '8px', 
+                                    padding: '20px' 
+                                } 
+                            },
+                                React.createElement('h4', { style: { marginTop: 0 } }, '🧪 Controles de Prueba'),
+                                React.createElement('div', { style: { display: 'flex', flexDirection: 'column', gap: '10px' } },
+                                    React.createElement('button', {
+                                        onClick: resetConsent,
+                                        style: {
+                                            padding: '10px 15px',
+                                            background: '#6c757d',
+                                            color: 'white',
+                                            border: 'none',
+                                            borderRadius: '4px',
+                                            cursor: 'pointer'
+                                        }
+                                    }, 'Restablecer Consentimiento'),
+                                    React.createElement('button', {
+                                        onClick: showCookieBanner,
+                                        style: {
+                                            padding: '10px 15px',
+                                            background: '#007cba',
+                                            color: 'white',
+                                            border: 'none',
+                                            borderRadius: '4px',
+                                            cursor: 'pointer'
+                                        }
+                                    }, 'Mostrar Banner de Cookies'),
+                                    React.createElement('button', {
+                                        onClick: clearAndTest,
+                                        style: {
+                                            padding: '10px 15px',
+                                            background: '#dc3545',
+                                            color: 'white',
+                                            border: 'none',
+                                            borderRadius: '4px',
+                                            cursor: 'pointer'
+                                        }
+                                    }, 'Limpiar y Probar')
+                                )
+                            )
+                        ),
+
+                        // Información adicional
+                        React.createElement('div', { 
+                            style: { 
+                                background: '#e3f2fd', 
+                                border: '1px solid #bbdefb', 
+                                borderRadius: '8px', 
+                                padding: '15px' 
+                            } 
+                        },
+                            React.createElement('h4', { style: { marginTop: 0 } }, 'ℹ️ Información'),
+                            React.createElement('p', { style: { margin: 0 } }, 
+                                'Este dashboard te permite probar el banner de cookies en tiempo real. Los cambios en el consentimiento se reflejarán automáticamente en esta interfaz.'
+                            )
+                        )
+                    );
+                };
+
+                // Renderizar el componente
+                ReactDOM.render(React.createElement(CookieBannerDashboard), document.getElementById('cookie-banner-react-dashboard'));
+                </script>
+
+                <!-- Cargar Babel para transpilar JSX -->
+                <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+            </div>
+        </div>
+        <?php
     }
 }
