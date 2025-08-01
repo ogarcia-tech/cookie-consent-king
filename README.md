@@ -96,13 +96,13 @@ The build command generates production files in the `dist/` directory. CSS and J
 
 ## Enqueuing in WordPress
 
-Use the plugin wrapper (`cookie-banner-plugin.php`) to load the build output:
+Use the plugin wrapper (`cookie-consent-king.php`) to load the build output:
 
 ```php
 function cck_enqueue_assets() {
     $plugin_url = plugin_dir_url(__FILE__);
-    wp_enqueue_style('cck-style', $plugin_url . 'dist/assets/index.css', [], COOKIE_BANNER_VERSION);
-    wp_enqueue_script('cck-script', $plugin_url . 'dist/assets/index.js', [], COOKIE_BANNER_VERSION, true);
+    wp_enqueue_style('cck-style', $plugin_url . 'dist/assets/index.css', [], COOKIE_CONSENT_KING_VERSION);
+    wp_enqueue_script('cck-script', $plugin_url . 'dist/assets/index.js', [], COOKIE_CONSENT_KING_VERSION, true);
 }
 add_action('wp_enqueue_scripts', 'cck_enqueue_assets');
 ```
@@ -124,4 +124,25 @@ Load them in the plugin wrapper with:
 ```php
 load_plugin_textdomain('cookie-banner', false, dirname(plugin_basename(__FILE__)) . '/languages');
 ```
+
+## Building the WordPress plugin
+
+Generate the production assets and translation files before copying the plugin into your WordPress installation:
+
+```sh
+# Install dependencies and build the React app
+npm install
+npm run build
+
+# Compile translations (.po -> .mo)
+for f in languages/*.po; do
+  msgfmt "$f" -o "${f%.po}.mo"
+done
+```
+
+The following files and folders are required on the server:
+
+- `cookie-consent-king.php` – the plugin bootstrap file.
+- `dist/` – the compiled JavaScript and CSS assets from the build step.
+- `languages/*.mo` – compiled translation files.
 
