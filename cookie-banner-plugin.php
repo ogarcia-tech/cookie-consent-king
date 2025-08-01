@@ -27,12 +27,16 @@ class CookieBannerPlugin {
         add_action('init', array($this, 'load_textdomain'));
         add_action('wp_enqueue_scripts', array($this, 'enqueue_scripts'));
         add_action('wp_footer', array($this, 'render_banner'));
+        add_action('wp_footer', array($this, 'add_manual_trigger'));
         
         // Admin
         if (is_admin()) {
             require_once COOKIE_BANNER_PLUGIN_DIR . 'admin/class-admin.php';
             new CookieBannerAdmin();
         }
+        
+        // Shortcode para mostrar el banner manualmente
+        add_shortcode('cookie_banner', array($this, 'shortcode_banner'));
         
         // Hooks de activación/desactivación
         register_activation_hook(__FILE__, array($this, 'activate'));
@@ -109,6 +113,83 @@ class CookieBannerPlugin {
      */
     public function render_banner() {
         echo '<div id="cookie-banner-container"></div>';
+    }
+    
+    /**
+     * Shortcode para mostrar el banner manualmente
+     */
+    public function shortcode_banner($atts) {
+        $atts = shortcode_atts(array(
+            'force' => 'false',
+        ), $atts);
+        
+        ob_start();
+        ?>
+        <div id="cookie-banner-container-shortcode"></div>
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                if (typeof CookieBanner !== 'undefined') {
+                    <?php if ($atts['force'] === 'true'): ?>
+                    // Forzar mostrar el banner independientemente del consentimiento guardado
+                    localStorage.removeItem('cookieConsent');
+                    <?php endif; ?>
+                    
+                    // Crear una nueva instancia del banner
+                    const shortcodeBanner = new CookieBanner();
+                    shortcodeBanner.showBanner = true;
+                    const originalContainer = shortcodeBanner.constructor.prototype.render;
+                    shortcodeBanner.render = function() {
+                        const container = document.getElementById('cookie-banner-container-shortcode');
+                        if (!container) return;
+                        
+                        if (!this.showBanner) {
+                            container.innerHTML = '';
+                            return;
+                        }
+                        
+                        container.innerHTML = `
+                            <div class="cookie-banner-overlay">
+                                <div class="cookie-banner-card">
+                                    <div class="cookie-banner-content">
+                                        ${this.showSettings ? this.renderSettings() : this.renderMain()}
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                        
+                        this.attachEventListeners();
+                    };
+                    shortcodeBanner.render();
+                }
+            });
+        </script>
+        <?php
+        return ob_get_clean();
+    }
+    
+    /**
+     * Función para mostrar banner manualmente via JavaScript
+     */
+    public function add_manual_trigger() {
+        ?>
+        <script>
+            function showCookieBanner() {
+                if (typeof cookieBanner !== 'undefined') {
+                    cookieBanner.showBanner = true;
+                    cookieBanner.render();
+                }
+            }
+            
+            function resetCookieConsent() {
+                localStorage.removeItem('cookieConsent');
+                localStorage.removeItem('cookieConsentDate');
+                if (typeof cookieBanner !== 'undefined') {
+                    cookieBanner.showBanner = true;
+                    cookieBanner.render();
+                }
+            }
+        </script>
+        <?php
     }
     
     /**
