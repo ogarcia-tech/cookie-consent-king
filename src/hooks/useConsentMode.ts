@@ -19,18 +19,42 @@ export const useConsentMode = () => {
   const [isLoaded, setIsLoaded] = useState(false);
 
   useEffect(() => {
-    // Load saved consent from localStorage
-    const savedConsent = localStorage.getItem('cookieConsent');
-    if (savedConsent) {
-      try {
-        const parsedConsent = JSON.parse(savedConsent);
-        setConsent(parsedConsent);
-        updateGoogleConsentMode(parsedConsent);
-      } catch (error) {
-        console.error('Error parsing saved consent:', error);
+    const loadConsent = () => {
+      const savedConsent = localStorage.getItem('cookieConsent');
+      if (savedConsent) {
+        try {
+          const parsedConsent = JSON.parse(savedConsent);
+          setConsent(parsedConsent);
+          updateGoogleConsentMode(parsedConsent);
+        } catch (error) {
+          console.error('Error parsing saved consent:', error);
+        }
       }
-    }
-    setIsLoaded(true);
+      setIsLoaded(true);
+    };
+
+    // Load initial consent
+    loadConsent();
+
+    // Listen for storage changes from other tabs or the cookie banner
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'cookieConsent') {
+        loadConsent();
+      }
+    };
+
+    // Listen for custom consent update events
+    const handleConsentUpdate = () => {
+      loadConsent();
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    window.addEventListener('consentUpdated', handleConsentUpdate);
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('consentUpdated', handleConsentUpdate);
+    };
   }, []);
 
   const updateGoogleConsentMode = (consentSettings: ConsentSettings) => {

@@ -138,6 +138,9 @@ const CookieBanner: React.FC<CookieBannerProps> = ({ onConsentUpdate, forceShow 
     localStorage.setItem('cookieConsent', JSON.stringify(consentSettings));
     localStorage.setItem('cookieConsentDate', new Date().toISOString());
     
+    // Dispatch custom event to notify other components
+    window.dispatchEvent(new CustomEvent('consentUpdated', { detail: consentSettings }));
+    
     // Update consent mode and push dataLayer event
     updateConsentMode(consentSettings, action);
     
