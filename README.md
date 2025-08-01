@@ -71,3 +71,15 @@ Yes, you can!
 To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
 
 Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+
+## WordPress Installation
+
+1. Run `npm install` to install dependencies.
+2. Build the React app with `npm run build`. This creates a `dist/` directory containing the final JavaScript and CSS assets.
+3. Copy the repository (or just the `cookie-consent-king.php` file and the `dist/` directory) into your WordPress `wp-content/plugins/` folder.
+4. Activate **Cookie Consent King** from the Plugins menu in WordPress.
+
+## Usage
+
+Once activated, the plugin automatically enqueues the built assets on the front end. After building the React project, you should see the cookie consent banner appear on your site.
+
