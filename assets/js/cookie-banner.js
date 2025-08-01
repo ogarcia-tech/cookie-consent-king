@@ -22,29 +22,23 @@ class CookieBanner {
     }
     
     init() {
-        // Múltiples puntos de inicialización para garantizar carga
+        // Una sola inicialización controlada
         if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', () => this.start());
+            document.addEventListener('DOMContentLoaded', () => this.safeStart());
         } else {
-            this.start();
+            this.safeStart();
         }
-        
-        // Backup para Elementor y otros builders
-        window.addEventListener('load', () => this.start());
-        
-        // Inicialización inmediata si el DOM ya está listo
-        setTimeout(() => this.start(), 100);
-        
-        // Backup adicional para builders pesados
-        setTimeout(() => this.start(), 1000);
-        setTimeout(() => this.start(), 3000);
     }
     
-    start() {
-        if (this.initialized) return;
-        this.initialized = true;
+    safeStart() {
+        if (this.initialized) {
+            console.log('CookieBanner: Ya inicializado, saltando...');
+            return;
+        }
         
+        this.initialized = true;
         console.log('CookieBanner: Iniciando...');
+        
         this.blockScripts();
         this.checkExistingConsent();
         this.initializeConsentMode();
@@ -699,23 +693,20 @@ class CookieBanner {
 let cookieBanner;
 
 function initializeCookieBanner() {
-    if (cookieBanner) return; // Evitar inicialización múltiple
+    if (cookieBanner) {
+        console.log('CookieBanner: Ya inicializado, saltando instancia múltiple...');
+        return; // Evitar inicialización múltiple
+    }
     console.log('CookieBanner: Inicializando instancia principal...');
     cookieBanner = new CookieBanner();
 }
 
-// Múltiples puntos de inicialización para máxima compatibilidad
+// Una sola inicialización controlada
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', initializeCookieBanner);
 } else {
     initializeCookieBanner();
 }
-
-// Backup para diferentes estados de carga
-window.addEventListener('load', initializeCookieBanner);
-setTimeout(initializeCookieBanner, 100);
-setTimeout(initializeCookieBanner, 500);
-setTimeout(initializeCookieBanner, 2000);
 
 // Funciones globales para control manual
 window.showCookieBanner = function() {
