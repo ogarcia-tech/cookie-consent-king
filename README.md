@@ -146,3 +146,14 @@ The following files and folders are required on the server:
 - `dist/` – the compiled JavaScript and CSS assets from the build step.
 - `languages/*.mo` – compiled translation files.
 
+After building you can package the plugin into a distributable archive using the
+helper script:
+
+```sh
+./scripts/build-plugin.sh
+```
+
+This script creates `cookie-consent-king.zip` containing only the necessary
+files so development folders like `src/`, `public/` and `node_modules/` are
+excluded.
+
