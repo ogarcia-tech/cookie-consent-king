@@ -62,11 +62,22 @@ const CookieBanner: React.FC<CookieBannerProps> = ({ onConsentUpdate, forceShow 
 
   useEffect(() => {
     // Check if user has already made a choice
-    const savedConsent = localStorage.getItem('cookieConsent');
+    let savedConsent: string | null = null;
+
+    if (typeof window !== 'undefined' && window.localStorage) {
+      try {
+        savedConsent = window.localStorage.getItem('cookieConsent');
+      } catch (error) {
+        if (import.meta.env.DEV) {
+          console.error('CookieBanner: Error accessing localStorage', error);
+        }
+      }
+    }
+
     if (import.meta.env.DEV) {
       console.log('CookieBanner: checking saved consent', savedConsent);
     }
-    
+
     if (!savedConsent) {
       if (import.meta.env.DEV) {
         console.log('CookieBanner: No saved consent, showing banner');
@@ -79,11 +90,36 @@ const CookieBanner: React.FC<CookieBannerProps> = ({ onConsentUpdate, forceShow 
       if (import.meta.env.DEV) {
         console.log('CookieBanner: Found saved consent, parsing and applying');
       }
-      const parsedConsent = JSON.parse(savedConsent);
-      setConsent(parsedConsent);
-      updateConsentMode(parsedConsent);
-      setShowBanner(false);
-      setShowMiniBanner(true); // Show mini banner when consent exists
+      try {
+        const parsedConsent = JSON.parse(savedConsent);
+        setConsent(parsedConsent);
+        updateConsentMode(parsedConsent);
+        setShowBanner(false);
+        setShowMiniBanner(true); // Show mini banner when consent exists
+      } catch (error) {
+        if (import.meta.env.DEV) {
+          console.error('CookieBanner: Error parsing saved consent', error);
+        }
+        if (typeof window !== 'undefined' && window.localStorage) {
+          try {
+            window.localStorage.removeItem('cookieConsent');
+            window.localStorage.removeItem('cookieConsentDate');
+          } catch (cleanupError) {
+            if (import.meta.env.DEV) {
+              console.error('CookieBanner: Error cleaning corrupt consent', cleanupError);
+            }
+          }
+        }
+        setConsent({
+          necessary: true,
+          analytics: false,
+          marketing: false,
+          preferences: false,
+        });
+        setShowBanner(true);
+        setShowMiniBanner(false);
+        initializeConsentMode();
+      }
     }
   }, [updateConsentMode]);
 
@@ -169,16 +205,25 @@ const CookieBanner: React.FC<CookieBannerProps> = ({ onConsentUpdate, forceShow 
     if (import.meta.env.DEV) {
       console.log('Saving consent:', consentSettings, 'Action:', action);
     }
-    
-    localStorage.setItem('cookieConsent', JSON.stringify(consentSettings));
-    localStorage.setItem('cookieConsentDate', new Date().toISOString());
-    
-    // Dispatch custom event to notify other components
-    window.dispatchEvent(new CustomEvent('consentUpdated', { detail: consentSettings }));
-    
+    if (typeof window !== 'undefined' && window.localStorage) {
+      try {
+        window.localStorage.setItem('cookieConsent', JSON.stringify(consentSettings));
+        window.localStorage.setItem('cookieConsentDate', new Date().toISOString());
+      } catch (error) {
+        if (import.meta.env.DEV) {
+          console.error('CookieBanner: Error saving consent', error);
+        }
+      }
+    }
+
+    if (typeof window !== 'undefined') {
+      // Dispatch custom event to notify other components
+      window.dispatchEvent(new CustomEvent('consentUpdated', { detail: consentSettings }));
+    }
+
     // Update consent mode and push dataLayer event
     updateConsentMode(consentSettings, action);
-    
+
     setConsent(consentSettings);
     setShowBanner(false);
     setShowSettings(false);
