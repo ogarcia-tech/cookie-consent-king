@@ -15,7 +15,7 @@ if (!defined('ABSPATH')) {
 }
 
 if (!defined('COOKIE_CONSENT_KING_VERSION')) {
-    define('COOKIE_CONSENT_KING_VERSION', '1.0.0');
+    define('COOKIE_CONSENT_KING_VERSION', '2.0');
 }
 
 function cck_enqueue_assets() {
