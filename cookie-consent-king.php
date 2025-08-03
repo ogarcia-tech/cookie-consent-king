@@ -20,19 +20,28 @@ if (!defined('COOKIE_CONSENT_KING_VERSION')) {
 
 function cck_enqueue_assets() {
     $asset_path = plugin_dir_path(__FILE__) . 'dist/assets/';
+    $asset_url  = plugin_dir_url(__FILE__) . 'dist/assets/';
 
-    $js_files = glob($asset_path . '*.js');
-    if ($js_files) {
-        $js_file = basename($js_files[0]);
-        wp_enqueue_script(
-            'cookie-consent-king-js',
-            plugin_dir_url(__FILE__) . 'dist/assets/' . $js_file,
-            [],
-            COOKIE_CONSENT_KING_VERSION,
-            true
+    $js_path  = $asset_path . 'index.js';
+    $css_path = $asset_path . 'index.css';
+
+    if (!file_exists($js_path) || !file_exists($css_path)) {
+        wp_admin_notice(
+            __('Cookie Consent King: assets not found. Please run "npm run build".', 'cookie-consent-king'),
+            ['type' => 'error']
         );
+        return;
+    }
 
-        $translations = [
+    wp_enqueue_script(
+        'cookie-consent-king-js',
+        $asset_url . 'index.js',
+        [],
+        filemtime($js_path),
+        true
+    );
+
+    $translations = [
             'Banner de cookies moderno con soporte completo para Google Consent Mode v2' => __('Banner de cookies moderno con soporte completo para Google Consent Mode v2', 'cookie-consent-king'),
             'Cumplimiento GDPR' => __('Cumplimiento GDPR', 'cookie-consent-king'),
             'Cumple totalmente con las regulaciones GDPR y otras leyes de privacidad internacionales.' => __('Cumple totalmente con las regulaciones GDPR y otras leyes de privacidad internacionales.', 'cookie-consent-king'),
@@ -97,19 +106,14 @@ function cck_enqueue_assets() {
             'Cookies estadísticas' => __('Cookies estadísticas', 'cookie-consent-king'),
             'Cookies de marketing' => __('Cookies de marketing', 'cookie-consent-king'),
         ];
-        wp_localize_script('cookie-consent-king-js', 'cckTranslations', $translations);
-    }
+    wp_localize_script('cookie-consent-king-js', 'cckTranslations', $translations);
 
-    $css_files = glob($asset_path . '*.css');
-    if ($css_files) {
-        $css_file = basename($css_files[0]);
-        wp_enqueue_style(
-            'cookie-consent-king-css',
-            plugin_dir_url(__FILE__) . 'dist/assets/' . $css_file,
-            [],
-            COOKIE_CONSENT_KING_VERSION
-        );
-    }
+    wp_enqueue_style(
+        'cookie-consent-king-css',
+        $asset_url . 'index.css',
+        [],
+        filemtime($css_path)
+    );
 }
 add_action('wp_enqueue_scripts', 'cck_enqueue_assets');
 
