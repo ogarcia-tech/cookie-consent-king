@@ -127,7 +127,7 @@ add_action('wp_enqueue_scripts', 'cck_enqueue_assets');
 
 function cck_load_textdomain() {
     load_plugin_textdomain(
-        'cookie-banner',
+        'cookie-consent-king',
         false,
         dirname(plugin_basename(__FILE__)) . '/languages'
     );
