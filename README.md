@@ -121,16 +121,16 @@ The wrapper also loads translations via `load_plugin_textdomain()` so WordPress 
 
 Available `.po` files are located in `languages/`:
 
-- `cookie-banner-en_US.po`
-- `cookie-banner-de_DE.po`
-- `cookie-banner-es_ES.po`
-- `cookie-banner-fr_FR.po`
-- `cookie-banner-it_IT.po`
+- `cookie-consent-king-en_US.po`
+- `cookie-consent-king-de_DE.po`
+- `cookie-consent-king-es_ES.po`
+- `cookie-consent-king-fr_FR.po`
+- `cookie-consent-king-it_IT.po`
 
 Load them in the plugin wrapper with:
 
 ```php
-load_plugin_textdomain('cookie-banner', false, dirname(plugin_basename(__FILE__)) . '/languages');
+load_plugin_textdomain('cookie-consent-king', false, dirname(plugin_basename(__FILE__)) . '/languages');
 ```
 
 ## Building the WordPress plugin
