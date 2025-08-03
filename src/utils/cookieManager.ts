@@ -22,7 +22,7 @@ export interface CookieManagerConfig {
 declare global {
   interface Window {
     gtag?: (...args: unknown[]) => void;
-    dataLayer?: any[];
+    dataLayer?: unknown[];
   }
 }
 
@@ -93,10 +93,26 @@ export class CookieManager {
   public resetConsent(): void {
     localStorage.removeItem('cookieConsent');
     localStorage.removeItem('cookieConsentDate');
+    const resetConsent: ConsentSettings = {
+      necessary: false,
+      analytics: false,
+      marketing: false,
+      preferences: false,
+    };
     this.consent = null;
-    
+
+    // Notificar a los listeners del reinicio
+    this.notifyListeners(resetConsent);
+
+    // Limpiar listeners registrados
+    this.clearListeners();
+
     // Notificar reset
     window.dispatchEvent(new CustomEvent('consentReset'));
+  }
+
+  public clearListeners(): void {
+    this.listeners = [];
   }
 
   public onConsentChange(listener: (consent: ConsentSettings) => void): () => void {
