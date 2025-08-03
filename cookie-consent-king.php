@@ -4,8 +4,11 @@
  * Plugin URI: https://www.metricaweb.es
  * Description: Provides a React-powered cookie consent banner.
  * Version: 2.0
+ * Requires at least: 5.0
+ * Requires PHP: 7.4
  * Author: David Adell (Metricaweb) & Oscar Garcia
  * License: GPL2
+ * Text Domain: cookie-consent-king
 
 */
 
