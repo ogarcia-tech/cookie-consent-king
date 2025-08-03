@@ -123,12 +123,24 @@ function cck_load_textdomain() {
 add_action('init', 'cck_load_textdomain');
 
 function cck_activate() {
-    // Placeholder for activation logic.
+    $defaults = [
+        'cck_banner_heading' => __('Gestión de Cookies', 'cookie-consent-king'),
+        'cck_banner_message' => __('Utilizamos cookies para mejorar tu experiencia de navegación.', 'cookie-consent-king'),
+        'cck_policy_url'     => '/politica-de-cookies',
+    ];
+
+    foreach ($defaults as $option => $value) {
+        if (false === get_option($option)) {
+            add_option($option, $value);
+        }
+    }
 }
 register_activation_hook(__FILE__, 'cck_activate');
 
 function cck_deactivate() {
-    // Placeholder for deactivation logic.
+    delete_option('cck_banner_heading');
+    delete_option('cck_banner_message');
+    delete_option('cck_policy_url');
 }
 register_deactivation_hook(__FILE__, 'cck_deactivate');
 

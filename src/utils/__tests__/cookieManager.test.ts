@@ -55,9 +55,6 @@ const sampleConsent = {
       cookieManager.updateConsent(sampleConsent);
       expect(listener).toHaveBeenCalledTimes(1);
     });
-  });
-
-=======
 
   it('onConsentChange notifies listeners and allows unsubscribe', () => {
     const listener = vi.fn();
