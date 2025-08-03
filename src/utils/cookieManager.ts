@@ -22,7 +22,7 @@ export interface CookieManagerConfig {
 declare global {
   interface Window {
     gtag?: (...args: unknown[]) => void;
-    dataLayer?: any[];
+    dataLayer?: unknown[];
   }
 }
 
@@ -70,33 +70,48 @@ export class CookieManager {
 
   public updateConsent(newConsent: ConsentSettings, action: string = 'custom'): void {
     this.consent = newConsent;
-    
-    // Guardar en localStorage
-    localStorage.setItem('cookieConsent', JSON.stringify(newConsent));
-    localStorage.setItem('cookieConsentDate', new Date().toISOString());
-    
+
+    if (typeof window !== 'undefined') {
+      try {
+        localStorage.setItem('cookieConsent', JSON.stringify(newConsent));
+        localStorage.setItem('cookieConsentDate', new Date().toISOString());
+      } catch (error) {
+        console.error('Error saving consent:', error);
+      }
+    }
+
     // Actualizar Google Consent Mode
     this.updateGoogleConsentMode(newConsent);
-    
+
     // Enviar evento al dataLayer
     this.pushDataLayerEvent(newConsent, action);
-    
+
     // Notificar a los listeners
     this.notifyListeners(newConsent);
-    
+
     // Disparar evento personalizado
-    window.dispatchEvent(new CustomEvent('consentUpdated', { 
-      detail: { consent: newConsent, action } 
-    }));
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('consentUpdated', {
+        detail: { consent: newConsent, action }
+      }));
+    }
   }
 
   public resetConsent(): void {
-    localStorage.removeItem('cookieConsent');
-    localStorage.removeItem('cookieConsentDate');
+    if (typeof window !== 'undefined') {
+      try {
+        localStorage.removeItem('cookieConsent');
+        localStorage.removeItem('cookieConsentDate');
+      } catch (error) {
+        console.error('Error resetting consent:', error);
+      }
+    }
     this.consent = null;
-    
+
     // Notificar reset
-    window.dispatchEvent(new CustomEvent('consentReset'));
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('consentReset'));
+    }
   }
 
   public onConsentChange(listener: (consent: ConsentSettings) => void): () => void {
@@ -173,8 +188,16 @@ export class CookieManager {
   }
 
   public getConsentDate(): Date | null {
-    const dateString = localStorage.getItem('cookieConsentDate');
-    return dateString ? new Date(dateString) : null;
+    if (typeof window !== 'undefined') {
+      try {
+        const dateString = localStorage.getItem('cookieConsentDate');
+        return dateString ? new Date(dateString) : null;
+      } catch (error) {
+        console.error('Error getting consent date:', error);
+        return null;
+      }
+    }
+    return null;
   }
 
   public updateConfig(newConfig: Partial<CookieManagerConfig>): void {
