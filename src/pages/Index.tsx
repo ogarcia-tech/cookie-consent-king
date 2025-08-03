@@ -8,13 +8,14 @@ import { useConsentMode } from '@/hooks/useConsentMode';
 import type { ConsentSettings } from '@/types/consent';
 import { Cookie, Shield, CheckCircle, Settings } from 'lucide-react';
 import { t } from '@/utils/i18n';
+import logger from '@/utils/logger';
 
 const Index = () => {
   const { consent, isConsentGiven, resetConsent, getConsentDate } = useConsentMode();
   const [showDemo, setShowDemo] = useState(false);
 
   const handleConsentUpdate = (newConsent: ConsentSettings) => {
-    console.log('Consent updated:', newConsent);
+    logger.log('Consent updated:', newConsent);
     setShowDemo(false); // Cerrar el banner demo cuando se actualice el consentimiento
     // Aquí puedes agregar lógica adicional cuando se actualice el consentimiento
   };
