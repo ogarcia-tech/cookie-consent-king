@@ -8,11 +8,11 @@ const sampleConsent = {
   preferences: true,
 };
 
-describe('cookieManager', () => {
-  beforeEach(() => {
-    localStorage.clear();
-    cookieManager.resetConsent();
-  });
+  describe('cookieManager', () => {
+    beforeEach(() => {
+      localStorage.clear();
+      cookieManager.resetConsent();
+    });
 
   it('updateConsent stores consent and dispatches event', () => {
     const handler = vi.fn();
@@ -26,18 +26,38 @@ describe('cookieManager', () => {
     window.removeEventListener('consentUpdated', handler);
   });
 
-  it('resetConsent clears consent and dispatches event', () => {
-    cookieManager.updateConsent(sampleConsent);
-    const handler = vi.fn();
-    window.addEventListener('consentReset', handler);
-    cookieManager.resetConsent();
+    it('resetConsent clears consent and dispatches event', () => {
+      cookieManager.updateConsent(sampleConsent);
+      const handler = vi.fn();
+      window.addEventListener('consentReset', handler);
+      cookieManager.resetConsent();
 
     expect(cookieManager.getConsent()).toBeNull();
     expect(localStorage.getItem('cookieConsent')).toBeNull();
     expect(localStorage.getItem('cookieConsentDate')).toBeNull();
     expect(handler).toHaveBeenCalled();
-    window.removeEventListener('consentReset', handler);
+      window.removeEventListener('consentReset', handler);
+    });
+
+    it('resetConsent notifies and clears listeners', () => {
+      const listener = vi.fn();
+      cookieManager.onConsentChange(listener);
+
+      cookieManager.resetConsent();
+
+      expect(listener).toHaveBeenCalledWith({
+        necessary: false,
+        analytics: false,
+        marketing: false,
+        preferences: false,
+      });
+
+      cookieManager.updateConsent(sampleConsent);
+      expect(listener).toHaveBeenCalledTimes(1);
+    });
   });
+
+=======
 
   it('onConsentChange notifies listeners and allows unsubscribe', () => {
     const listener = vi.fn();
@@ -115,3 +135,4 @@ describe('cookieManager', () => {
     expect(cookieManager.getConsentDate()).toBeNull();
   });
 });
+

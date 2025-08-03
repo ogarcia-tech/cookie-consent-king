@@ -98,20 +98,32 @@ export class CookieManager {
   }
 
   public resetConsent(): void {
-    if (typeof window !== 'undefined') {
-      try {
-        localStorage.removeItem('cookieConsent');
-        localStorage.removeItem('cookieConsentDate');
-      } catch (error) {
-        console.error('Error resetting consent:', error);
-      }
-    }
+
+    localStorage.removeItem('cookieConsent');
+    localStorage.removeItem('cookieConsentDate');
+    const resetConsent: ConsentSettings = {
+      necessary: false,
+      analytics: false,
+      marketing: false,
+      preferences: false,
+    };
     this.consent = null;
+
+    // Notificar a los listeners del reinicio
+    this.notifyListeners(resetConsent);
+
+    // Limpiar listeners registrados
+    this.clearListeners();
+
 
     // Notificar reset
     if (typeof window !== 'undefined') {
       window.dispatchEvent(new CustomEvent('consentReset'));
     }
+  }
+
+  public clearListeners(): void {
+    this.listeners = [];
   }
 
   public onConsentChange(listener: (consent: ConsentSettings) => void): () => void {
