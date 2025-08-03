@@ -11,18 +11,13 @@ export interface ConsentSettings {
 }
 
 export interface CookieManagerConfig {
-  cookiePolicyUrl?: string;
-  aboutCookiesUrl?: string;
   gtmId?: string;
-  position?: 'bottom' | 'top' | 'modal';
-  primaryColor?: string;
-  secondaryColor?: string;
 }
 
 declare global {
   interface Window {
     gtag?: (...args: unknown[]) => void;
-    dataLayer?: any[];
+    dataLayer?: unknown[];
   }
 }
 
@@ -31,15 +26,17 @@ export class CookieManager {
   private consent: ConsentSettings | null = null;
   private config: CookieManagerConfig;
   private listeners: Array<(consent: ConsentSettings) => void> = [];
-  
+
   private constructor(config: CookieManagerConfig = {}) {
-    this.config = config;
+    this.config = { ...config };
     this.loadSavedConsent();
   }
 
   public static getInstance(config?: CookieManagerConfig): CookieManager {
     if (!CookieManager.instance) {
       CookieManager.instance = new CookieManager(config);
+    } else if (config) {
+      CookieManager.instance.setConfig(config);
     }
     return CookieManager.instance;
   }
@@ -170,6 +167,7 @@ export class CookieManager {
         'wait_for_update': 500,
       });
     }
+    this.loadGtmScript();
   }
 
   public getConsentDate(): Date | null {
@@ -177,12 +175,41 @@ export class CookieManager {
     return dateString ? new Date(dateString) : null;
   }
 
-  public updateConfig(newConfig: Partial<CookieManagerConfig>): void {
+  public setConfig(newConfig: Partial<CookieManagerConfig>): void {
     this.config = { ...this.config, ...newConfig };
+    if (newConfig.gtmId) {
+      this.loadGtmScript();
+    }
   }
 
   public getConfig(): CookieManagerConfig {
     return { ...this.config };
+  }
+
+  private loadGtmScript(): void {
+    if (typeof document === 'undefined' || typeof window === 'undefined') {
+      return;
+    }
+    const { gtmId } = this.config;
+    if (!gtmId) {
+      return;
+    }
+    if (!document.querySelector(`script[src*="${gtmId}"]`)) {
+      const script = document.createElement('script');
+      script.async = true;
+      script.src = `https://www.googletagmanager.com/gtm.js?id=${gtmId}`;
+      document.head.appendChild(script);
+
+      const noscript = document.createElement('noscript');
+      const iframe = document.createElement('iframe');
+      iframe.src = `https://www.googletagmanager.com/ns.html?id=${gtmId}`;
+      iframe.height = '0';
+      iframe.width = '0';
+      iframe.style.display = 'none';
+      iframe.style.visibility = 'hidden';
+      noscript.appendChild(iframe);
+      document.body.appendChild(noscript);
+    }
   }
 }
 
