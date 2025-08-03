@@ -1,11 +1,5 @@
 import { useState, useEffect } from 'react';
-
-interface ConsentSettings {
-  necessary: boolean;
-  analytics: boolean;
-  marketing: boolean;
-  preferences: boolean;
-}
+import type { ConsentSettings } from '@/types/consent';
 
 interface Gtag {
   (
@@ -26,7 +20,7 @@ declare global {
   interface Window {
 
     gtag?: (...args: unknown[]) => void;
-    dataLayer?: any[];
+    dataLayer?: DataLayer;
 
   }
 }
@@ -37,21 +31,28 @@ export const useConsentMode = () => {
 
   useEffect(() => {
     const loadConsent = () => {
-      const savedConsent = localStorage.getItem('cookieConsent');
-      if (savedConsent) {
-        try {
+      if (typeof window === 'undefined') {
+        return;
+      }
+      try {
+        const savedConsent = window.localStorage.getItem('cookieConsent');
+        if (savedConsent) {
           const parsedConsent = JSON.parse(savedConsent);
           setConsent(parsedConsent);
           updateGoogleConsentMode(parsedConsent);
-        } catch (error) {
-          console.error('Error parsing saved consent:', error);
         }
+      } catch (error) {
+        console.error('Error loading saved consent:', error);
       }
-      setIsLoaded(true);
     };
 
     // Load initial consent
     loadConsent();
+    setIsLoaded(true);
+
+    if (typeof window === 'undefined') {
+      return;
+    }
 
     // Listen for storage changes from other tabs or the cookie banner
     const handleStorageChange = (e: StorageEvent) => {
@@ -89,14 +90,26 @@ export const useConsentMode = () => {
 
   const updateConsent = (newConsent: ConsentSettings) => {
     setConsent(newConsent);
-    localStorage.setItem('cookieConsent', JSON.stringify(newConsent));
-    localStorage.setItem('cookieConsentDate', new Date().toISOString());
+    if (typeof window !== 'undefined') {
+      try {
+        window.localStorage.setItem('cookieConsent', JSON.stringify(newConsent));
+        window.localStorage.setItem('cookieConsentDate', new Date().toISOString());
+      } catch (error) {
+        console.error('Error saving consent:', error);
+      }
+    }
     updateGoogleConsentMode(newConsent);
   };
 
   const resetConsent = () => {
-    localStorage.removeItem('cookieConsent');
-    localStorage.removeItem('cookieConsentDate');
+    if (typeof window !== 'undefined') {
+      try {
+        window.localStorage.removeItem('cookieConsent');
+        window.localStorage.removeItem('cookieConsentDate');
+      } catch (error) {
+        console.error('Error clearing consent:', error);
+      }
+    }
     setConsent(null);
   };
 
@@ -110,8 +123,16 @@ export const useConsentMode = () => {
 
   // Get consent timestamp
   const getConsentDate = (): Date | null => {
-    const dateString = localStorage.getItem('cookieConsentDate');
-    return dateString ? new Date(dateString) : null;
+    if (typeof window === 'undefined') {
+      return null;
+    }
+    try {
+      const dateString = window.localStorage.getItem('cookieConsentDate');
+      return dateString ? new Date(dateString) : null;
+    } catch (error) {
+      console.error('Error reading consent date:', error);
+      return null;
+    }
   };
 
   return {

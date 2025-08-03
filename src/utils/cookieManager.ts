@@ -1,28 +1,26 @@
 /**
  * Cookie Manager - Sistema unificado de gestión de cookies
  * Compatible con GDPR y Google Consent Mode v2
- */
+*/
 
-export interface ConsentSettings {
-  necessary: boolean;
-  analytics: boolean;
-  marketing: boolean;
-  preferences: boolean;
-}
+import type { ConsentSettings } from '@/types/consent';
+export type { ConsentSettings } from '@/types/consent';
 
 export interface CookieManagerConfig {
-  cookiePolicyUrl?: string;
-  aboutCookiesUrl?: string;
   gtmId?: string;
-  position?: 'bottom' | 'top' | 'modal';
-  primaryColor?: string;
-  secondaryColor?: string;
+}
+
+type DataLayerEvent = Record<string, unknown>;
+
+interface DataLayer extends Array<DataLayerEvent> {
+  push: (...args: DataLayerEvent[]) => number;
 }
 
 declare global {
   interface Window {
     gtag?: (...args: unknown[]) => void;
     dataLayer?: unknown[];
+
   }
 }
 
@@ -31,15 +29,17 @@ export class CookieManager {
   private consent: ConsentSettings | null = null;
   private config: CookieManagerConfig;
   private listeners: Array<(consent: ConsentSettings) => void> = [];
-  
+
   private constructor(config: CookieManagerConfig = {}) {
-    this.config = config;
+    this.config = { ...config };
     this.loadSavedConsent();
   }
 
   public static getInstance(config?: CookieManagerConfig): CookieManager {
     if (!CookieManager.instance) {
       CookieManager.instance = new CookieManager(config);
+    } else if (config) {
+      CookieManager.instance.setConfig(config);
     }
     return CookieManager.instance;
   }
@@ -70,27 +70,35 @@ export class CookieManager {
 
   public updateConsent(newConsent: ConsentSettings, action: string = 'custom'): void {
     this.consent = newConsent;
-    
-    // Guardar en localStorage
-    localStorage.setItem('cookieConsent', JSON.stringify(newConsent));
-    localStorage.setItem('cookieConsentDate', new Date().toISOString());
-    
+
+    if (typeof window !== 'undefined') {
+      try {
+        localStorage.setItem('cookieConsent', JSON.stringify(newConsent));
+        localStorage.setItem('cookieConsentDate', new Date().toISOString());
+      } catch (error) {
+        console.error('Error saving consent:', error);
+      }
+    }
+
     // Actualizar Google Consent Mode
     this.updateGoogleConsentMode(newConsent);
-    
+
     // Enviar evento al dataLayer
     this.pushDataLayerEvent(newConsent, action);
-    
+
     // Notificar a los listeners
     this.notifyListeners(newConsent);
-    
+
     // Disparar evento personalizado
-    window.dispatchEvent(new CustomEvent('consentUpdated', { 
-      detail: { consent: newConsent, action } 
-    }));
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('consentUpdated', {
+        detail: { consent: newConsent, action }
+      }));
+    }
   }
 
   public resetConsent(): void {
+
     localStorage.removeItem('cookieConsent');
     localStorage.removeItem('cookieConsentDate');
     const resetConsent: ConsentSettings = {
@@ -107,8 +115,11 @@ export class CookieManager {
     // Limpiar listeners registrados
     this.clearListeners();
 
+
     // Notificar reset
-    window.dispatchEvent(new CustomEvent('consentReset'));
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('consentReset'));
+    }
   }
 
   public clearListeners(): void {
@@ -186,19 +197,57 @@ export class CookieManager {
         'wait_for_update': 500,
       });
     }
+    this.loadGtmScript();
   }
 
   public getConsentDate(): Date | null {
-    const dateString = localStorage.getItem('cookieConsentDate');
-    return dateString ? new Date(dateString) : null;
+    if (typeof window !== 'undefined') {
+      try {
+        const dateString = localStorage.getItem('cookieConsentDate');
+        return dateString ? new Date(dateString) : null;
+      } catch (error) {
+        console.error('Error getting consent date:', error);
+        return null;
+      }
+    }
+    return null;
   }
 
-  public updateConfig(newConfig: Partial<CookieManagerConfig>): void {
+  public setConfig(newConfig: Partial<CookieManagerConfig>): void {
     this.config = { ...this.config, ...newConfig };
+    if (newConfig.gtmId) {
+      this.loadGtmScript();
+    }
   }
 
   public getConfig(): CookieManagerConfig {
     return { ...this.config };
+  }
+
+  private loadGtmScript(): void {
+    if (typeof document === 'undefined' || typeof window === 'undefined') {
+      return;
+    }
+    const { gtmId } = this.config;
+    if (!gtmId) {
+      return;
+    }
+    if (!document.querySelector(`script[src*="${gtmId}"]`)) {
+      const script = document.createElement('script');
+      script.async = true;
+      script.src = `https://www.googletagmanager.com/gtm.js?id=${gtmId}`;
+      document.head.appendChild(script);
+
+      const noscript = document.createElement('noscript');
+      const iframe = document.createElement('iframe');
+      iframe.src = `https://www.googletagmanager.com/ns.html?id=${gtmId}`;
+      iframe.height = '0';
+      iframe.width = '0';
+      iframe.style.display = 'none';
+      iframe.style.visibility = 'hidden';
+      noscript.appendChild(iframe);
+      document.body.appendChild(noscript);
+    }
   }
 }
 

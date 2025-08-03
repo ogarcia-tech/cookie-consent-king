@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import CookieBanner from '@/components/CookieBanner';
 import ConsentModeScript from '@/components/ConsentModeScript';
 import { useConsentMode } from '@/hooks/useConsentMode';
-import type { ConsentSettings } from '@/utils/cookieManager';
+import type { ConsentSettings } from '@/types/consent';
 import { Cookie, Shield, CheckCircle, Settings } from 'lucide-react';
 import { t } from '@/utils/i18n';
 
