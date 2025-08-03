@@ -26,10 +26,16 @@ function cck_enqueue_assets() {
     $css_path = $asset_path . 'index.css';
 
     if (!file_exists($js_path) || !file_exists($css_path)) {
-        wp_admin_notice(
-            __('Cookie Consent King: assets not found. Please run "npm run build".', 'cookie-consent-king'),
-            ['type' => 'error']
-        );
+        $message = __('Cookie Consent King: assets not found. Please run "npm run build".', 'cookie-consent-king');
+
+        if (function_exists('wp_admin_notice')) {
+            wp_admin_notice($message, ['type' => 'error']);
+        } else {
+            add_action('admin_notices', function () use ($message) {
+                echo '<div class="notice notice-error"><p>' . esc_html($message) . '</p></div>';
+            });
+        }
+
         return;
     }
 
