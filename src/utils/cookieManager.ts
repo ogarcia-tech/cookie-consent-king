@@ -8,6 +8,7 @@ export type { ConsentSettings } from '@/types/consent';
 
 export interface CookieManagerConfig {
   gtmId?: string;
+  position?: string;
 }
 
 type DataLayerEvent = Record<string, unknown>;
@@ -218,6 +219,10 @@ export class CookieManager {
     if (newConfig.gtmId) {
       this.loadGtmScript();
     }
+  }
+
+  public updateConfig(newConfig: Partial<CookieManagerConfig>): void {
+    this.setConfig(newConfig);
   }
 
   public getConfig(): CookieManagerConfig {
