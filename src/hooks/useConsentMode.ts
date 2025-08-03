@@ -1,11 +1,5 @@
 import { useState, useEffect } from 'react';
-
-interface ConsentSettings {
-  necessary: boolean;
-  analytics: boolean;
-  marketing: boolean;
-  preferences: boolean;
-}
+import type { ConsentSettings } from '@/types/consent';
 
 interface Gtag {
   (
@@ -26,7 +20,7 @@ declare global {
   interface Window {
 
     gtag?: (...args: unknown[]) => void;
-    dataLayer?: any[];
+    dataLayer?: DataLayer;
 
   }
 }

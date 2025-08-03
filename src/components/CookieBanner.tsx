@@ -9,13 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Label } from '@/components/ui/label';
 import { Cookie, Settings, Shield, BarChart3, Target, X } from 'lucide-react';
 import { t } from '@/utils/i18n';
-
-interface ConsentSettings {
-  necessary: boolean;
-  analytics: boolean;
-  marketing: boolean;
-  preferences: boolean;
-}
+import type { ConsentSettings } from '@/types/consent';
 
 interface CookieBannerProps {
   onConsentUpdate?: (consent: ConsentSettings) => void;
@@ -44,7 +38,7 @@ declare global {
   interface Window {
 
     gtag?: (...args: unknown[]) => void;
-    dataLayer?: any[];
+    dataLayer?: DataLayer;
 
   }
 }

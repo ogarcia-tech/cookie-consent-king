@@ -1,14 +1,10 @@
 /**
  * Cookie Manager - Sistema unificado de gestión de cookies
  * Compatible con GDPR y Google Consent Mode v2
- */
+*/
 
-export interface ConsentSettings {
-  necessary: boolean;
-  analytics: boolean;
-  marketing: boolean;
-  preferences: boolean;
-}
+import type { ConsentSettings } from '@/types/consent';
+export type { ConsentSettings } from '@/types/consent';
 
 export interface CookieManagerConfig {
   cookiePolicyUrl?: string;
@@ -19,10 +15,16 @@ export interface CookieManagerConfig {
   secondaryColor?: string;
 }
 
+type DataLayerEvent = Record<string, unknown>;
+
+interface DataLayer extends Array<DataLayerEvent> {
+  push: (...args: DataLayerEvent[]) => number;
+}
+
 declare global {
   interface Window {
     gtag?: (...args: unknown[]) => void;
-    dataLayer?: unknown[];
+    dataLayer?: DataLayer;
   }
 }
 
