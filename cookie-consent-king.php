@@ -20,19 +20,28 @@ if (!defined('COOKIE_CONSENT_KING_VERSION')) {
 
 function cck_enqueue_assets() {
     $asset_path = plugin_dir_path(__FILE__) . 'dist/assets/';
+    $asset_url  = plugin_dir_url(__FILE__) . 'dist/assets/';
 
-    $js_files = glob($asset_path . '*.js');
-    if ($js_files) {
-        $js_file = basename($js_files[0]);
-        wp_enqueue_script(
-            'cookie-consent-king-js',
-            plugin_dir_url(__FILE__) . 'dist/assets/' . $js_file,
-            [],
-            COOKIE_CONSENT_KING_VERSION,
-            true
+    $js_path  = $asset_path . 'index.js';
+    $css_path = $asset_path . 'index.css';
+
+    if (!file_exists($js_path) || !file_exists($css_path)) {
+        wp_admin_notice(
+            __('Cookie Consent King: assets not found. Please run "npm run build".', 'cookie-consent-king'),
+            ['type' => 'error']
         );
+        return;
+    }
 
-        $translations = [
+    wp_enqueue_script(
+        'cookie-consent-king-js',
+        $asset_url . 'index.js',
+        [],
+        filemtime($js_path),
+        true
+    );
+
+    $translations = [
             'Banner de cookies moderno con soporte completo para Google Consent Mode v2' => __('Banner de cookies moderno con soporte completo para Google Consent Mode v2', 'cookie-consent-king'),
             'Cumplimiento GDPR' => __('Cumplimiento GDPR', 'cookie-consent-king'),
             'Cumple totalmente con las regulaciones GDPR y otras leyes de privacidad internacionales.' => __('Cumple totalmente con las regulaciones GDPR y otras leyes de privacidad internacionales.', 'cookie-consent-king'),
@@ -97,20 +106,18 @@ function cck_enqueue_assets() {
             'Cookies estadísticas' => __('Cookies estadísticas', 'cookie-consent-king'),
             'Cookies de marketing' => __('Cookies de marketing', 'cookie-consent-king'),
         ];
+
         wp_localize_script('cookie-consent-king-js', 'cckTranslations', $translations);
         add_action('wp_footer', 'cck_render_root_div');
     }
 
-    $css_files = glob($asset_path . '*.css');
-    if ($css_files) {
-        $css_file = basename($css_files[0]);
-        wp_enqueue_style(
-            'cookie-consent-king-css',
-            plugin_dir_url(__FILE__) . 'dist/assets/' . $css_file,
-            [],
-            COOKIE_CONSENT_KING_VERSION
-        );
-    }
+
+    wp_enqueue_style(
+        'cookie-consent-king-css',
+        $asset_url . 'index.css',
+        [],
+        filemtime($css_path)
+    );
 }
 
 function cck_render_root_div() {
@@ -128,12 +135,24 @@ function cck_load_textdomain() {
 add_action('init', 'cck_load_textdomain');
 
 function cck_activate() {
-    // Placeholder for activation logic.
+    $defaults = [
+        'cck_banner_heading' => __('Gestión de Cookies', 'cookie-consent-king'),
+        'cck_banner_message' => __('Utilizamos cookies para mejorar tu experiencia de navegación.', 'cookie-consent-king'),
+        'cck_policy_url'     => '/politica-de-cookies',
+    ];
+
+    foreach ($defaults as $option => $value) {
+        if (false === get_option($option)) {
+            add_option($option, $value);
+        }
+    }
 }
 register_activation_hook(__FILE__, 'cck_activate');
 
 function cck_deactivate() {
-    // Placeholder for deactivation logic.
+    delete_option('cck_banner_heading');
+    delete_option('cck_banner_message');
+    delete_option('cck_policy_url');
 }
 register_deactivation_hook(__FILE__, 'cck_deactivate');
 
@@ -207,6 +226,111 @@ function cck_register_admin_menu() {
 }
 add_action('admin_menu', 'cck_register_admin_menu');
 
+// -----------------------------------------------------------------------------
+// Settings API registration
+// -----------------------------------------------------------------------------
+
+function cck_settings_init() {
+    // Banner Styles options.
+    register_setting('cck_banner_styles_group', 'cck_banner_styles_options');
+    add_settings_section('cck_banner_styles_section', '', '__return_false', 'cck-banner-styles');
+    add_settings_field(
+        'cck_banner_bg_color',
+        __('Background Color', 'cookie-consent-king'),
+        'cck_field_banner_bg_color',
+        'cck-banner-styles',
+        'cck_banner_styles_section'
+    );
+    add_settings_field(
+        'cck_banner_text_color',
+        __('Text Color', 'cookie-consent-king'),
+        'cck_field_banner_text_color',
+        'cck-banner-styles',
+        'cck_banner_styles_section'
+    );
+
+    // Default Texts options.
+    register_setting('cck_default_texts_group', 'cck_default_texts_options');
+    add_settings_section('cck_default_texts_section', '', '__return_false', 'cck-default-texts');
+    add_settings_field(
+        'cck_default_title',
+        __('Title', 'cookie-consent-king'),
+        'cck_field_default_title',
+        'cck-default-texts',
+        'cck_default_texts_section'
+    );
+    add_settings_field(
+        'cck_default_message',
+        __('Message', 'cookie-consent-king'),
+        'cck_field_default_message',
+        'cck-default-texts',
+        'cck_default_texts_section'
+    );
+
+    // Basic Configuration options.
+    register_setting('cck_basic_configuration_group', 'cck_basic_configuration_options');
+    add_settings_section('cck_basic_configuration_section', '', '__return_false', 'cck-basic-configuration');
+    add_settings_field(
+        'cck_privacy_url',
+        __('Privacy Policy URL', 'cookie-consent-king'),
+        'cck_field_privacy_url',
+        'cck-basic-configuration',
+        'cck_basic_configuration_section'
+    );
+
+    // Cookie List options.
+    register_setting('cck_cookie_list_group', 'cck_cookie_list_options');
+    add_settings_section('cck_cookie_list_section', '', '__return_false', 'cck-cookie-list');
+    add_settings_field(
+        'cck_cookie_list',
+        __('Cookie List', 'cookie-consent-king'),
+        'cck_field_cookie_list',
+        'cck-cookie-list',
+        'cck_cookie_list_section'
+    );
+}
+add_action('admin_init', 'cck_settings_init');
+
+// -----------------------------------------------------------------------------
+// Field render callbacks
+// -----------------------------------------------------------------------------
+
+function cck_field_banner_bg_color() {
+    $options = get_option('cck_banner_styles_options', []);
+    $value   = $options['bg_color'] ?? '';
+    echo '<input type="text" name="cck_banner_styles_options[bg_color]" value="' . esc_attr($value) . '" />';
+}
+
+function cck_field_banner_text_color() {
+    $options = get_option('cck_banner_styles_options', []);
+    $value   = $options['text_color'] ?? '';
+    echo '<input type="text" name="cck_banner_styles_options[text_color]" value="' . esc_attr($value) . '" />';
+}
+
+function cck_field_default_title() {
+    $options = get_option('cck_default_texts_options', []);
+    $value   = $options['title'] ?? '';
+    echo '<input type="text" name="cck_default_texts_options[title]" value="' . esc_attr($value) . '" class="regular-text" />';
+}
+
+function cck_field_default_message() {
+    $options = get_option('cck_default_texts_options', []);
+    $value   = $options['message'] ?? '';
+    echo '<textarea name="cck_default_texts_options[message]" rows="5" cols="50">' . esc_textarea($value) . '</textarea>';
+}
+
+function cck_field_privacy_url() {
+    $options = get_option('cck_basic_configuration_options', []);
+    $value   = $options['privacy_url'] ?? '';
+    echo '<input type="url" name="cck_basic_configuration_options[privacy_url]" value="' . esc_attr($value) . '" class="regular-text" />';
+}
+
+function cck_field_cookie_list() {
+    $options = get_option('cck_cookie_list_options', []);
+    $value   = $options['list'] ?? '';
+    echo '<textarea name="cck_cookie_list_options[list]" rows="5" cols="50">' . esc_textarea($value) . '</textarea>';
+}
+
 /**
  * Render the Dashboard screen.
  */
@@ -218,28 +342,102 @@ function cck_render_dashboard() {
  * Render the Banner Styles screen.
  */
 function cck_render_banner_styles() {
-    echo '<div class="wrap"><h1>' . esc_html__('Banner Styles', 'cookie-consent-king') . '</h1><p>' . esc_html__('Placeholder for banner styles.', 'cookie-consent-king') . '</p></div>';
+    if (
+        $_SERVER['REQUEST_METHOD'] === 'POST' &&
+        isset($_POST['cck_banner_styles_nonce']) &&
+        wp_verify_nonce($_POST['cck_banner_styles_nonce'], 'cck_save_banner_styles')
+    ) {
+        $input   = $_POST['cck_banner_styles_options'] ?? [];
+        $options = [
+            'bg_color'   => sanitize_text_field($input['bg_color'] ?? ''),
+            'text_color' => sanitize_text_field($input['text_color'] ?? ''),
+        ];
+        update_option('cck_banner_styles_options', $options);
+        echo '<div class="updated"><p>' . esc_html__('Settings saved.', 'cookie-consent-king') . '</p></div>';
+    }
+
+    echo '<div class="wrap"><h1>' . esc_html__('Banner Styles', 'cookie-consent-king') . '</h1>';
+    echo '<form method="post">';
+    wp_nonce_field('cck_save_banner_styles', 'cck_banner_styles_nonce');
+    do_settings_sections('cck-banner-styles');
+    submit_button();
+    echo '</form></div>';
 }
 
 /**
  * Render the Default Texts screen.
  */
 function cck_render_default_texts() {
-    echo '<div class="wrap"><h1>' . esc_html__('Default Texts', 'cookie-consent-king') . '</h1><p>' . esc_html__('Placeholder for default texts.', 'cookie-consent-king') . '</p></div>';
+    if (
+        $_SERVER['REQUEST_METHOD'] === 'POST' &&
+        isset($_POST['cck_default_texts_nonce']) &&
+        wp_verify_nonce($_POST['cck_default_texts_nonce'], 'cck_save_default_texts')
+    ) {
+        $input   = $_POST['cck_default_texts_options'] ?? [];
+        $options = [
+            'title'   => sanitize_text_field($input['title'] ?? ''),
+            'message' => sanitize_textarea_field($input['message'] ?? ''),
+        ];
+        update_option('cck_default_texts_options', $options);
+        echo '<div class="updated"><p>' . esc_html__('Settings saved.', 'cookie-consent-king') . '</p></div>';
+    }
+
+    echo '<div class="wrap"><h1>' . esc_html__('Default Texts', 'cookie-consent-king') . '</h1>';
+    echo '<form method="post">';
+    wp_nonce_field('cck_save_default_texts', 'cck_default_texts_nonce');
+    do_settings_sections('cck-default-texts');
+    submit_button();
+    echo '</form></div>';
 }
 
 /**
  * Render the Basic Configuration screen.
  */
 function cck_render_basic_configuration() {
-    echo '<div class="wrap"><h1>' . esc_html__('Basic Configuration', 'cookie-consent-king') . '</h1><p>' . esc_html__('Placeholder for basic configuration.', 'cookie-consent-king') . '</p></div>';
+    if (
+        $_SERVER['REQUEST_METHOD'] === 'POST' &&
+        isset($_POST['cck_basic_configuration_nonce']) &&
+        wp_verify_nonce($_POST['cck_basic_configuration_nonce'], 'cck_save_basic_configuration')
+    ) {
+        $input   = $_POST['cck_basic_configuration_options'] ?? [];
+        $options = [
+            'privacy_url' => esc_url_raw($input['privacy_url'] ?? ''),
+        ];
+        update_option('cck_basic_configuration_options', $options);
+        echo '<div class="updated"><p>' . esc_html__('Settings saved.', 'cookie-consent-king') . '</p></div>';
+    }
+
+    echo '<div class="wrap"><h1>' . esc_html__('Basic Configuration', 'cookie-consent-king') . '</h1>';
+    echo '<form method="post">';
+    wp_nonce_field('cck_save_basic_configuration', 'cck_basic_configuration_nonce');
+    do_settings_sections('cck-basic-configuration');
+    submit_button();
+    echo '</form></div>';
 }
 
 /**
  * Render the Cookie List/Analysis screen.
  */
 function cck_render_cookie_list() {
-    echo '<div class="wrap"><h1>' . esc_html__('Cookie List/Analysis', 'cookie-consent-king') . '</h1><p>' . esc_html__('Placeholder for cookie list or analysis.', 'cookie-consent-king') . '</p></div>';
+    if (
+        $_SERVER['REQUEST_METHOD'] === 'POST' &&
+        isset($_POST['cck_cookie_list_nonce']) &&
+        wp_verify_nonce($_POST['cck_cookie_list_nonce'], 'cck_save_cookie_list')
+    ) {
+        $input   = $_POST['cck_cookie_list_options'] ?? [];
+        $options = [
+            'list' => sanitize_textarea_field($input['list'] ?? ''),
+        ];
+        update_option('cck_cookie_list_options', $options);
+        echo '<div class="updated"><p>' . esc_html__('Settings saved.', 'cookie-consent-king') . '</p></div>';
+    }
+
+    echo '<div class="wrap"><h1>' . esc_html__('Cookie List/Analysis', 'cookie-consent-king') . '</h1>';
+    echo '<form method="post">';
+    wp_nonce_field('cck_save_cookie_list', 'cck_cookie_list_nonce');
+    do_settings_sections('cck-cookie-list');
+    submit_button();
+    echo '</form></div>';
 }
 
 ?>

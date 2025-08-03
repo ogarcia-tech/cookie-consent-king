@@ -101,8 +101,16 @@ Use the plugin wrapper (`cookie-consent-king.php`) to load the build output:
 ```php
 function cck_enqueue_assets() {
     $plugin_url = plugin_dir_url(__FILE__);
-    wp_enqueue_style('cck-style', $plugin_url . 'dist/assets/index.css', [], COOKIE_CONSENT_KING_VERSION);
-    wp_enqueue_script('cck-script', $plugin_url . 'dist/assets/index.js', [], COOKIE_CONSENT_KING_VERSION, true);
+    $js_path  = plugin_dir_path(__FILE__) . 'dist/assets/index.js';
+    $css_path = plugin_dir_path(__FILE__) . 'dist/assets/index.css';
+
+    if (!file_exists($js_path) || !file_exists($css_path)) {
+        wp_admin_notice('Cookie Consent King assets not found.', ['type' => 'error']);
+        return;
+    }
+
+    wp_enqueue_style('cck-style', $plugin_url . 'dist/assets/index.css', [], filemtime($css_path));
+    wp_enqueue_script('cck-script', $plugin_url . 'dist/assets/index.js', [], filemtime($js_path), true);
 }
 add_action('wp_enqueue_scripts', 'cck_enqueue_assets');
 ```
