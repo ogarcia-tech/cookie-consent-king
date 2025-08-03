@@ -56,7 +56,8 @@ const sampleConsent = {
       expect(listener).toHaveBeenCalledTimes(1);
     });
 
-  it('onConsentChange notifies listeners and allows unsubscribe', () => {
+    it('onConsentChange notifies listeners and allows unsubscribe', () => {
+
     const listener = vi.fn();
     const unsubscribe = cookieManager.onConsentChange(listener);
 
@@ -91,17 +92,16 @@ const sampleConsent = {
     delete window.gtag;
   });
 
-  it('updateConfig merges new configuration', () => {
-    const originalConfig = cookieManager.getConfig();
-    cookieManager.updateConfig({ gtmId: 'GTM-TEST', position: 'top' });
+    it('setConfig merges new configuration', () => {
+      const originalConfig = cookieManager.getConfig();
+      cookieManager.setConfig({ gtmId: 'GTM-TEST' });
 
-    expect(cookieManager.getConfig()).toMatchObject({
-      gtmId: 'GTM-TEST',
-      position: 'top',
+      expect(cookieManager.getConfig()).toMatchObject({
+        gtmId: 'GTM-TEST',
+      });
+
+      cookieManager.setConfig(originalConfig);
     });
-
-    cookieManager.updateConfig(originalConfig);
-  });
 
   it('handles localStorage errors when loading consent', () => {
     const getItemSpy = vi

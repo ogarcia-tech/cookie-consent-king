@@ -106,7 +106,11 @@ function cck_enqueue_assets() {
             'Cookies estadísticas' => __('Cookies estadísticas', 'cookie-consent-king'),
             'Cookies de marketing' => __('Cookies de marketing', 'cookie-consent-king'),
         ];
-    wp_localize_script('cookie-consent-king-js', 'cckTranslations', $translations);
+
+        wp_localize_script('cookie-consent-king-js', 'cckTranslations', $translations);
+        add_action('wp_footer', 'cck_render_root_div');
+    }
+
 
     wp_enqueue_style(
         'cookie-consent-king-css',
@@ -114,6 +118,10 @@ function cck_enqueue_assets() {
         [],
         filemtime($css_path)
     );
+}
+
+function cck_render_root_div() {
+    echo '<div id="root"></div>';
 }
 add_action('wp_enqueue_scripts', 'cck_enqueue_assets');
 
