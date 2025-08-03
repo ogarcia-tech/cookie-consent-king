@@ -10,6 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Cookie, Settings, Shield, BarChart3, Target, X } from 'lucide-react';
 import { t } from '@/utils/i18n';
 import type { ConsentSettings } from '@/types/consent';
+import logger from '@/utils/logger';
 
 interface CookieBannerProps {
   onConsentUpdate?: (consent: ConsentSettings) => void;
@@ -74,28 +75,20 @@ const CookieBanner: React.FC<CookieBannerProps> = ({ onConsentUpdate, forceShow 
       try {
         savedConsent = window.localStorage.getItem('cookieConsent');
       } catch (error) {
-        if (import.meta.env.DEV) {
-          console.error('CookieBanner: Error accessing localStorage', error);
-        }
+        logger.error('CookieBanner: Error accessing localStorage', error);
       }
     }
 
-    if (import.meta.env.DEV) {
-      console.log('CookieBanner: checking saved consent', savedConsent);
-    }
+    logger.log('CookieBanner: checking saved consent', savedConsent);
 
     if (!savedConsent) {
-      if (import.meta.env.DEV) {
-        console.log('CookieBanner: No saved consent, showing banner');
-      }
+      logger.log('CookieBanner: No saved consent, showing banner');
       setShowBanner(true);
       setShowMiniBanner(false);
       // Initialize Google Consent Mode v2 with default values
       initializeConsentMode();
     } else {
-      if (import.meta.env.DEV) {
-        console.log('CookieBanner: Found saved consent, parsing and applying');
-      }
+      logger.log('CookieBanner: Found saved consent, parsing and applying');
       try {
         const parsedConsent = JSON.parse(savedConsent);
         setConsent(parsedConsent);
@@ -103,17 +96,13 @@ const CookieBanner: React.FC<CookieBannerProps> = ({ onConsentUpdate, forceShow 
         setShowBanner(false);
         setShowMiniBanner(true); // Show mini banner when consent exists
       } catch (error) {
-        if (import.meta.env.DEV) {
-          console.error('CookieBanner: Error parsing saved consent', error);
-        }
+        logger.error('CookieBanner: Error parsing saved consent', error);
         if (typeof window !== 'undefined' && window.localStorage) {
           try {
             window.localStorage.removeItem('cookieConsent');
             window.localStorage.removeItem('cookieConsentDate');
           } catch (cleanupError) {
-            if (import.meta.env.DEV) {
-              console.error('CookieBanner: Error cleaning corrupt consent', cleanupError);
-            }
+            logger.error('CookieBanner: Error cleaning corrupt consent', cleanupError);
           }
         }
         setConsent({
@@ -177,9 +166,7 @@ const CookieBanner: React.FC<CookieBannerProps> = ({ onConsentUpdate, forceShow 
         'timestamp': new Date().toISOString()
       };
 
-      if (import.meta.env.DEV) {
-        console.log('Pushing to dataLayer:', eventData);
-      }
+      logger.log('Pushing to dataLayer:', eventData);
       window.dataLayer.push(eventData);
     }
   };
@@ -208,17 +195,13 @@ const CookieBanner: React.FC<CookieBannerProps> = ({ onConsentUpdate, forceShow 
   );
 
   const saveConsent = (consentSettings: ConsentSettings, action: string) => {
-    if (import.meta.env.DEV) {
-      console.log('Saving consent:', consentSettings, 'Action:', action);
-    }
+    logger.log('Saving consent:', consentSettings, 'Action:', action);
     if (typeof window !== 'undefined' && window.localStorage) {
       try {
         window.localStorage.setItem('cookieConsent', JSON.stringify(consentSettings));
         window.localStorage.setItem('cookieConsentDate', new Date().toISOString());
       } catch (error) {
-        if (import.meta.env.DEV) {
-          console.error('CookieBanner: Error saving consent', error);
-        }
+        logger.error('CookieBanner: Error saving consent', error);
       }
     }
 
