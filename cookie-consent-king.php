@@ -109,15 +109,13 @@ function cck_enqueue_assets() {
 
         wp_localize_script('cookie-consent-king-js', 'cckTranslations', $translations);
         add_action('wp_footer', 'cck_render_root_div');
-    }
 
-
-    wp_enqueue_style(
-        'cookie-consent-king-css',
-        $asset_url . 'index.css',
-        [],
-        filemtime($css_path)
-    );
+        wp_enqueue_style(
+            'cookie-consent-king-css',
+            $asset_url . 'index.css',
+            [],
+            filemtime($css_path)
+        );
 }
 
 function cck_render_root_div() {
