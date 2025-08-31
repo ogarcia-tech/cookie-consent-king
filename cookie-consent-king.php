@@ -239,13 +239,7 @@ add_action('admin_menu', 'cck_register_admin_menu');
 
 function cck_settings_init() {
     // Banner Styles options.
-    register_setting(
-        'cck_banner_styles_group',
-        'cck_banner_styles_options',
-        [
-            'sanitize_callback' => 'cck_sanitize_banner_styles',
-        ]
-    );
+    register_setting('cck_banner_styles_group', 'cck_banner_styles_options');
     add_settings_section('cck_banner_styles_section', '', '__return_false', 'cck-banner-styles');
     add_settings_field(
         'cck_banner_bg_color',
@@ -263,13 +257,7 @@ function cck_settings_init() {
     );
 
     // Default Texts options.
-    register_setting(
-        'cck_default_texts_group',
-        'cck_default_texts_options',
-        [
-            'sanitize_callback' => 'cck_sanitize_default_texts',
-        ]
-    );
+    register_setting('cck_default_texts_group', 'cck_default_texts_options');
     add_settings_section('cck_default_texts_section', '', '__return_false', 'cck-default-texts');
     add_settings_field(
         'cck_default_title',
@@ -287,13 +275,7 @@ function cck_settings_init() {
     );
 
     // Basic Configuration options.
-    register_setting(
-        'cck_basic_configuration_group',
-        'cck_basic_configuration_options',
-        [
-            'sanitize_callback' => 'cck_sanitize_basic_configuration',
-        ]
-    );
+    register_setting('cck_basic_configuration_group', 'cck_basic_configuration_options');
     add_settings_section('cck_basic_configuration_section', '', '__return_false', 'cck-basic-configuration');
     add_settings_field(
         'cck_privacy_url',
@@ -304,13 +286,7 @@ function cck_settings_init() {
     );
 
     // Cookie List options.
-    register_setting(
-        'cck_cookie_list_group',
-        'cck_cookie_list_options',
-        [
-            'sanitize_callback' => 'cck_sanitize_cookie_list',
-        ]
-    );
+    register_setting('cck_cookie_list_group', 'cck_cookie_list_options');
     add_settings_section('cck_cookie_list_section', '', '__return_false', 'cck-cookie-list');
     add_settings_field(
         'cck_cookie_list',
@@ -362,36 +338,6 @@ function cck_field_cookie_list() {
     echo '<textarea name="cck_cookie_list_options[list]" rows="5" cols="50">' . esc_textarea($value) . '</textarea>';
 }
 
-// -----------------------------------------------------------------------------
-// Sanitize callbacks
-// -----------------------------------------------------------------------------
-
-function cck_sanitize_banner_styles($input) {
-    $output = [];
-    $output['bg_color']   = sanitize_hex_color($input['bg_color'] ?? '');
-    $output['text_color'] = sanitize_hex_color($input['text_color'] ?? '');
-    return $output;
-}
-
-function cck_sanitize_default_texts($input) {
-    $output = [];
-    $output['title']   = sanitize_text_field($input['title'] ?? '');
-    $output['message'] = sanitize_textarea_field($input['message'] ?? '');
-    return $output;
-}
-
-function cck_sanitize_basic_configuration($input) {
-    $output = [];
-    $output['privacy_url'] = esc_url_raw($input['privacy_url'] ?? '');
-    return $output;
-}
-
-function cck_sanitize_cookie_list($input) {
-    $output = [];
-    $output['list'] = sanitize_textarea_field($input['list'] ?? '');
-    return $output;
-}
-
 /**
  * Render the Dashboard screen.
  */
@@ -410,8 +356,8 @@ function cck_render_banner_styles() {
     ) {
         $input   = $_POST['cck_banner_styles_options'] ?? [];
         $options = [
-            'bg_color'   => sanitize_hex_color($input['bg_color'] ?? ''),
-            'text_color' => sanitize_hex_color($input['text_color'] ?? ''),
+            'bg_color'   => sanitize_text_field($input['bg_color'] ?? ''),
+            'text_color' => sanitize_text_field($input['text_color'] ?? ''),
         ];
         update_option('cck_banner_styles_options', $options);
         echo '<div class="updated"><p>' . esc_html__('Settings saved.', 'cookie-consent-king') . '</p></div>';
