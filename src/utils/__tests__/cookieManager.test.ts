@@ -22,6 +22,9 @@ const sampleConsent = {
     expect(cookieManager.getConsent()).toEqual(sampleConsent);
     expect(localStorage.getItem('cookieConsent')).toEqual(JSON.stringify(sampleConsent));
     expect(localStorage.getItem('cookieConsentDate')).not.toBeNull();
+    const cookieMatch = document.cookie.match(/cookieConsent=([^;]+)/);
+    expect(cookieMatch).not.toBeNull();
+    expect(JSON.parse(decodeURIComponent(cookieMatch![1]))).toEqual(sampleConsent);
     expect(handler).toHaveBeenCalled();
     window.removeEventListener('consentUpdated', handler);
   });
@@ -35,6 +38,7 @@ const sampleConsent = {
     expect(cookieManager.getConsent()).toBeNull();
     expect(localStorage.getItem('cookieConsent')).toBeNull();
     expect(localStorage.getItem('cookieConsentDate')).toBeNull();
+    expect(document.cookie).not.toContain('cookieConsent=');
     expect(handler).toHaveBeenCalled();
       window.removeEventListener('consentReset', handler);
     });
@@ -130,6 +134,15 @@ const sampleConsent = {
 
     cookieManager.resetConsent();
     expect(cookieManager.getConsentDate()).toBeNull();
+  });
+
+  it('loads consent from cookie when localStorage is empty', () => {
+    cookieManager.resetConsent();
+    localStorage.clear();
+    document.cookie = `cookieConsent=${encodeURIComponent(JSON.stringify(sampleConsent))}; path=/; max-age=31536000`;
+    // @ts-expect-error accessing private method for test
+    cookieManager.loadSavedConsent();
+    expect(cookieManager.getConsent()).toEqual(sampleConsent);
   });
 });
 
