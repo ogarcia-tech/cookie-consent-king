@@ -137,7 +137,21 @@ function cck_enqueue_assets() {
             'Cookies de marketing' => __('Cookies de marketing', 'cookie-consent-king'),
         ];
 
-        wp_localize_script('cookie-consent-king-js', 'cckTranslations', $translations);
+        $banner_styles  = get_option('cck_banner_styles_options', []);
+        $default_texts  = get_option('cck_default_texts_options', []);
+        $basic_config   = get_option('cck_basic_configuration_options', []);
+
+        $localized_data = [
+            'translations' => $translations,
+            'styles'       => $banner_styles,
+            'texts'        => $default_texts,
+            'urls'         => [
+                'cookiePolicy' => $basic_config['privacy_url'] ?? '',
+                'aboutCookies' => $basic_config['about_cookies_url'] ?? '',
+            ],
+        ];
+
+        wp_localize_script('cookie-consent-king-js', 'cckData', $localized_data);
         add_action('wp_footer', 'cck_render_root_div');
 
         wp_enqueue_style(
