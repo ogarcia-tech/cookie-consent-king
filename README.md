@@ -60,15 +60,6 @@ This project is built with:
 - shadcn-ui
 - Tailwind CSS
 
-## Running tests
-
-Install dependencies and run the Vitest suite:
-
-```sh
-npm install
-npm test
-```
-
 ## How can I deploy this project?
 
 Simply open [Lovable](https://lovable.dev/projects/1da458a0-5313-4e8e-8699-a605a08fdfea) and click on Share -> Publish.
