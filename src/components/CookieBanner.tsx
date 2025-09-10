@@ -82,13 +82,38 @@ const CookieBanner: React.FC<CookieBannerProps> = ({ onConsentUpdate, forceShow 
     }
   }, [onConsentUpdate]);
 
+  const logAction = (action: string) => {
+    if (typeof window === 'undefined') return;
+    const ajax = (window as any).cckAjax;
+    if (!ajax?.ajax_url) return;
+
+    try {
+      fetch(ajax.ajax_url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({
+          action: 'cck_log_consent',
+          consent_action: action,
+        }).toString(),
+      });
+    } catch (error) {
+      if (import.meta.env.DEV) {
+        console.error('CookieBanner: Error logging action', error);
+      }
+    }
+  };
+
   const saveConsent = (consentSettings: ConsentSettings, action: string) => {
     if (import.meta.env.DEV) {
       console.log('Saving consent:', consentSettings, 'Action:', action);
     }
 
-    cookieManager.updateConsent(consentSettings, action);
-    onConsentUpdate?.(consentSettings);
+
+    logAction(action);
+
+    // Update consent mode and push dataLayer event
+    updateConsentMode(consentSettings, action);
+
 
     setConsent(consentSettings);
     setShowBanner(false);
