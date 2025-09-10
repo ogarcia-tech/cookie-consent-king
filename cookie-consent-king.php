@@ -230,6 +230,16 @@ function cck_register_admin_menu() {
         'cck-cookie-list',
         'cck_render_cookie_list'
     );
+
+    // Submenu: Translations.
+    add_submenu_page(
+        'cck-dashboard',
+        __('Translations', 'cookie-consent-king'),
+        __('Translations', 'cookie-consent-king'),
+        'manage_options',
+        'cck-translations',
+        'cck_render_translations'
+    );
 }
 add_action('admin_menu', 'cck_register_admin_menu');
 
@@ -445,6 +455,156 @@ function cck_render_cookie_list() {
     do_settings_sections('cck-cookie-list');
     submit_button();
     echo '</form></div>';
+}
+
+/**
+ * Render the Translations screen.
+ */
+function cck_render_translations() {
+    $languages_dir = plugin_dir_path(__FILE__) . 'languages/';
+    $po_files      = glob($languages_dir . '*.po');
+    $locales       = [];
+    $strings       = [];
+
+    foreach ($po_files as $file) {
+        if (preg_match('/cookie-banner-([a-z_]+)\.po$/i', basename($file), $m)) {
+            $locale   = $m[1];
+            $locales[] = $locale;
+            $entries  = cck_parse_po($file);
+            foreach ($entries as $id => $str) {
+                $strings[$id][$locale] = $str;
+            }
+        }
+    }
+
+    if (
+        $_SERVER['REQUEST_METHOD'] === 'POST' &&
+        isset($_POST['cck_translation_nonce']) &&
+        wp_verify_nonce($_POST['cck_translation_nonce'], 'cck_save_translations')
+    ) {
+        foreach ($locales as $locale) {
+            $entries = array_map('sanitize_textarea_field', $_POST['trans_' . $locale] ?? []);
+            cck_write_po($locale, $entries, $languages_dir);
+        }
+        cck_generate_mo($languages_dir);
+        echo '<div class="updated"><p>' . esc_html__('Translations saved.', 'cookie-consent-king') . '</p></div>';
+    }
+
+    if (
+        $_SERVER['REQUEST_METHOD'] === 'POST' &&
+        isset($_POST['cck_import_po_nonce']) &&
+        wp_verify_nonce($_POST['cck_import_po_nonce'], 'cck_import_po') &&
+        !empty($_FILES['po_file']['tmp_name'])
+    ) {
+        $filename = basename($_FILES['po_file']['name']);
+        $dest     = $languages_dir . $filename;
+        move_uploaded_file($_FILES['po_file']['tmp_name'], $dest);
+        cck_generate_mo($languages_dir);
+        echo '<div class="updated"><p>' . esc_html__('File imported.', 'cookie-consent-king') . '</p></div>';
+    }
+
+    if (
+        $_SERVER['REQUEST_METHOD'] === 'POST' &&
+        isset($_POST['cck_regen_mo_nonce']) &&
+        wp_verify_nonce($_POST['cck_regen_mo_nonce'], 'cck_regen_mo')
+    ) {
+        cck_generate_mo($languages_dir);
+        echo '<div class="updated"><p>' . esc_html__('.mo files regenerated.', 'cookie-consent-king') . '</p></div>';
+    }
+
+    echo '<div class="wrap"><h1>' . esc_html__('Translations', 'cookie-consent-king') . '</h1>';
+    echo '<form method="post">';
+    wp_nonce_field('cck_save_translations', 'cck_translation_nonce');
+    echo '<table class="widefat"><thead><tr><th>' . esc_html__('Key', 'cookie-consent-king') . '</th>';
+    foreach ($locales as $locale) {
+        echo '<th>' . esc_html($locale) . '</th>';
+    }
+    echo '</tr></thead><tbody>';
+    foreach ($strings as $id => $vals) {
+        echo '<tr><td>' . esc_html($id) . '</td>';
+        foreach ($locales as $locale) {
+            $val = esc_textarea($vals[$locale] ?? '');
+            echo '<td><textarea name="trans_' . esc_attr($locale) . '[' . esc_attr($id) . ']" rows="1" cols="25">' . $val . '</textarea></td>';
+        }
+        echo '</tr>';
+    }
+    echo '</tbody></table>';
+    submit_button(__('Save Translations', 'cookie-consent-king'));
+    echo '</form>';
+
+    echo '<h2>' . esc_html__('Import / Export', 'cookie-consent-king') . '</h2>';
+    echo '<form method="post" enctype="multipart/form-data" style="margin-bottom:1em;">';
+    wp_nonce_field('cck_import_po', 'cck_import_po_nonce');
+    echo '<input type="file" name="po_file" /> ';
+    submit_button(__('Import .po/.pot', 'cookie-consent-king'), 'secondary', 'import_po', false);
+    echo '</form>';
+
+    echo '<p>';
+    foreach ($po_files as $file) {
+        $url = plugins_url('languages/' . basename($file), __FILE__);
+        echo '<a class="button" href="' . esc_url($url) . '">' . esc_html__('Export', 'cookie-consent-king') . ' ' . esc_html(basename($file)) . '</a> ';
+    }
+    echo '</p>';
+
+    echo '<form method="post">';
+    wp_nonce_field('cck_regen_mo', 'cck_regen_mo_nonce');
+    submit_button(__('Regenerate .mo files', 'cookie-consent-king'), 'secondary', 'regen_mo', false);
+    echo '</form>';
+
+    echo '</div>';
+}
+
+/**
+ * Parse a .po file into an array of translations.
+ */
+function cck_parse_po($file) {
+    $lines   = file($file);
+    $entries = [];
+    $id      = null;
+    foreach ($lines as $line) {
+        if (0 === strpos($line, 'msgid ')) {
+            $id = trim(substr($line, 6), "\"\n");
+        } elseif ($id !== null && 0 === strpos($line, 'msgstr ')) {
+            $entries[$id] = trim(substr($line, 7), "\"\n");
+            $id           = null;
+        }
+    }
+    return $entries;
+}
+
+/**
+ * Write translations back to a .po file.
+ */
+function cck_write_po($locale, $entries, $dir) {
+    $file  = $dir . "cookie-banner-$locale.po";
+    $lines = file_exists($file) ? file($file) : [];
+    $out   = [];
+    $id    = null;
+    foreach ($lines as $line) {
+        if (0 === strpos($line, 'msgid ')) {
+            $id   = trim(substr($line, 6), "\"\n");
+            $out[] = $line;
+        } elseif ($id !== null && 0 === strpos($line, 'msgstr ')) {
+            $new   = $entries[$id] ?? '';
+            $out[] = 'msgstr "' . addslashes($new) . "\n";
+            $id    = null;
+        } else {
+            $out[] = $line;
+        }
+    }
+    file_put_contents($file, implode('', $out));
+}
+
+/**
+ * Generate .mo files for all .po files in directory using msgfmt.
+ */
+function cck_generate_mo($dir) {
+    $po_files = glob($dir . '*.po');
+    foreach ($po_files as $po) {
+        $mo  = substr($po, 0, -3) . 'mo';
+        $cmd = sprintf('msgfmt %s -o %s', escapeshellarg($po), escapeshellarg($mo));
+        shell_exec($cmd);
+    }
 }
 
 ?>
