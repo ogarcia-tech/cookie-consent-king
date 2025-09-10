@@ -1,4 +1,4 @@
-import { cookieManager, CookieManager } from '../cookieManager';
+import { cookieManager } from '../cookieManager';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 
 const sampleConsent = {
@@ -20,20 +20,29 @@ const sampleConsent = {
       delete (window as any).__cckTest2;
     });
 
-  it('updateConsent stores consent and dispatches event', () => {
+  it('saveConsent stores consent and dispatches event', () => {
     const handler = vi.fn();
     window.addEventListener('consentUpdated', handler);
-    cookieManager.updateConsent(sampleConsent);
+    cookieManager.saveConsent(sampleConsent);
 
     expect(cookieManager.getConsent()).toEqual(sampleConsent);
     expect(localStorage.getItem('cookieConsent')).toEqual(JSON.stringify(sampleConsent));
     expect(localStorage.getItem('cookieConsentDate')).not.toBeNull();
+    const cookieMatch = document.cookie.match(/cookieConsent=([^;]+)/);
+    expect(cookieMatch).not.toBeNull();
+    expect(JSON.parse(decodeURIComponent(cookieMatch![1]))).toEqual(sampleConsent);
     expect(handler).toHaveBeenCalled();
     window.removeEventListener('consentUpdated', handler);
   });
 
+  it('loadConsent retrieves stored consent', () => {
+    localStorage.setItem('cookieConsent', JSON.stringify(sampleConsent));
+    const loaded = cookieManager.loadConsent();
+    expect(loaded).toEqual(sampleConsent);
+  });
+
     it('resetConsent clears consent and dispatches event', () => {
-      cookieManager.updateConsent(sampleConsent);
+      cookieManager.saveConsent(sampleConsent);
       const handler = vi.fn();
       window.addEventListener('consentReset', handler);
       cookieManager.resetConsent();
@@ -41,13 +50,14 @@ const sampleConsent = {
     expect(cookieManager.getConsent()).toBeNull();
     expect(localStorage.getItem('cookieConsent')).toBeNull();
     expect(localStorage.getItem('cookieConsentDate')).toBeNull();
+    expect(document.cookie).not.toContain('cookieConsent=');
     expect(handler).toHaveBeenCalled();
       window.removeEventListener('consentReset', handler);
     });
 
     it('resetConsent notifies and clears listeners', () => {
       const listener = vi.fn();
-      cookieManager.onConsentChange(listener);
+      cookieManager.onChange(listener);
 
       cookieManager.resetConsent();
 
@@ -58,21 +68,21 @@ const sampleConsent = {
         preferences: false,
       });
 
-      cookieManager.updateConsent(sampleConsent);
+      cookieManager.saveConsent(sampleConsent);
       expect(listener).toHaveBeenCalledTimes(1);
     });
 
-    it('onConsentChange notifies listeners and allows unsubscribe', () => {
+    it('onChange notifies listeners and allows unsubscribe', () => {
 
     const listener = vi.fn();
-    const unsubscribe = cookieManager.onConsentChange(listener);
+    const unsubscribe = cookieManager.onChange(listener);
 
-    cookieManager.updateConsent(sampleConsent);
+    cookieManager.saveConsent(sampleConsent);
     expect(listener).toHaveBeenCalledWith(sampleConsent);
 
     listener.mockClear();
     unsubscribe();
-    cookieManager.updateConsent({ ...sampleConsent, marketing: true });
+    cookieManager.saveConsent({ ...sampleConsent, marketing: true });
     expect(listener).not.toHaveBeenCalled();
   });
 
@@ -137,8 +147,7 @@ const sampleConsent = {
       });
     const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
-    // @ts-expect-error accessing private method for test
-    cookieManager.loadSavedConsent();
+    cookieManager.loadConsent();
 
     expect(errorSpy).toHaveBeenCalled();
 
@@ -147,7 +156,7 @@ const sampleConsent = {
   });
 
   it('getConsentDate returns stored date and null after reset', () => {
-    cookieManager.updateConsent(sampleConsent);
+    cookieManager.saveConsent(sampleConsent);
     const date = cookieManager.getConsentDate();
     expect(date).toBeInstanceOf(Date);
     expect(date!.toISOString()).toEqual(
@@ -156,6 +165,15 @@ const sampleConsent = {
 
     cookieManager.resetConsent();
     expect(cookieManager.getConsentDate()).toBeNull();
+  });
+
+  it('loads consent from cookie when localStorage is empty', () => {
+    cookieManager.resetConsent();
+    localStorage.clear();
+    document.cookie = `cookieConsent=${encodeURIComponent(JSON.stringify(sampleConsent))}; path=/; max-age=31536000`;
+    // @ts-expect-error accessing private method for test
+    cookieManager.loadSavedConsent();
+    expect(cookieManager.getConsent()).toEqual(sampleConsent);
   });
 });
 

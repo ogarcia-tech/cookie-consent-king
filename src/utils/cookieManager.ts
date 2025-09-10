@@ -33,7 +33,7 @@ export class CookieManager {
 
   private constructor(config: CookieManagerConfig = {}) {
     this.config = { ...config };
-    this.loadSavedConsent();
+    this.loadConsent();
   }
 
   public static getInstance(config?: CookieManagerConfig): CookieManager {
@@ -45,12 +45,25 @@ export class CookieManager {
     return CookieManager.instance;
   }
 
-  private loadSavedConsent(): void {
+  public loadConsent(): ConsentSettings | null {
     try {
-      const savedConsent = localStorage.getItem('cookieConsent');
+      let savedConsent: string | null = null;
+
+      if (typeof document !== 'undefined') {
+        const match = document.cookie.match(/(?:^|; )cookieConsent=([^;]+)/);
+        if (match) {
+          savedConsent = decodeURIComponent(match[1]);
+        }
+      }
+
+      if (!savedConsent && typeof localStorage !== 'undefined') {
+        savedConsent = localStorage.getItem('cookieConsent');
+      }
+
       if (savedConsent) {
         this.consent = JSON.parse(savedConsent);
         this.updateGoogleConsentMode(this.consent!);
+
         // Activar scripts diferidos si ya se había dado consentimiento
         if (typeof document !== 'undefined') {
           const run = () => this.applyConsentToScripts(this.consent!);
@@ -60,10 +73,13 @@ export class CookieManager {
             run();
           }
         }
+
       }
+      this.initializeConsentMode();
     } catch (error) {
       console.error('Error loading saved consent:', error);
     }
+    return null;
   }
 
   public getConsent(): ConsentSettings | null {
@@ -78,7 +94,7 @@ export class CookieManager {
     return this.consent ? this.consent[type] : false;
   }
 
-  public updateConsent(newConsent: ConsentSettings, action: string = 'custom'): void {
+  public saveConsent(newConsent: ConsentSettings, action: string = 'custom'): void {
     this.consent = newConsent;
 
     if (typeof window !== 'undefined') {
@@ -88,6 +104,11 @@ export class CookieManager {
       } catch (error) {
         console.error('Error saving consent:', error);
       }
+    }
+
+    if (typeof document !== 'undefined') {
+      const cookieValue = encodeURIComponent(JSON.stringify(newConsent));
+      document.cookie = `cookieConsent=${cookieValue}; path=/; max-age=31536000`;
     }
 
     // Actualizar Google Consent Mode
@@ -111,9 +132,11 @@ export class CookieManager {
   }
 
   public resetConsent(): void {
-
     localStorage.removeItem('cookieConsent');
     localStorage.removeItem('cookieConsentDate');
+    if (typeof document !== 'undefined') {
+      document.cookie = 'cookieConsent=; path=/; max-age=0';
+    }
     const resetConsent: ConsentSettings = {
       necessary: false,
       analytics: false,
@@ -139,7 +162,7 @@ export class CookieManager {
     this.listeners = [];
   }
 
-  public onConsentChange(listener: (consent: ConsentSettings) => void): () => void {
+  public onChange(listener: (consent: ConsentSettings) => void): () => void {
     this.listeners.push(listener);
     
     // Devolver función para desuscribirse
