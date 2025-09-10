@@ -138,6 +138,16 @@ function cck_enqueue_assets() {
         ];
 
 
+        $banner_styles = get_option('cck_banner_styles_options', []);
+        wp_localize_script(
+            'cookie-consent-king-js',
+            'cckBannerStyles',
+            [
+                'position' => $banner_styles['position'] ?? 'bottom',
+            ]
+        );
+
+
         wp_localize_script('cookie-consent-king-js', 'cckTranslations', $translations);
         wp_localize_script('cookie-consent-king-js', 'cckAjax', [
             'ajax_url' => admin_url('admin-ajax.php'),
@@ -317,6 +327,13 @@ function cck_settings_init() {
         'cck-banner-styles',
         'cck_banner_styles_section'
     );
+    add_settings_field(
+        'cck_banner_position',
+        __('Banner Position', 'cookie-consent-king'),
+        'cck_field_banner_position',
+        'cck-banner-styles',
+        'cck_banner_styles_section'
+    );
 
     // Default Texts options.
     register_setting('cck_default_texts_group', 'cck_default_texts_options');
@@ -374,6 +391,22 @@ function cck_field_banner_text_color() {
     $options = get_option('cck_banner_styles_options', []);
     $value   = $options['text_color'] ?? '';
     echo '<input type="text" name="cck_banner_styles_options[text_color]" value="' . esc_attr($value) . '" />';
+}
+
+function cck_field_banner_position() {
+    $options  = get_option('cck_banner_styles_options', []);
+    $value    = $options['position'] ?? 'bottom';
+    $positions = [
+        'bottom' => __('Bottom', 'cookie-consent-king'),
+        'top'    => __('Top', 'cookie-consent-king'),
+        'modal'  => __('Modal', 'cookie-consent-king'),
+    ];
+    echo '<select name="cck_banner_styles_options[position]">';
+    foreach ($positions as $key => $label) {
+        $selected = selected($value, $key, false);
+        echo '<option value="' . esc_attr($key) . '" ' . $selected . '>' . esc_html($label) . '</option>';
+    }
+    echo '</select>';
 }
 
 function cck_field_default_title() {
@@ -443,9 +476,14 @@ function cck_render_banner_styles() {
         wp_verify_nonce($_POST['cck_banner_styles_nonce'], 'cck_save_banner_styles')
     ) {
         $input   = $_POST['cck_banner_styles_options'] ?? [];
+        $position = sanitize_text_field($input['position'] ?? 'bottom');
+        if (!in_array($position, ['bottom', 'top', 'modal'], true)) {
+            $position = 'bottom';
+        }
         $options = [
             'bg_color'   => sanitize_text_field($input['bg_color'] ?? ''),
             'text_color' => sanitize_text_field($input['text_color'] ?? ''),
+            'position'   => $position,
         ];
         update_option('cck_banner_styles_options', $options);
         echo '<div class="updated"><p>' . esc_html__('Settings saved.', 'cookie-consent-king') . '</p></div>';

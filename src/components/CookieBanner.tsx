@@ -44,19 +44,28 @@ const CookieBanner: React.FC<CookieBannerProps> = ({ onConsentUpdate, forceShow 
     preferences: false,
   });
 
-  const cckData =
-    typeof window !== 'undefined' ? ((window as any).cckData || {}) : {};
-  const { styles = {}, texts = {}, urls = {} } = cckData;
-  const bannerStyle: React.CSSProperties = {
-    backgroundColor: styles.bg_color || undefined,
-    color: styles.text_color || undefined,
-  };
-  const heading = texts.title || t('Gestión de Cookies');
-  const defaultMessage =
-    'Utilizamos cookies para mejorar tu experiencia de navegación, personalizar contenido y anuncios, proporcionar funciones de redes sociales y analizar nuestro tráfico. También compartimos información sobre tu uso de nuestro sitio con nuestros socios de análisis y publicidad.';
-  const message = texts.message || t(defaultMessage);
-  const cookiePolicyUrlResolved = urls.cookiePolicy || cookiePolicyUrl;
-  const aboutCookiesUrlResolved = urls.aboutCookies || aboutCookiesUrl;
+
+  const bannerPosition =
+    typeof window !== 'undefined'
+      ? (window as Window).cckBannerStyles?.position || 'bottom'
+      : 'bottom';
+
+  const overlayPositionClass =
+    bannerPosition === 'top'
+      ? 'items-start'
+      : bannerPosition === 'modal'
+        ? 'items-center'
+        : 'items-end';
+
+  const mobilePositionClass =
+    bannerPosition === 'top'
+      ? 'top-4'
+      : bannerPosition === 'modal'
+        ? 'top-1/2 -translate-y-1/2'
+        : 'bottom-4';
+
+  const miniBannerPositionClass = bannerPosition === 'top' ? 'top-6' : 'bottom-6';
+
 
   useEffect(() => {
     const handleResize = () => {
@@ -168,8 +177,10 @@ const CookieBanner: React.FC<CookieBannerProps> = ({ onConsentUpdate, forceShow 
   return (
     <>
       {showBanner && (!isMobile || showSettings) && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-end justify-center p-4">
-          <Card className="w-full max-w-2xl bg-cookie-banner border-cookie-banner-border shadow-floating animate-in slide-in-from-bottom-4 duration-300" style={bannerStyle}>
+
+        <div className={`fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex justify-center p-4 ${overlayPositionClass}`}>
+          <Card className="w-full max-w-2xl bg-cookie-banner border-cookie-banner-border shadow-floating animate-in slide-in-from-bottom-4 duration-300">
+
             <div className="p-6">
                 {!showSettings ? (
                   // Main banner
@@ -483,8 +494,10 @@ const CookieBanner: React.FC<CookieBannerProps> = ({ onConsentUpdate, forceShow 
       )}
 
       {showBanner && isMobile && !showSettings && (
-          <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 w-full px-4">
-            <Card className="bg-cookie-banner border-cookie-banner-border shadow-floating animate-in slide-in-from-bottom-4 duration-300" style={bannerStyle}>
+
+          <div className={`fixed left-1/2 -translate-x-1/2 z-50 w-full px-4 ${mobilePositionClass}`}>
+            <Card className="bg-cookie-banner border-cookie-banner-border shadow-floating animate-in slide-in-from-bottom-4 duration-300">
+
               <div className="p-4 space-y-3">
                 <div className="flex items-center gap-2">
                   <Cookie className="w-5 h-5 text-primary" />
@@ -506,8 +519,10 @@ const CookieBanner: React.FC<CookieBannerProps> = ({ onConsentUpdate, forceShow 
         )}
 
       {!forceShow && !showBanner && showMiniBanner && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[9999] w-full max-w-xs px-4">
-          <Card className="bg-cookie-banner border-cookie-banner-border shadow-floating animate-in slide-in-from-bottom-4 duration-300" style={bannerStyle}>
+
+        <div className={`fixed left-1/2 -translate-x-1/2 z-[9999] w-full max-w-xs px-4 ${miniBannerPositionClass}`}>
+          <Card className="bg-cookie-banner border-cookie-banner-border shadow-floating animate-in slide-in-from-bottom-4 duration-300">
+
             <div className="flex items-center justify-between p-3">
               <div className="flex items-center gap-2">
                 <Cookie className="w-5 h-5 text-primary" />
