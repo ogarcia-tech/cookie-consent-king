@@ -33,7 +33,7 @@ export class CookieManager {
 
   private constructor(config: CookieManagerConfig = {}) {
     this.config = { ...config };
-    this.loadSavedConsent();
+    this.loadConsent();
   }
 
   public static getInstance(config?: CookieManagerConfig): CookieManager {
@@ -45,16 +45,41 @@ export class CookieManager {
     return CookieManager.instance;
   }
 
-  private loadSavedConsent(): void {
+  public loadConsent(): ConsentSettings | null {
     try {
-      const savedConsent = localStorage.getItem('cookieConsent');
+      let savedConsent: string | null = null;
+
+      if (typeof document !== 'undefined') {
+        const match = document.cookie.match(/(?:^|; )cookieConsent=([^;]+)/);
+        if (match) {
+          savedConsent = decodeURIComponent(match[1]);
+        }
+      }
+
+      if (!savedConsent && typeof localStorage !== 'undefined') {
+        savedConsent = localStorage.getItem('cookieConsent');
+      }
+
       if (savedConsent) {
         this.consent = JSON.parse(savedConsent);
         this.updateGoogleConsentMode(this.consent!);
+
+        // Activar scripts diferidos si ya se había dado consentimiento
+        if (typeof document !== 'undefined') {
+          const run = () => this.applyConsentToScripts(this.consent!);
+          if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', run, { once: true });
+          } else {
+            run();
+          }
+        }
+
       }
+      this.initializeConsentMode();
     } catch (error) {
       console.error('Error loading saved consent:', error);
     }
+    return null;
   }
 
   public getConsent(): ConsentSettings | null {
@@ -69,7 +94,7 @@ export class CookieManager {
     return this.consent ? this.consent[type] : false;
   }
 
-  public updateConsent(newConsent: ConsentSettings, action: string = 'custom'): void {
+  public saveConsent(newConsent: ConsentSettings, action: string = 'custom'): void {
     this.consent = newConsent;
 
     if (typeof window !== 'undefined') {
@@ -81,6 +106,11 @@ export class CookieManager {
       }
     }
 
+    if (typeof document !== 'undefined') {
+      const cookieValue = encodeURIComponent(JSON.stringify(newConsent));
+      document.cookie = `cookieConsent=${cookieValue}; path=/; max-age=31536000`;
+    }
+
     // Actualizar Google Consent Mode
     this.updateGoogleConsentMode(newConsent);
 
@@ -89,6 +119,9 @@ export class CookieManager {
 
     // Notificar a los listeners
     this.notifyListeners(newConsent);
+
+    // Activar scripts diferidos según el nuevo consentimiento
+    this.applyConsentToScripts(newConsent);
 
     // Disparar evento personalizado
     if (typeof window !== 'undefined') {
@@ -99,9 +132,11 @@ export class CookieManager {
   }
 
   public resetConsent(): void {
-
     localStorage.removeItem('cookieConsent');
     localStorage.removeItem('cookieConsentDate');
+    if (typeof document !== 'undefined') {
+      document.cookie = 'cookieConsent=; path=/; max-age=0';
+    }
     const resetConsent: ConsentSettings = {
       necessary: false,
       analytics: false,
@@ -127,7 +162,7 @@ export class CookieManager {
     this.listeners = [];
   }
 
-  public onConsentChange(listener: (consent: ConsentSettings) => void): () => void {
+  public onChange(listener: (consent: ConsentSettings) => void): () => void {
     this.listeners.push(listener);
     
     // Devolver función para desuscribirse
@@ -253,6 +288,31 @@ export class CookieManager {
       noscript.appendChild(iframe);
       document.body.appendChild(noscript);
     }
+  }
+
+  // Activa los scripts marcados con type="text/plain" y data-consent
+  private applyConsentToScripts(consent: ConsentSettings): void {
+    if (typeof document === 'undefined') return;
+    const scripts = document.querySelectorAll<HTMLScriptElement>('script[type="text/plain"][data-consent]');
+
+    scripts.forEach(oldScript => {
+      const attr = oldScript.getAttribute('data-consent');
+      if (!attr) return;
+      const categories = attr.split('|').map(c => c.trim()).filter(Boolean);
+      const allowed = categories.some(cat => (consent as any)[cat as keyof ConsentSettings]);
+      if (!allowed) return;
+
+      const newScript = document.createElement('script');
+      Array.from(oldScript.attributes).forEach(({ name, value }) => {
+        if (name === 'type' || name === 'data-consent') return;
+        newScript.setAttribute(name, value);
+      });
+      newScript.type = 'text/javascript';
+      if (oldScript.textContent) {
+        newScript.text = oldScript.textContent;
+      }
+      oldScript.parentNode?.replaceChild(newScript, oldScript);
+    });
   }
 }
 

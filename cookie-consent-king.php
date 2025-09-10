@@ -29,15 +29,30 @@ function cck_enqueue_assets() {
     $css_path = $asset_path . 'index.css';
 
     if (!file_exists($js_path) || !file_exists($css_path)) {
-        $message = __('Cookie Consent King: assets not found. Please run "npm run build".', 'cookie-consent-king');
+        $message = __('Cookie Consent King: assets not found. Loading from CDN. To use local assets, run "npm run build".', 'cookie-consent-king');
 
         if (function_exists('wp_admin_notice')) {
-            wp_admin_notice($message, ['type' => 'error']);
+            wp_admin_notice($message, ['type' => 'warning']);
         } else {
             add_action('admin_notices', function () use ($message) {
-                echo '<div class="notice notice-error"><p>' . esc_html($message) . '</p></div>';
+                echo '<div class="notice notice-warning"><p>' . esc_html($message) . '</p></div>';
             });
         }
+
+        $cdn_base = 'https://cdn.jsdelivr.net/gh/metricaweb/cookie-consent-king@main/dist/assets/';
+        wp_enqueue_script(
+            'cookie-consent-king-js',
+            $cdn_base . 'index.js',
+            [],
+            COOKIE_CONSENT_KING_VERSION,
+            true
+        );
+        wp_enqueue_style(
+            'cookie-consent-king-css',
+            $cdn_base . 'index.css',
+            [],
+            COOKIE_CONSENT_KING_VERSION
+        );
 
         return;
     }
@@ -48,6 +63,12 @@ function cck_enqueue_assets() {
         [],
         filemtime($js_path),
         true
+    );
+    wp_enqueue_style(
+        'cookie-consent-king-css',
+        $asset_url . 'index.css',
+        [],
+        filemtime($css_path)
     );
 
     $translations = [
@@ -116,7 +137,22 @@ function cck_enqueue_assets() {
             'Cookies de marketing' => __('Cookies de marketing', 'cookie-consent-king'),
         ];
 
+
+        $banner_styles = get_option('cck_banner_styles_options', []);
+        wp_localize_script(
+            'cookie-consent-king-js',
+            'cckBannerStyles',
+            [
+                'position' => $banner_styles['position'] ?? 'bottom',
+            ]
+        );
+
+
         wp_localize_script('cookie-consent-king-js', 'cckTranslations', $translations);
+        wp_localize_script('cookie-consent-king-js', 'cckAjax', [
+            'ajax_url' => admin_url('admin-ajax.php'),
+        ]);
+
         add_action('wp_footer', 'cck_render_root_div');
 
         wp_enqueue_style(
@@ -132,6 +168,26 @@ function cck_render_root_div() {
 }
 add_action('wp_enqueue_scripts', 'cck_enqueue_assets');
 
+function cck_enqueue_admin_preview_assets($hook) {
+    if (strpos($hook, 'cck') === false) {
+        return;
+    }
+
+    cck_enqueue_assets();
+
+    $default_texts = get_option('cck_default_texts_options', []);
+    $basic_config = get_option('cck_basic_configuration_options', []);
+    $options = [
+        'title' => $default_texts['title'] ?? '',
+        'message' => $default_texts['message'] ?? '',
+        'cookiePolicyUrl' => $basic_config['privacy_url'] ?? '',
+    ];
+
+    wp_localize_script('cookie-consent-king-js', 'cckOptions', $options);
+    wp_add_inline_script('cookie-consent-king-js', 'window.cckPreview = true; window.cckForceShow = true;', 'before');
+}
+add_action('admin_enqueue_scripts', 'cck_enqueue_admin_preview_assets');
+
 function cck_load_textdomain() {
     load_plugin_textdomain(
         'cookie-consent-king',
@@ -142,6 +198,22 @@ function cck_load_textdomain() {
 add_action('init', 'cck_load_textdomain');
 
 function cck_activate() {
+    global $wpdb;
+
+    $table_name      = $wpdb->prefix . 'cck_consent_logs';
+    $charset_collate = $wpdb->get_charset_collate();
+    $sql             = "CREATE TABLE $table_name (
+        id mediumint(9) NOT NULL AUTO_INCREMENT,
+        action varchar(50) NOT NULL,
+        ip varchar(100) DEFAULT '' NOT NULL,
+        country varchar(100) DEFAULT '' NOT NULL,
+        created_at datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        PRIMARY KEY  (id)
+    ) $charset_collate;";
+
+    require_once ABSPATH . 'wp-admin/includes/upgrade.php';
+    dbDelta($sql);
+
     $defaults = [
         'cck_banner_heading' => __('Gestión de Cookies', 'cookie-consent-king'),
         'cck_banner_message' => __('Utilizamos cookies para mejorar tu experiencia de navegación.', 'cookie-consent-king'),
@@ -265,6 +337,13 @@ function cck_settings_init() {
         'cck-banner-styles',
         'cck_banner_styles_section'
     );
+    add_settings_field(
+        'cck_banner_position',
+        __('Banner Position', 'cookie-consent-king'),
+        'cck_field_banner_position',
+        'cck-banner-styles',
+        'cck_banner_styles_section'
+    );
 
     // Default Texts options.
     register_setting('cck_default_texts_group', 'cck_default_texts_options');
@@ -324,6 +403,22 @@ function cck_field_banner_text_color() {
     echo '<input type="text" name="cck_banner_styles_options[text_color]" value="' . esc_attr($value) . '" />';
 }
 
+function cck_field_banner_position() {
+    $options  = get_option('cck_banner_styles_options', []);
+    $value    = $options['position'] ?? 'bottom';
+    $positions = [
+        'bottom' => __('Bottom', 'cookie-consent-king'),
+        'top'    => __('Top', 'cookie-consent-king'),
+        'modal'  => __('Modal', 'cookie-consent-king'),
+    ];
+    echo '<select name="cck_banner_styles_options[position]">';
+    foreach ($positions as $key => $label) {
+        $selected = selected($value, $key, false);
+        echo '<option value="' . esc_attr($key) . '" ' . $selected . '>' . esc_html($label) . '</option>';
+    }
+    echo '</select>';
+}
+
 function cck_field_default_title() {
     $options = get_option('cck_default_texts_options', []);
     $value   = $options['title'] ?? '';
@@ -352,7 +447,33 @@ function cck_field_cookie_list() {
  * Render the Dashboard screen.
  */
 function cck_render_dashboard() {
-    echo '<div class="wrap"><h1>' . esc_html__('Dashboard', 'cookie-consent-king') . '</h1><p>' . esc_html__('Admin dashboard placeholder.', 'cookie-consent-king') . '</p></div>';
+    global $wpdb;
+
+    $table = $wpdb->prefix . 'cck_consent_logs';
+    $logs  = $wpdb->get_results("SELECT action, ip, country, created_at FROM $table ORDER BY id DESC LIMIT 100");
+
+    $counts = [];
+    foreach ($logs as $log) {
+        $counts[$log->action] = ($counts[$log->action] ?? 0) + 1;
+    }
+
+    $labels = array_keys($counts);
+    $data   = array_values($counts);
+
+    echo '<div class="wrap"><h1>' . esc_html__('Dashboard', 'cookie-consent-king') . '</h1>';
+    echo '<p><a class="button" href="' . esc_url(admin_url('admin-post.php?action=cck_export_logs')) . '">' . esc_html__('Export CSV', 'cookie-consent-king') . '</a></p>';
+    echo '<canvas id="cck-consent-chart" height="100"></canvas>';
+    echo '<table class="widefat"><thead><tr><th>' . esc_html__('Date', 'cookie-consent-king') . '</th><th>' . esc_html__('Action', 'cookie-consent-king') . '</th><th>IP</th><th>' . esc_html__('Country', 'cookie-consent-king') . '</th></tr></thead><tbody>';
+    if ($logs) {
+        foreach ($logs as $row) {
+            echo '<tr><td>' . esc_html($row->created_at) . '</td><td>' . esc_html($row->action) . '</td><td>' . esc_html($row->ip) . '</td><td>' . esc_html($row->country) . '</td></tr>';
+        }
+    } else {
+        echo '<tr><td colspan="4">' . esc_html__('No data', 'cookie-consent-king') . '</td></tr>';
+    }
+    echo '</tbody></table></div>';
+    echo '<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>';
+    echo '<script>const ctx=document.getElementById("cck-consent-chart");new Chart(ctx,{type:"bar",data:{labels:' . wp_json_encode($labels) . ',datasets:[{label:"Logs",data:' . wp_json_encode($data) . '}],}});</script>';
 }
 
 /**
@@ -365,9 +486,14 @@ function cck_render_banner_styles() {
         wp_verify_nonce($_POST['cck_banner_styles_nonce'], 'cck_save_banner_styles')
     ) {
         $input   = $_POST['cck_banner_styles_options'] ?? [];
+        $position = sanitize_text_field($input['position'] ?? 'bottom');
+        if (!in_array($position, ['bottom', 'top', 'modal'], true)) {
+            $position = 'bottom';
+        }
         $options = [
             'bg_color'   => sanitize_text_field($input['bg_color'] ?? ''),
             'text_color' => sanitize_text_field($input['text_color'] ?? ''),
+            'position'   => $position,
         ];
         update_option('cck_banner_styles_options', $options);
         echo '<div class="updated"><p>' . esc_html__('Settings saved.', 'cookie-consent-king') . '</p></div>';
@@ -378,7 +504,10 @@ function cck_render_banner_styles() {
     wp_nonce_field('cck_save_banner_styles', 'cck_banner_styles_nonce');
     do_settings_sections('cck-banner-styles');
     submit_button();
-    echo '</form></div>';
+    echo '</form>';
+    echo '<h2>' . esc_html__('Preview', 'cookie-consent-king') . '</h2>';
+    cck_render_preview_banner();
+    echo '</div>';
 }
 
 /**
@@ -404,7 +533,10 @@ function cck_render_default_texts() {
     wp_nonce_field('cck_save_default_texts', 'cck_default_texts_nonce');
     do_settings_sections('cck-default-texts');
     submit_button();
-    echo '</form></div>';
+    echo '</form>';
+    echo '<h2>' . esc_html__('Preview', 'cookie-consent-king') . '</h2>';
+    cck_render_preview_banner();
+    echo '</div>';
 }
 
 /**
@@ -429,7 +561,10 @@ function cck_render_basic_configuration() {
     wp_nonce_field('cck_save_basic_configuration', 'cck_basic_configuration_nonce');
     do_settings_sections('cck-basic-configuration');
     submit_button();
-    echo '</form></div>';
+    echo '</form>';
+    echo '<h2>' . esc_html__('Preview', 'cookie-consent-king') . '</h2>';
+    cck_render_preview_banner();
+    echo '</div>';
 }
 
 /**
@@ -454,8 +589,84 @@ function cck_render_cookie_list() {
     wp_nonce_field('cck_save_cookie_list', 'cck_cookie_list_nonce');
     do_settings_sections('cck-cookie-list');
     submit_button();
-    echo '</form></div>';
+    echo '</form>';
+    echo '<h2>' . esc_html__('Preview', 'cookie-consent-king') . '</h2>';
+    cck_render_preview_banner();
+    echo '</div>';
 }
+
+function cck_render_preview_banner() {
+    echo '<div id="root"></div>';
+}
+add_shortcode('cck_preview_banner', 'cck_render_preview_banner');
+
+function cck_get_user_ip() {
+    if (!empty($_SERVER['HTTP_CLIENT_IP'])) {
+        return sanitize_text_field(wp_unslash($_SERVER['HTTP_CLIENT_IP']));
+    }
+    if (!empty($_SERVER['HTTP_X_FORWARDED_FOR'])) {
+        $ip = explode(',', wp_unslash($_SERVER['HTTP_X_FORWARDED_FOR']))[0];
+        return sanitize_text_field(trim($ip));
+    }
+    return sanitize_text_field($_SERVER['REMOTE_ADDR'] ?? '');
+}
+
+function cck_get_country_from_ip($ip) {
+    if (empty($ip)) {
+        return '';
+    }
+    $response = wp_remote_get('https://ipapi.co/' . $ip . '/country/');
+    if (is_wp_error($response)) {
+        return '';
+    }
+    return sanitize_text_field(wp_remote_retrieve_body($response));
+}
+
+function cck_log_consent() {
+    $action = sanitize_text_field($_POST['consent_action'] ?? '');
+    if (!$action) {
+        wp_send_json_error('missing action');
+    }
+
+    global $wpdb;
+    $ip      = cck_get_user_ip();
+    $country = cck_get_country_from_ip($ip);
+    $table   = $wpdb->prefix . 'cck_consent_logs';
+    $wpdb->insert(
+        $table,
+        [
+            'action'     => $action,
+            'ip'         => $ip,
+            'country'    => $country,
+            'created_at' => current_time('mysql'),
+        ]
+    );
+
+    wp_send_json_success();
+}
+add_action('wp_ajax_cck_log_consent', 'cck_log_consent');
+add_action('wp_ajax_nopriv_cck_log_consent', 'cck_log_consent');
+
+function cck_export_logs() {
+    if (!current_user_can('manage_options')) {
+        wp_die(__('Unauthorized', 'cookie-consent-king'));
+    }
+    global $wpdb;
+    $table = $wpdb->prefix . 'cck_consent_logs';
+    $logs  = $wpdb->get_results("SELECT action, ip, country, created_at FROM $table ORDER BY id DESC");
+
+    header('Content-Type: text/csv');
+    header('Content-Disposition: attachment; filename="cck_consent_logs.csv"');
+
+    $output = fopen('php://output', 'w');
+    fputcsv($output, ['date', 'action', 'ip', 'country']);
+    foreach ($logs as $log) {
+        fputcsv($output, [$log->created_at, $log->action, $log->ip, $log->country]);
+    }
+    fclose($output);
+    exit;
+}
+add_action('admin_post_cck_export_logs', 'cck_export_logs');
 
 /**
  * Render the Translations screen.
