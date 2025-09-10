@@ -132,6 +132,26 @@ function cck_render_root_div() {
 }
 add_action('wp_enqueue_scripts', 'cck_enqueue_assets');
 
+function cck_enqueue_admin_preview_assets($hook) {
+    if (strpos($hook, 'cck') === false) {
+        return;
+    }
+
+    cck_enqueue_assets();
+
+    $default_texts = get_option('cck_default_texts_options', []);
+    $basic_config = get_option('cck_basic_configuration_options', []);
+    $options = [
+        'title' => $default_texts['title'] ?? '',
+        'message' => $default_texts['message'] ?? '',
+        'cookiePolicyUrl' => $basic_config['privacy_url'] ?? '',
+    ];
+
+    wp_localize_script('cookie-consent-king-js', 'cckOptions', $options);
+    wp_add_inline_script('cookie-consent-king-js', 'window.cckPreview = true; window.cckForceShow = true;', 'before');
+}
+add_action('admin_enqueue_scripts', 'cck_enqueue_admin_preview_assets');
+
 function cck_load_textdomain() {
     load_plugin_textdomain(
         'cookie-consent-king',
@@ -368,7 +388,10 @@ function cck_render_banner_styles() {
     wp_nonce_field('cck_save_banner_styles', 'cck_banner_styles_nonce');
     do_settings_sections('cck-banner-styles');
     submit_button();
-    echo '</form></div>';
+    echo '</form>';
+    echo '<h2>' . esc_html__('Preview', 'cookie-consent-king') . '</h2>';
+    cck_render_preview_banner();
+    echo '</div>';
 }
 
 /**
@@ -394,7 +417,10 @@ function cck_render_default_texts() {
     wp_nonce_field('cck_save_default_texts', 'cck_default_texts_nonce');
     do_settings_sections('cck-default-texts');
     submit_button();
-    echo '</form></div>';
+    echo '</form>';
+    echo '<h2>' . esc_html__('Preview', 'cookie-consent-king') . '</h2>';
+    cck_render_preview_banner();
+    echo '</div>';
 }
 
 /**
@@ -419,7 +445,10 @@ function cck_render_basic_configuration() {
     wp_nonce_field('cck_save_basic_configuration', 'cck_basic_configuration_nonce');
     do_settings_sections('cck-basic-configuration');
     submit_button();
-    echo '</form></div>';
+    echo '</form>';
+    echo '<h2>' . esc_html__('Preview', 'cookie-consent-king') . '</h2>';
+    cck_render_preview_banner();
+    echo '</div>';
 }
 
 /**
@@ -444,7 +473,15 @@ function cck_render_cookie_list() {
     wp_nonce_field('cck_save_cookie_list', 'cck_cookie_list_nonce');
     do_settings_sections('cck-cookie-list');
     submit_button();
-    echo '</form></div>';
+    echo '</form>';
+    echo '<h2>' . esc_html__('Preview', 'cookie-consent-king') . '</h2>';
+    cck_render_preview_banner();
+    echo '</div>';
 }
+
+function cck_render_preview_banner() {
+    echo '<div id="root"></div>';
+}
+add_shortcode('cck_preview_banner', 'cck_render_preview_banner');
 
 ?>
