@@ -29,15 +29,30 @@ function cck_enqueue_assets() {
     $css_path = $asset_path . 'index.css';
 
     if (!file_exists($js_path) || !file_exists($css_path)) {
-        $message = __('Cookie Consent King: assets not found. Please run "npm run build".', 'cookie-consent-king');
+        $message = __('Cookie Consent King: assets not found. Loading from CDN. To use local assets, run "npm run build".', 'cookie-consent-king');
 
         if (function_exists('wp_admin_notice')) {
-            wp_admin_notice($message, ['type' => 'error']);
+            wp_admin_notice($message, ['type' => 'warning']);
         } else {
             add_action('admin_notices', function () use ($message) {
-                echo '<div class="notice notice-error"><p>' . esc_html($message) . '</p></div>';
+                echo '<div class="notice notice-warning"><p>' . esc_html($message) . '</p></div>';
             });
         }
+
+        $cdn_base = 'https://cdn.jsdelivr.net/gh/metricaweb/cookie-consent-king@main/dist/assets/';
+        wp_enqueue_script(
+            'cookie-consent-king-js',
+            $cdn_base . 'index.js',
+            [],
+            COOKIE_CONSENT_KING_VERSION,
+            true
+        );
+        wp_enqueue_style(
+            'cookie-consent-king-css',
+            $cdn_base . 'index.css',
+            [],
+            COOKIE_CONSENT_KING_VERSION
+        );
 
         return;
     }
@@ -48,6 +63,12 @@ function cck_enqueue_assets() {
         [],
         filemtime($js_path),
         true
+    );
+    wp_enqueue_style(
+        'cookie-consent-king-css',
+        $asset_url . 'index.css',
+        [],
+        filemtime($css_path)
     );
 
     $translations = [
