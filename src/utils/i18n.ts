@@ -1,8 +1,7 @@
 export const t = (key: string): string => {
   if (typeof window !== 'undefined') {
-    const translations = (window as Window).cckTranslations as
-      | Record<string, string>
-      | undefined;
+    const data = (window as Window & { cckData?: { translations?: Record<string, string> } }).cckData;
+    const translations = data?.translations;
     if (translations && translations[key]) {
       return translations[key];
     }
