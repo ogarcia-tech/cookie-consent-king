@@ -94,6 +94,26 @@ npm run build
 
 The build command generates production files in the `dist/` directory. CSS and JavaScript are placed inside `dist/assets/`.
 
+## Marking scripts for consent categories
+
+Third‑party scripts that require consent must be added with `type="text/plain"` and a `data-consent` attribute that lists the required categories (`analytics`, `marketing`, `preferences`, etc.):
+
+```html
+<script type="text/plain" data-consent="analytics" src="https://example.com/analytics.js"></script>
+
+<script type="text/plain" data-consent="marketing">
+  console.log('Marketing script');
+</script>
+```
+
+If a script depends on multiple categories, separate them with `|`:
+
+```html
+<script type="text/plain" data-consent="analytics|marketing" src="https://example.com/tag.js"></script>
+```
+
+After a visitor grants consent for the listed categories, Cookie Manager automatically converts these tags to `type="text/javascript"` and executes their contents or loads the referenced URL.
+
 ## Enqueuing in WordPress
 
 Use the plugin wrapper (`cookie-consent-king.php`) to load the build output:

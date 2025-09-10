@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
@@ -10,6 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Cookie, Settings, Shield, BarChart3, Target, X } from 'lucide-react';
 import { t } from '@/utils/i18n';
 import type { ConsentSettings } from '@/types/consent';
+import { cookieManager } from '@/utils/cookieManager';
 
 interface CookieBannerProps {
   onConsentUpdate?: (consent: ConsentSettings) => void;
@@ -18,30 +19,15 @@ interface CookieBannerProps {
   aboutCookiesUrl?: string; // URL personalizable para información detallada sobre cookies
 }
 
+
 // Consent Mode v2 integration
-interface Gtag {
-  (
-    command: 'consent' | 'config' | 'event',
-    action: string,
-    params?: Record<string, unknown>
-  ): void;
-  (...args: unknown[]): void;
-}
-
-type DataLayerEvent = Record<string, unknown>;
-
-interface DataLayer extends Array<DataLayerEvent> {
-  push: (...args: DataLayerEvent[]) => number;
-}
-
 declare global {
   interface Window {
-
     gtag?: (...args: unknown[]) => void;
-    dataLayer?: DataLayer;
-
+    dataLayer?: unknown[];
   }
 }
+
 
 const CookieBanner: React.FC<CookieBannerProps> = ({ onConsentUpdate, forceShow = false, cookiePolicyUrl, aboutCookiesUrl }) => {
   const [showBanner, setShowBanner] = useState(false);
@@ -55,6 +41,20 @@ const CookieBanner: React.FC<CookieBannerProps> = ({ onConsentUpdate, forceShow 
     preferences: false,
   });
 
+  const cckData =
+    typeof window !== 'undefined' ? ((window as any).cckData || {}) : {};
+  const { styles = {}, texts = {}, urls = {} } = cckData;
+  const bannerStyle: React.CSSProperties = {
+    backgroundColor: styles.bg_color || undefined,
+    color: styles.text_color || undefined,
+  };
+  const heading = texts.title || t('Gestión de Cookies');
+  const defaultMessage =
+    'Utilizamos cookies para mejorar tu experiencia de navegación, personalizar contenido y anuncios, proporcionar funciones de redes sociales y analizar nuestro tráfico. También compartimos información sobre tu uso de nuestro sitio con nuestros socios de análisis y publicidad.';
+  const message = texts.message || t(defaultMessage);
+  const cookiePolicyUrlResolved = urls.cookiePolicy || cookiePolicyUrl;
+  const aboutCookiesUrlResolved = urls.aboutCookies || aboutCookiesUrl;
+
   useEffect(() => {
     const handleResize = () => {
       if (typeof window !== 'undefined') {
@@ -67,145 +67,20 @@ const CookieBanner: React.FC<CookieBannerProps> = ({ onConsentUpdate, forceShow 
   }, []);
 
   useEffect(() => {
-    // Check if user has already made a choice
-    let savedConsent: string | null = null;
 
-    if (typeof window !== 'undefined' && window.localStorage) {
-      try {
-        savedConsent = window.localStorage.getItem('cookieConsent');
-      } catch (error) {
-        if (import.meta.env.DEV) {
-          console.error('CookieBanner: Error accessing localStorage', error);
-        }
-      }
-    }
-
-    if (import.meta.env.DEV) {
-      console.log('CookieBanner: checking saved consent', savedConsent);
-    }
+    const savedConsent = cookieManager.getConsent();
 
     if (!savedConsent) {
-      if (import.meta.env.DEV) {
-        console.log('CookieBanner: No saved consent, showing banner');
-      }
       setShowBanner(true);
       setShowMiniBanner(false);
-      // Initialize Google Consent Mode v2 with default values
-      initializeConsentMode();
+      cookieManager.initializeConsentMode();
     } else {
-      if (import.meta.env.DEV) {
-        console.log('CookieBanner: Found saved consent, parsing and applying');
-      }
-      try {
-        const parsedConsent = JSON.parse(savedConsent);
-        setConsent(parsedConsent);
-        updateConsentMode(parsedConsent);
-        setShowBanner(false);
-        setShowMiniBanner(true); // Show mini banner when consent exists
-      } catch (error) {
-        if (import.meta.env.DEV) {
-          console.error('CookieBanner: Error parsing saved consent', error);
-        }
-        if (typeof window !== 'undefined' && window.localStorage) {
-          try {
-            window.localStorage.removeItem('cookieConsent');
-            window.localStorage.removeItem('cookieConsentDate');
-          } catch (cleanupError) {
-            if (import.meta.env.DEV) {
-              console.error('CookieBanner: Error cleaning corrupt consent', cleanupError);
-            }
-          }
-        }
-        setConsent({
-          necessary: true,
-          analytics: false,
-          marketing: false,
-          preferences: false,
-        });
-        setShowBanner(true);
-        setShowMiniBanner(false);
-        initializeConsentMode();
-      }
+      setConsent(savedConsent);
+      setShowBanner(false);
+      setShowMiniBanner(true);
+      onConsentUpdate?.(savedConsent);
     }
-  }, [updateConsentMode]);
-
-  const initializeConsentMode = () => {
-    if (typeof window !== 'undefined' && window.gtag) {
-      // Set default consent state (denied)
-      window.gtag('consent', 'default', {
-        'ad_storage': 'denied',
-        'ad_user_data': 'denied',
-        'ad_personalization': 'denied',
-        'analytics_storage': 'denied',
-        'functionality_storage': 'denied',
-        'personalization_storage': 'denied',
-        'security_storage': 'granted', // Usually granted by default
-        'wait_for_update': 500,
-      });
-    }
-  };
-
-  const getConsentAction = (consentSettings: ConsentSettings): string => {
-    const { analytics, marketing, preferences } = consentSettings;
-    
-    if (analytics && marketing && preferences) {
-      return 'accept_all';
-    } else if (!analytics && !marketing && !preferences) {
-      return 'reject_all';
-    } else {
-      return 'custom_selection';
-    }
-  };
-
-  const pushDataLayerEvent = (consentSettings: ConsentSettings, action: string) => {
-    // Ensure dataLayer exists
-    if (typeof window !== 'undefined') {
-      window.dataLayer = window.dataLayer || [];
-      
-      const eventData = {
-        'event': 'consent_update',
-        'consent': {
-          'ad_storage': consentSettings.marketing ? 'granted' : 'denied',
-          'analytics_storage': consentSettings.analytics ? 'granted' : 'denied',
-          'functionality_storage': consentSettings.preferences ? 'granted' : 'denied',
-          'personalization_storage': consentSettings.preferences ? 'granted' : 'denied',
-          'security_storage': 'granted', // Always granted
-          'ad_user_data': consentSettings.marketing ? 'granted' : 'denied',
-          'ad_personalization': consentSettings.marketing ? 'granted' : 'denied'
-        },
-        'consent_action': action,
-        'timestamp': new Date().toISOString()
-      };
-
-      if (import.meta.env.DEV) {
-        console.log('Pushing to dataLayer:', eventData);
-      }
-      window.dataLayer.push(eventData);
-    }
-  };
-
-  const updateConsentMode = useCallback(
-    (consentSettings: ConsentSettings, action?: string) => {
-      if (typeof window !== 'undefined' && window.gtag) {
-        window.gtag('consent', 'update', {
-          'ad_storage': consentSettings.marketing ? 'granted' : 'denied',
-          'ad_user_data': consentSettings.marketing ? 'granted' : 'denied',
-          'ad_personalization': consentSettings.marketing ? 'granted' : 'denied',
-          'analytics_storage': consentSettings.analytics ? 'granted' : 'denied',
-          'functionality_storage': consentSettings.preferences ? 'granted' : 'denied',
-          'personalization_storage': consentSettings.preferences ? 'granted' : 'denied',
-        });
-      }
-
-      // Push consent_update event to dataLayer
-      if (action) {
-        pushDataLayerEvent(consentSettings, action);
-      }
-
-      onConsentUpdate?.(consentSettings);
-    },
-    [onConsentUpdate]
-  );
+  }, [onConsentUpdate]);
 
   const logAction = (action: string) => {
     if (typeof window === 'undefined') return;
@@ -232,31 +107,18 @@ const CookieBanner: React.FC<CookieBannerProps> = ({ onConsentUpdate, forceShow 
     if (import.meta.env.DEV) {
       console.log('Saving consent:', consentSettings, 'Action:', action);
     }
-    if (typeof window !== 'undefined' && window.localStorage) {
-      try {
-        window.localStorage.setItem('cookieConsent', JSON.stringify(consentSettings));
-        window.localStorage.setItem('cookieConsentDate', new Date().toISOString());
-      } catch (error) {
-        if (import.meta.env.DEV) {
-          console.error('CookieBanner: Error saving consent', error);
-        }
-      }
-    }
 
-    if (typeof window !== 'undefined') {
-      // Dispatch custom event to notify other components
-      window.dispatchEvent(new CustomEvent('consentUpdated', { detail: consentSettings }));
-    }
 
     logAction(action);
 
     // Update consent mode and push dataLayer event
     updateConsentMode(consentSettings, action);
 
+
     setConsent(consentSettings);
     setShowBanner(false);
     setShowSettings(false);
-    setShowMiniBanner(true); // Show mini banner after consent
+    setShowMiniBanner(true);
   };
 
   const acceptAll = () => {
@@ -304,7 +166,7 @@ const CookieBanner: React.FC<CookieBannerProps> = ({ onConsentUpdate, forceShow 
     <>
       {showBanner && (!isMobile || showSettings) && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-end justify-center p-4">
-          <Card className="w-full max-w-2xl bg-cookie-banner border-cookie-banner-border shadow-floating animate-in slide-in-from-bottom-4 duration-300">
+          <Card className="w-full max-w-2xl bg-cookie-banner border-cookie-banner-border shadow-floating animate-in slide-in-from-bottom-4 duration-300" style={bannerStyle}>
             <div className="p-6">
                 {!showSettings ? (
                   // Main banner
@@ -316,10 +178,10 @@ const CookieBanner: React.FC<CookieBannerProps> = ({ onConsentUpdate, forceShow 
                       <div className="flex-1 space-y-3">
                         <div>
                           <h3 className="text-lg font-semibold text-foreground mb-2">
-                            {t('Gestión de Cookies')}
+                            {heading}
                           </h3>
                           <p className="text-sm text-muted-foreground leading-relaxed">
-                            {t('Utilizamos cookies para mejorar tu experiencia de navegación, personalizar contenido y anuncios, proporcionar funciones de redes sociales y analizar nuestro tráfico. También compartimos información sobre tu uso de nuestro sitio con nuestros socios de análisis y publicidad.')}
+                            {message}
                           </p>
                         </div>
                       </div>
@@ -389,11 +251,11 @@ const CookieBanner: React.FC<CookieBannerProps> = ({ onConsentUpdate, forceShow 
                           </p>
                           <p className="text-sm text-muted-foreground">
                             {t('Puedes aceptar todas las cookies pulsando el botón "Aceptar", rechazar todas las cookies pulsando sobre el botón "Rechazar" o configurarlas su uso pulsando el botón "Configuración de cookies".')}
-                            {cookiePolicyUrl && (
+                            {cookiePolicyUrlResolved && (
                               <>
                                 {t('Si deseas más información pulsa en')}{' '}
                                 <a
-                                  href={cookiePolicyUrl}
+                                  href={cookiePolicyUrlResolved}
                                   target="_blank"
                                   rel="noopener noreferrer"
                                   className="text-primary hover:underline font-medium"
@@ -568,23 +430,23 @@ const CookieBanner: React.FC<CookieBannerProps> = ({ onConsentUpdate, forceShow 
                           <p>
                             {t('En cumplimiento del Reglamento General de Protección de Datos (RGPD), solicitamos su consentimiento para el uso de cookies no esenciales. Puede gestionar sus preferencias de cookies en cualquier momento accediendo a la configuración de privacidad de nuestro sitio web.')}
                           </p>
-                          <p>
-                            {t('Para más información sobre nuestra política de privacidad y el tratamiento de datos personales, consulte nuestra política de privacidad completa.')}
-                            {aboutCookiesUrl && (
-                              <>
-                                {' '}{t('Para información detallada sobre cookies, visite')}{' '}
-                                <a
-                                  href={aboutCookiesUrl}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="text-primary hover:underline font-medium"
-                                >
-                                  {t('Acerca de las Cookies')}
-                                </a>
-                                .
-                              </>
-                            )}
-                          </p>
+                            <p>
+                              {t('Para más información sobre nuestra política de privacidad y el tratamiento de datos personales, consulte nuestra política de privacidad completa.')}
+                              {aboutCookiesUrlResolved && (
+                                <>
+                                  {' '}{t('Para información detallada sobre cookies, visite')}{' '}
+                                  <a
+                                    href={aboutCookiesUrlResolved}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-primary hover:underline font-medium"
+                                  >
+                                    {t('Acerca de las Cookies')}
+                                  </a>
+                                  .
+                                </>
+                              )}
+                            </p>
                         </div>
 
                         <Separator />
@@ -617,12 +479,12 @@ const CookieBanner: React.FC<CookieBannerProps> = ({ onConsentUpdate, forceShow 
 
       {showBanner && isMobile && !showSettings && (
           <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 w-full px-4">
-            <Card className="bg-cookie-banner border-cookie-banner-border shadow-floating animate-in slide-in-from-bottom-4 duration-300">
+            <Card className="bg-cookie-banner border-cookie-banner-border shadow-floating animate-in slide-in-from-bottom-4 duration-300" style={bannerStyle}>
               <div className="p-4 space-y-3">
                 <div className="flex items-center gap-2">
                   <Cookie className="w-5 h-5 text-primary" />
                   <p className="text-sm flex-1">
-                    {t('Utilizamos cookies para mejorar tu experiencia')}
+                    {message}
                   </p>
                 </div>
                 <div className="flex gap-2 justify-end">
@@ -640,7 +502,7 @@ const CookieBanner: React.FC<CookieBannerProps> = ({ onConsentUpdate, forceShow 
 
       {!forceShow && !showBanner && showMiniBanner && (
         <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[9999] w-full max-w-xs px-4">
-          <Card className="bg-cookie-banner border-cookie-banner-border shadow-floating animate-in slide-in-from-bottom-4 duration-300">
+          <Card className="bg-cookie-banner border-cookie-banner-border shadow-floating animate-in slide-in-from-bottom-4 duration-300" style={bannerStyle}>
             <div className="flex items-center justify-between p-3">
               <div className="flex items-center gap-2">
                 <Cookie className="w-5 h-5 text-primary" />
