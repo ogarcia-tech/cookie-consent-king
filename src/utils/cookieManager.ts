@@ -63,7 +63,17 @@ export class CookieManager {
       if (savedConsent) {
         this.consent = JSON.parse(savedConsent);
         this.updateGoogleConsentMode(this.consent!);
-        return this.consent;
+
+        // Activar scripts diferidos si ya se había dado consentimiento
+        if (typeof document !== 'undefined') {
+          const run = () => this.applyConsentToScripts(this.consent!);
+          if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', run, { once: true });
+          } else {
+            run();
+          }
+        }
+
       }
       this.initializeConsentMode();
     } catch (error) {
@@ -109,6 +119,9 @@ export class CookieManager {
 
     // Notificar a los listeners
     this.notifyListeners(newConsent);
+
+    // Activar scripts diferidos según el nuevo consentimiento
+    this.applyConsentToScripts(newConsent);
 
     // Disparar evento personalizado
     if (typeof window !== 'undefined') {
@@ -275,6 +288,31 @@ export class CookieManager {
       noscript.appendChild(iframe);
       document.body.appendChild(noscript);
     }
+  }
+
+  // Activa los scripts marcados con type="text/plain" y data-consent
+  private applyConsentToScripts(consent: ConsentSettings): void {
+    if (typeof document === 'undefined') return;
+    const scripts = document.querySelectorAll<HTMLScriptElement>('script[type="text/plain"][data-consent]');
+
+    scripts.forEach(oldScript => {
+      const attr = oldScript.getAttribute('data-consent');
+      if (!attr) return;
+      const categories = attr.split('|').map(c => c.trim()).filter(Boolean);
+      const allowed = categories.some(cat => (consent as any)[cat as keyof ConsentSettings]);
+      if (!allowed) return;
+
+      const newScript = document.createElement('script');
+      Array.from(oldScript.attributes).forEach(({ name, value }) => {
+        if (name === 'type' || name === 'data-consent') return;
+        newScript.setAttribute(name, value);
+      });
+      newScript.type = 'text/javascript';
+      if (oldScript.textContent) {
+        newScript.text = oldScript.textContent;
+      }
+      oldScript.parentNode?.replaceChild(newScript, oldScript);
+    });
   }
 }
 
