@@ -12,6 +12,12 @@ const sampleConsent = {
     beforeEach(() => {
       localStorage.clear();
       cookieManager.resetConsent();
+      document.body.innerHTML = '';
+      // limpiar variables globales de pruebas previas
+      // @ts-expect-error cleanup
+      delete (window as any).__cckTest;
+      // @ts-expect-error cleanup
+      delete (window as any).__cckTest2;
     });
 
   it('updateConsent stores consent and dispatches event', () => {
@@ -68,6 +74,26 @@ const sampleConsent = {
     unsubscribe();
     cookieManager.updateConsent({ ...sampleConsent, marketing: true });
     expect(listener).not.toHaveBeenCalled();
+  });
+
+  it('activates deferred scripts for granted consent categories', () => {
+    document.body.innerHTML = '<script id="test" type="text/plain" data-consent="analytics">window.__cckTest = 42;<\/script>';
+    cookieManager.updateConsent(sampleConsent);
+    const script = document.querySelector<HTMLScriptElement>('#test');
+    expect(script).not.toBeNull();
+    expect(script!.type).toBe('text/javascript');
+    // @ts-expect-error test global
+    expect((window as any).__cckTest).toBe(42);
+  });
+
+  it('keeps scripts deferred when consent is not granted', () => {
+    document.body.innerHTML = '<script id="test2" type="text/plain" data-consent="marketing">window.__cckTest2 = 7;<\/script>';
+    cookieManager.updateConsent(sampleConsent);
+    const script = document.querySelector<HTMLScriptElement>('#test2');
+    expect(script).not.toBeNull();
+    expect(script!.type).toBe('text/plain');
+    // @ts-expect-error test global
+    expect((window as any).__cckTest2).toBeUndefined();
   });
 
   it('initializeConsentMode sets default consent in gtag', () => {
