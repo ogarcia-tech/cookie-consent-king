@@ -33,7 +33,7 @@ export class CookieManager {
 
   private constructor(config: CookieManagerConfig = {}) {
     this.config = { ...config };
-    this.loadSavedConsent();
+    this.loadConsent();
   }
 
   public static getInstance(config?: CookieManagerConfig): CookieManager {
@@ -45,16 +45,19 @@ export class CookieManager {
     return CookieManager.instance;
   }
 
-  private loadSavedConsent(): void {
+  public loadConsent(): ConsentSettings | null {
     try {
       const savedConsent = localStorage.getItem('cookieConsent');
       if (savedConsent) {
         this.consent = JSON.parse(savedConsent);
         this.updateGoogleConsentMode(this.consent!);
+        return this.consent;
       }
+      this.initializeConsentMode();
     } catch (error) {
       console.error('Error loading saved consent:', error);
     }
+    return null;
   }
 
   public getConsent(): ConsentSettings | null {
@@ -69,7 +72,7 @@ export class CookieManager {
     return this.consent ? this.consent[type] : false;
   }
 
-  public updateConsent(newConsent: ConsentSettings, action: string = 'custom'): void {
+  public saveConsent(newConsent: ConsentSettings, action: string = 'custom'): void {
     this.consent = newConsent;
 
     if (typeof window !== 'undefined') {
@@ -127,7 +130,7 @@ export class CookieManager {
     this.listeners = [];
   }
 
-  public onConsentChange(listener: (consent: ConsentSettings) => void): () => void {
+  public onChange(listener: (consent: ConsentSettings) => void): () => void {
     this.listeners.push(listener);
     
     // Devolver función para desuscribirse
