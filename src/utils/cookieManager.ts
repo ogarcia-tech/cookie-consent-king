@@ -47,7 +47,19 @@ export class CookieManager {
 
   public loadConsent(): ConsentSettings | null {
     try {
-      const savedConsent = localStorage.getItem('cookieConsent');
+      let savedConsent: string | null = null;
+
+      if (typeof document !== 'undefined') {
+        const match = document.cookie.match(/(?:^|; )cookieConsent=([^;]+)/);
+        if (match) {
+          savedConsent = decodeURIComponent(match[1]);
+        }
+      }
+
+      if (!savedConsent && typeof localStorage !== 'undefined') {
+        savedConsent = localStorage.getItem('cookieConsent');
+      }
+
       if (savedConsent) {
         this.consent = JSON.parse(savedConsent);
         this.updateGoogleConsentMode(this.consent!);
@@ -84,6 +96,11 @@ export class CookieManager {
       }
     }
 
+    if (typeof document !== 'undefined') {
+      const cookieValue = encodeURIComponent(JSON.stringify(newConsent));
+      document.cookie = `cookieConsent=${cookieValue}; path=/; max-age=31536000`;
+    }
+
     // Actualizar Google Consent Mode
     this.updateGoogleConsentMode(newConsent);
 
@@ -102,9 +119,11 @@ export class CookieManager {
   }
 
   public resetConsent(): void {
-
     localStorage.removeItem('cookieConsent');
     localStorage.removeItem('cookieConsentDate');
+    if (typeof document !== 'undefined') {
+      document.cookie = 'cookieConsent=; path=/; max-age=0';
+    }
     const resetConsent: ConsentSettings = {
       necessary: false,
       analytics: false,

@@ -19,6 +19,16 @@ interface CookieBannerProps {
   aboutCookiesUrl?: string; // URL personalizable para información detallada sobre cookies
 }
 
+
+// Consent Mode v2 integration
+declare global {
+  interface Window {
+    gtag?: (...args: unknown[]) => void;
+    dataLayer?: unknown[];
+  }
+}
+
+
 const CookieBanner: React.FC<CookieBannerProps> = ({ onConsentUpdate, forceShow = false, cookiePolicyUrl, aboutCookiesUrl }) => {
   const [showBanner, setShowBanner] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
@@ -43,25 +53,29 @@ const CookieBanner: React.FC<CookieBannerProps> = ({ onConsentUpdate, forceShow 
   }, []);
 
   useEffect(() => {
-    const loaded = cookieManager.loadConsent();
-    if (loaded) {
-      setConsent(loaded);
-      setShowBanner(false);
-      setShowMiniBanner(true);
-    } else {
+
+    const savedConsent = cookieManager.getConsent();
+
+    if (!savedConsent) {
       setShowBanner(true);
       setShowMiniBanner(false);
+      cookieManager.initializeConsentMode();
+    } else {
+      setConsent(savedConsent);
+      setShowBanner(false);
+      setShowMiniBanner(true);
+      onConsentUpdate?.(savedConsent);
     }
-
-    const unsubscribe = cookieManager.onChange((c) => {
-      setConsent(c);
-      onConsentUpdate?.(c);
-    });
-    return unsubscribe;
   }, [onConsentUpdate]);
 
   const saveConsent = (consentSettings: ConsentSettings, action: string) => {
-    cookieManager.saveConsent(consentSettings, action);
+    if (import.meta.env.DEV) {
+      console.log('Saving consent:', consentSettings, 'Action:', action);
+    }
+
+    cookieManager.updateConsent(consentSettings, action);
+    onConsentUpdate?.(consentSettings);
+
     setConsent(consentSettings);
     setShowBanner(false);
     setShowSettings(false);
