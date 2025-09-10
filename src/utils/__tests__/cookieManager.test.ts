@@ -1,4 +1,4 @@
-import { cookieManager, CookieManager } from '../cookieManager';
+import { cookieManager } from '../cookieManager';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 
 const sampleConsent = {
@@ -14,10 +14,10 @@ const sampleConsent = {
       cookieManager.resetConsent();
     });
 
-  it('updateConsent stores consent and dispatches event', () => {
+  it('saveConsent stores consent and dispatches event', () => {
     const handler = vi.fn();
     window.addEventListener('consentUpdated', handler);
-    cookieManager.updateConsent(sampleConsent);
+    cookieManager.saveConsent(sampleConsent);
 
     expect(cookieManager.getConsent()).toEqual(sampleConsent);
     expect(localStorage.getItem('cookieConsent')).toEqual(JSON.stringify(sampleConsent));
@@ -26,8 +26,14 @@ const sampleConsent = {
     window.removeEventListener('consentUpdated', handler);
   });
 
+  it('loadConsent retrieves stored consent', () => {
+    localStorage.setItem('cookieConsent', JSON.stringify(sampleConsent));
+    const loaded = cookieManager.loadConsent();
+    expect(loaded).toEqual(sampleConsent);
+  });
+
     it('resetConsent clears consent and dispatches event', () => {
-      cookieManager.updateConsent(sampleConsent);
+      cookieManager.saveConsent(sampleConsent);
       const handler = vi.fn();
       window.addEventListener('consentReset', handler);
       cookieManager.resetConsent();
@@ -41,7 +47,7 @@ const sampleConsent = {
 
     it('resetConsent notifies and clears listeners', () => {
       const listener = vi.fn();
-      cookieManager.onConsentChange(listener);
+      cookieManager.onChange(listener);
 
       cookieManager.resetConsent();
 
@@ -52,21 +58,21 @@ const sampleConsent = {
         preferences: false,
       });
 
-      cookieManager.updateConsent(sampleConsent);
+      cookieManager.saveConsent(sampleConsent);
       expect(listener).toHaveBeenCalledTimes(1);
     });
 
-    it('onConsentChange notifies listeners and allows unsubscribe', () => {
+    it('onChange notifies listeners and allows unsubscribe', () => {
 
     const listener = vi.fn();
-    const unsubscribe = cookieManager.onConsentChange(listener);
+    const unsubscribe = cookieManager.onChange(listener);
 
-    cookieManager.updateConsent(sampleConsent);
+    cookieManager.saveConsent(sampleConsent);
     expect(listener).toHaveBeenCalledWith(sampleConsent);
 
     listener.mockClear();
     unsubscribe();
-    cookieManager.updateConsent({ ...sampleConsent, marketing: true });
+    cookieManager.saveConsent({ ...sampleConsent, marketing: true });
     expect(listener).not.toHaveBeenCalled();
   });
 
@@ -111,8 +117,7 @@ const sampleConsent = {
       });
     const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
-    // @ts-expect-error accessing private method for test
-    cookieManager.loadSavedConsent();
+    cookieManager.loadConsent();
 
     expect(errorSpy).toHaveBeenCalled();
 
@@ -121,7 +126,7 @@ const sampleConsent = {
   });
 
   it('getConsentDate returns stored date and null after reset', () => {
-    cookieManager.updateConsent(sampleConsent);
+    cookieManager.saveConsent(sampleConsent);
     const date = cookieManager.getConsentDate();
     expect(date).toBeInstanceOf(Date);
     expect(date!.toISOString()).toEqual(

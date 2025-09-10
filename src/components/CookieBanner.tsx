@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
@@ -10,37 +10,13 @@ import { Label } from '@/components/ui/label';
 import { Cookie, Settings, Shield, BarChart3, Target, X } from 'lucide-react';
 import { t } from '@/utils/i18n';
 import type { ConsentSettings } from '@/types/consent';
+import { cookieManager } from '@/utils/cookieManager';
 
 interface CookieBannerProps {
   onConsentUpdate?: (consent: ConsentSettings) => void;
   forceShow?: boolean; // Nueva prop para forzar mostrar el banner en demo
   cookiePolicyUrl?: string; // URL personalizable para la política de cookies
   aboutCookiesUrl?: string; // URL personalizable para información detallada sobre cookies
-}
-
-// Consent Mode v2 integration
-interface Gtag {
-  (
-    command: 'consent' | 'config' | 'event',
-    action: string,
-    params?: Record<string, unknown>
-  ): void;
-  (...args: unknown[]): void;
-}
-
-type DataLayerEvent = Record<string, unknown>;
-
-interface DataLayer extends Array<DataLayerEvent> {
-  push: (...args: DataLayerEvent[]) => number;
-}
-
-declare global {
-  interface Window {
-
-    gtag?: (...args: unknown[]) => void;
-    dataLayer?: DataLayer;
-
-  }
 }
 
 const CookieBanner: React.FC<CookieBannerProps> = ({ onConsentUpdate, forceShow = false, cookiePolicyUrl, aboutCookiesUrl }) => {
@@ -67,173 +43,29 @@ const CookieBanner: React.FC<CookieBannerProps> = ({ onConsentUpdate, forceShow 
   }, []);
 
   useEffect(() => {
-    // Check if user has already made a choice
-    let savedConsent: string | null = null;
-
-    if (typeof window !== 'undefined' && window.localStorage) {
-      try {
-        savedConsent = window.localStorage.getItem('cookieConsent');
-      } catch (error) {
-        if (import.meta.env.DEV) {
-          console.error('CookieBanner: Error accessing localStorage', error);
-        }
-      }
-    }
-
-    if (import.meta.env.DEV) {
-      console.log('CookieBanner: checking saved consent', savedConsent);
-    }
-
-    if (!savedConsent) {
-      if (import.meta.env.DEV) {
-        console.log('CookieBanner: No saved consent, showing banner');
-      }
+    const loaded = cookieManager.loadConsent();
+    if (loaded) {
+      setConsent(loaded);
+      setShowBanner(false);
+      setShowMiniBanner(true);
+    } else {
       setShowBanner(true);
       setShowMiniBanner(false);
-      // Initialize Google Consent Mode v2 with default values
-      initializeConsentMode();
-    } else {
-      if (import.meta.env.DEV) {
-        console.log('CookieBanner: Found saved consent, parsing and applying');
-      }
-      try {
-        const parsedConsent = JSON.parse(savedConsent);
-        setConsent(parsedConsent);
-        updateConsentMode(parsedConsent);
-        setShowBanner(false);
-        setShowMiniBanner(true); // Show mini banner when consent exists
-      } catch (error) {
-        if (import.meta.env.DEV) {
-          console.error('CookieBanner: Error parsing saved consent', error);
-        }
-        if (typeof window !== 'undefined' && window.localStorage) {
-          try {
-            window.localStorage.removeItem('cookieConsent');
-            window.localStorage.removeItem('cookieConsentDate');
-          } catch (cleanupError) {
-            if (import.meta.env.DEV) {
-              console.error('CookieBanner: Error cleaning corrupt consent', cleanupError);
-            }
-          }
-        }
-        setConsent({
-          necessary: true,
-          analytics: false,
-          marketing: false,
-          preferences: false,
-        });
-        setShowBanner(true);
-        setShowMiniBanner(false);
-        initializeConsentMode();
-      }
     }
-  }, [updateConsentMode]);
 
-  const initializeConsentMode = () => {
-    if (typeof window !== 'undefined' && window.gtag) {
-      // Set default consent state (denied)
-      window.gtag('consent', 'default', {
-        'ad_storage': 'denied',
-        'ad_user_data': 'denied',
-        'ad_personalization': 'denied',
-        'analytics_storage': 'denied',
-        'functionality_storage': 'denied',
-        'personalization_storage': 'denied',
-        'security_storage': 'granted', // Usually granted by default
-        'wait_for_update': 500,
-      });
-    }
-  };
-
-  const getConsentAction = (consentSettings: ConsentSettings): string => {
-    const { analytics, marketing, preferences } = consentSettings;
-    
-    if (analytics && marketing && preferences) {
-      return 'accept_all';
-    } else if (!analytics && !marketing && !preferences) {
-      return 'reject_all';
-    } else {
-      return 'custom_selection';
-    }
-  };
-
-  const pushDataLayerEvent = (consentSettings: ConsentSettings, action: string) => {
-    // Ensure dataLayer exists
-    if (typeof window !== 'undefined') {
-      window.dataLayer = window.dataLayer || [];
-      
-      const eventData = {
-        'event': 'consent_update',
-        'consent': {
-          'ad_storage': consentSettings.marketing ? 'granted' : 'denied',
-          'analytics_storage': consentSettings.analytics ? 'granted' : 'denied',
-          'functionality_storage': consentSettings.preferences ? 'granted' : 'denied',
-          'personalization_storage': consentSettings.preferences ? 'granted' : 'denied',
-          'security_storage': 'granted', // Always granted
-          'ad_user_data': consentSettings.marketing ? 'granted' : 'denied',
-          'ad_personalization': consentSettings.marketing ? 'granted' : 'denied'
-        },
-        'consent_action': action,
-        'timestamp': new Date().toISOString()
-      };
-
-      if (import.meta.env.DEV) {
-        console.log('Pushing to dataLayer:', eventData);
-      }
-      window.dataLayer.push(eventData);
-    }
-  };
-
-  const updateConsentMode = useCallback(
-    (consentSettings: ConsentSettings, action?: string) => {
-      if (typeof window !== 'undefined' && window.gtag) {
-        window.gtag('consent', 'update', {
-          'ad_storage': consentSettings.marketing ? 'granted' : 'denied',
-          'ad_user_data': consentSettings.marketing ? 'granted' : 'denied',
-          'ad_personalization': consentSettings.marketing ? 'granted' : 'denied',
-          'analytics_storage': consentSettings.analytics ? 'granted' : 'denied',
-          'functionality_storage': consentSettings.preferences ? 'granted' : 'denied',
-          'personalization_storage': consentSettings.preferences ? 'granted' : 'denied',
-        });
-      }
-
-      // Push consent_update event to dataLayer
-      if (action) {
-        pushDataLayerEvent(consentSettings, action);
-      }
-
-      onConsentUpdate?.(consentSettings);
-    },
-    [onConsentUpdate]
-  );
+    const unsubscribe = cookieManager.onChange((c) => {
+      setConsent(c);
+      onConsentUpdate?.(c);
+    });
+    return unsubscribe;
+  }, [onConsentUpdate]);
 
   const saveConsent = (consentSettings: ConsentSettings, action: string) => {
-    if (import.meta.env.DEV) {
-      console.log('Saving consent:', consentSettings, 'Action:', action);
-    }
-    if (typeof window !== 'undefined' && window.localStorage) {
-      try {
-        window.localStorage.setItem('cookieConsent', JSON.stringify(consentSettings));
-        window.localStorage.setItem('cookieConsentDate', new Date().toISOString());
-      } catch (error) {
-        if (import.meta.env.DEV) {
-          console.error('CookieBanner: Error saving consent', error);
-        }
-      }
-    }
-
-    if (typeof window !== 'undefined') {
-      // Dispatch custom event to notify other components
-      window.dispatchEvent(new CustomEvent('consentUpdated', { detail: consentSettings }));
-    }
-
-    // Update consent mode and push dataLayer event
-    updateConsentMode(consentSettings, action);
-
+    cookieManager.saveConsent(consentSettings, action);
     setConsent(consentSettings);
     setShowBanner(false);
     setShowSettings(false);
-    setShowMiniBanner(true); // Show mini banner after consent
+    setShowMiniBanner(true);
   };
 
   const acceptAll = () => {
