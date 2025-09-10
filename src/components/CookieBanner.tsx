@@ -19,6 +19,7 @@ interface CookieBannerProps {
   aboutCookiesUrl?: string; // URL personalizable para información detallada sobre cookies
 }
 
+
 // Consent Mode v2 integration
 declare global {
   interface Window {
@@ -26,6 +27,7 @@ declare global {
     dataLayer?: unknown[];
   }
 }
+
 
 const CookieBanner: React.FC<CookieBannerProps> = ({ onConsentUpdate, forceShow = false, cookiePolicyUrl, aboutCookiesUrl }) => {
   const [showBanner, setShowBanner] = useState(false);
@@ -51,6 +53,7 @@ const CookieBanner: React.FC<CookieBannerProps> = ({ onConsentUpdate, forceShow 
   }, []);
 
   useEffect(() => {
+
     const savedConsent = cookieManager.getConsent();
 
     if (!savedConsent) {
@@ -76,7 +79,7 @@ const CookieBanner: React.FC<CookieBannerProps> = ({ onConsentUpdate, forceShow 
     setConsent(consentSettings);
     setShowBanner(false);
     setShowSettings(false);
-    setShowMiniBanner(true); // Show mini banner after consent
+    setShowMiniBanner(true);
   };
 
   const acceptAll = () => {
