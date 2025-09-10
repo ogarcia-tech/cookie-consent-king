@@ -17,6 +17,8 @@ interface CookieBannerProps {
   forceShow?: boolean; // Nueva prop para forzar mostrar el banner en demo
   cookiePolicyUrl?: string; // URL personalizable para la política de cookies
   aboutCookiesUrl?: string; // URL personalizable para información detallada sobre cookies
+  title?: string; // Título personalizado del banner
+  message?: string; // Mensaje personalizado del banner
 }
 
 
@@ -29,7 +31,8 @@ declare global {
 }
 
 
-const CookieBanner: React.FC<CookieBannerProps> = ({ onConsentUpdate, forceShow = false, cookiePolicyUrl, aboutCookiesUrl }) => {
+const CookieBanner: React.FC<CookieBannerProps> = ({ onConsentUpdate, forceShow = false, cookiePolicyUrl, aboutCookiesUrl, title, message }) => {
+
   const [showBanner, setShowBanner] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [showMiniBanner, setShowMiniBanner] = useState(false);
@@ -178,10 +181,12 @@ const CookieBanner: React.FC<CookieBannerProps> = ({ onConsentUpdate, forceShow 
                       <div className="flex-1 space-y-3">
                         <div>
                           <h3 className="text-lg font-semibold text-foreground mb-2">
-                            {heading}
+
+                            {title ?? t('Gestión de Cookies')}
                           </h3>
                           <p className="text-sm text-muted-foreground leading-relaxed">
-                            {message}
+                            {message ?? t('Utilizamos cookies para mejorar tu experiencia de navegación, personalizar contenido y anuncios, proporcionar funciones de redes sociales y analizar nuestro tráfico. También compartimos información sobre tu uso de nuestro sitio con nuestros socios de análisis y publicidad.')}
+
                           </p>
                         </div>
                       </div>
