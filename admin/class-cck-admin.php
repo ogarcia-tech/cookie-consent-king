@@ -40,7 +40,6 @@ class CCK_Admin {
 
     public function settings_init() {
         register_setting('cck_settings_group', 'cck_options', [$this, 'sanitize_options']);
-
         add_settings_section('cck_content_section', __('Content', 'cookie-consent-king'), null, 'cck-settings');
         add_settings_field('title', __('Title', 'cookie-consent-king'), [$this, 'render_field'], 'cck-settings', 'cck_content_section', ['name' => 'title', 'default' => __('Política de Cookies', 'cookie-consent-king')]);
         add_settings_field('message', __('Message', 'cookie-consent-king'), [$this, 'render_field'], 'cck-settings', 'cck_content_section', ['name' => 'message', 'type' => 'textarea', 'default' => __('Utilizamos cookies esenciales para el funcionamiento del sitio y cookies de análisis para mejorar tu experiencia. Puedes aceptar todas, rechazarlas o personalizar tus preferencias. Lee nuestra {privacy_policy_link}.', 'cookie-consent-king')]);
@@ -77,7 +76,6 @@ class CCK_Admin {
         }
         return $new_value;
     }
-
 
     public function render_field($args) {
         $options = get_option('cck_options', []);
@@ -188,19 +186,27 @@ class CCK_Admin {
         <?php
     }
 
+    private function get_user_ip_address() {
+        $ip = '';
+        if (isset($_SERVER['HTTP_CLIENT_IP'])) { $ip = $_SERVER['HTTP_CLIENT_IP']; }
+        elseif (isset($_SERVER['HTTP_X_FORWARDED_FOR'])) { $ip = $_SERVER['HTTP_X_FORWARDED_FOR']; }
+        elseif (isset($_SERVER['REMOTE_ADDR'])) { $ip = $_SERVER['REMOTE_ADDR']; }
+        else { $ip = 'UNKNOWN'; }
+        return sanitize_text_field($ip);
+    }
+    
     public function log_consent() {
-        if (!isset($_POST['nonce']) || !wp_verify_nonce(sanitize_text_field($_POST['nonce']), 'cck_log_consent_nonce')) {
-            wp_send_json_error('Invalid nonce', 403);
-            return;
-        }
+        check_ajax_referer('cck_log_consent_nonce', 'nonce');
         global $wpdb;
-        $ip = $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0';
+        $action = isset($_POST['consent_action']) ? sanitize_text_field($_POST['consent_action']) : '';
+        if (empty($action)) { wp_send_json_error('Action is missing.', 400); }
         $wpdb->insert($wpdb->prefix . 'cck_consent_logs', [
-            'action' => sanitize_text_field($_POST['consent_action']),
-            'ip' => sanitize_text_field($ip),
-            'consent_details' => sanitize_text_field($_POST['consent_details'])
+            'action' => $action,
+            'ip' => $this->get_user_ip_address(),
+            'consent_details' => isset($_POST['consent_details']) ? sanitize_text_field($_POST['consent_details']) : '',
+            'created_at' => current_time('mysql', 1)
         ]);
-        wp_send_json_success();
+        wp_send_json_success('Consent logged.');
     }
     
     public function export_logs() {

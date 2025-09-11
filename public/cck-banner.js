@@ -1,6 +1,9 @@
 document.addEventListener('DOMContentLoaded', () => {
     const data = window.cckData || {};
-    if (Object.keys(data).length === 0) return;
+    if (Object.keys(data).length === 0) {
+        console.warn('Cookie Consent King: Data object not found.');
+        return;
+    }
     
     const texts = data.texts || {};
     const bannerContainer = document.getElementById('cck-banner-container');
@@ -80,7 +83,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const saveConsent = (action, details) => {
         setCookie('cck_consent', JSON.stringify(details), 365);
         hideBanner();
-        
         if (!document.getElementById('cck-reopen-trigger')) {
             buildReopenTrigger();
         }
@@ -90,7 +92,10 @@ document.addEventListener('DOMContentLoaded', () => {
         formData.append('nonce', data.nonce);
         formData.append('consent_action', action);
         formData.append('consent_details', JSON.stringify(details));
-        fetch(data.ajax_url, { method: 'POST', body: formData }).catch(error => console.error('Error logging consent:', error));
+        fetch(data.ajax_url, { 
+            method: 'POST', 
+            body: formData 
+        }).catch(error => console.error('Error logging consent:', error));
     };
 
     const showBanner = () => {

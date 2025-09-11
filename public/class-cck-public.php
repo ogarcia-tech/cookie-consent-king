@@ -27,11 +27,11 @@ class CCK_Public {
         
         $privacy_link_text = __('política de privacidad', 'cookie-consent-king');
         $privacy_link = !empty($privacy_url) ? "<a href='" . esc_url($privacy_url) . "' target='_blank' rel='noopener noreferrer'>$privacy_link_text</a>" : '';
-        $message = str_replace('{privacy_policy_link}', $privacy_link, $message);
+        $message_processed = str_replace('{privacy_policy_link}', $privacy_link, $message);
 
         $texts = [
             'title' => $title,
-            'message' => $message,
+            'message' => $message_processed,
             'acceptAll' => __('Aceptar todas', 'cookie-consent-king'),
             'rejectAll' => __('Rechazar todas', 'cookie-consent-king'),
             'personalize' => __('Personalizar', 'cookie-consent-king'),
@@ -45,7 +45,7 @@ class CCK_Public {
             'ajax_url' => admin_url('admin-ajax.php'),
             'nonce' => wp_create_nonce('cck_log_consent_nonce'),
             'icon_url' => esc_url($options['icon_url'] ?? ''),
-            'reopen_icon_url' => esc_url($options['reopen_icon_url'] ?? ''), // Pasa la URL del icono
+            'reopen_icon_url' => esc_url($options['reopen_icon_url'] ?? ''),
             'texts'    => $texts,
         ]);
         
