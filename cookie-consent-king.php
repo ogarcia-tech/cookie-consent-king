@@ -34,3 +34,5 @@ register_activation_hook(__FILE__, ['CCK_Admin', 'activate']);
 add_action('init', function() {
     load_plugin_textdomain('cookie-consent-king', false, dirname(plugin_basename(__FILE__)) . '/languages');
 });
+
+}
