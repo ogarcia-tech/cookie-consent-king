@@ -107,7 +107,8 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('cck-save-btn').addEventListener('click', () => saveConsent('custom_selection', consentState));
     };
 
-    if (!getCookie('cck_consent')) {
+    const existingCookie = getCookie('cck_consent');
+    if (!existingCookie) {
         buildBanner();
         setTimeout(showBanner, 100);
     }

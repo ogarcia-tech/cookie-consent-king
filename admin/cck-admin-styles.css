@@ -1,0 +1,36 @@
+#cck-dashboard .cck-metrics {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+    margin-bottom: 20px;
+}
+#cck-dashboard .cck-metric-card {
+    padding: 20px;
+    text-align: center;
+}
+#cck-dashboard .cck-metric-card h3 {
+    margin: 0 0 10px;
+    font-size: 1em;
+}
+#cck-dashboard .cck-metric-value {
+    font-size: 2em;
+    font-weight: bold;
+    margin: 0;
+}
+#cck-dashboard .cck-main-content {
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+    gap: 20px;
+    align-items: flex-start;
+}
+@media (max-width: 960px) {
+    #cck-dashboard .cck-main-content {
+        grid-template-columns: 1fr;
+    }
+}
+#cck-dashboard .cck-logs-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}

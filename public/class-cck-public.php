@@ -12,11 +12,9 @@ class CCK_Public {
 
         $options = get_option('cck_options', []);
         
-        // **MEJORA**: Cargar textos dinámicos y prepararlos para traducción
         $title = $options['title'] ?? __('Política de Cookies', 'cookie-consent-king');
         $message = $options['message'] ?? __('Utilizamos cookies esenciales para el funcionamiento del sitio y cookies de análisis para mejorar tu experiencia. Puedes aceptar todas, rechazarlas o personalizar tus preferencias.', 'cookie-consent-king');
 
-        // **MEJORA**: Aplicar traducciones de WPML/Polylang si existen
         if (function_exists('pll__')) {
             $title = pll__($title);
             $message = pll__($message);
