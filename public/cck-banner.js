@@ -1,9 +1,6 @@
 document.addEventListener('DOMContentLoaded', () => {
     const data = window.cckData || {};
-    if (Object.keys(data).length === 0) {
-        console.warn('Cookie Consent King: Data object not found.');
-        return;
-    }
+    if (Object.keys(data).length === 0) return;
     
     const texts = data.texts || {};
     const bannerContainer = document.getElementById('cck-banner-container');
@@ -41,13 +38,7 @@ document.addEventListener('DOMContentLoaded', () => {
             <div id="cck-banner-backdrop"></div>
             <div id="cck-banner" class="cck-banner">
                 <div class="cck-main">
-                    <div class="cck-header">
-                        ${iconHtml}
-                        <div class="cck-content">
-                            <h3 class="cck-title">${texts.title || ''}</h3>
-                            <p class="cck-message">${texts.message || ''}</p>
-                        </div>
-                    </div>
+                    <div class="cck-header">${iconHtml}<div class="cck-content"><h3 class="cck-title">${texts.title || ''}</h3><p class="cck-message">${texts.message || ''}</p></div></div>
                     <div class="cck-actions">
                         <button id="cck-personalize-btn" class="cck-btn cck-btn-secondary">${texts.personalize || 'Personalizar'}</button>
                         <button id="cck-reject-btn" class="cck-btn cck-btn-primary">${texts.rejectAll || 'Rechazar todas'}</button>
@@ -55,31 +46,14 @@ document.addEventListener('DOMContentLoaded', () => {
                     </div>
                 </div>
                 <div class="cck-settings">
-                    <div class="cck-settings-header">
-                        <h3 class="cck-settings-title">${texts.personalize || 'Personalizar'}</h3>
-                        <button id="cck-close-btn" class="cck-close-btn">&times;</button>
-                    </div>
+                    <div class="cck-settings-header"><h3 class="cck-settings-title">${texts.personalize || 'Personalizar'}</h3><button id="cck-close-btn" class="cck-close-btn">&times;</button></div>
                     <div class="cck-options">
-                        <div class="cck-option">
-                            <label><strong>Necesario</strong> (Siempre activo)</label>
-                            <label class="cck-switch"><input type="checkbox" data-consent="necessary" checked disabled><span class="cck-slider"></span></label>
-                        </div>
-                        <div class="cck-option">
-                            <label>${texts.preferences || 'Preferencias'}</label>
-                            <label class="cck-switch"><input type="checkbox" data-consent="preferences"><span class="cck-slider"></span></label>
-                        </div>
-                        <div class="cck-option">
-                            <label>${texts.analytics || 'Análisis'}</label>
-                            <label class="cck-switch"><input type="checkbox" data-consent="analytics"><span class="cck-slider"></span></label>
-                        </div>
-                        <div class="cck-option">
-                            <label>${texts.marketing || 'Marketing'}</label>
-                            <label class="cck-switch"><input type="checkbox" data-consent="marketing"><span class="cck-slider"></span></label>
-                        </div>
+                        <div class="cck-option"><label><strong>Necesario</strong> (Siempre activo)</label><label class="cck-switch"><input type="checkbox" data-consent="necessary" checked disabled><span class="cck-slider"></span></label></div>
+                        <div class="cck-option"><label>${texts.preferences || 'Preferencias'}</label><label class="cck-switch"><input type="checkbox" data-consent="preferences"><span class="cck-slider"></span></label></div>
+                        <div class="cck-option"><label>${texts.analytics || 'Análisis'}</label><label class="cck-switch"><input type="checkbox" data-consent="analytics"><span class="cck-slider"></span></label></div>
+                        <div class="cck-option"><label>${texts.marketing || 'Marketing'}</label><label class="cck-switch"><input type="checkbox" data-consent="marketing"><span class="cck-slider"></span></label></div>
                     </div>
-                    <div class="cck-actions">
-                        <button id="cck-save-btn" class="cck-btn cck-btn-primary">${texts.savePreferences || 'Guardar preferencias'}</button>
-                    </div>
+                    <div class="cck-actions"><button id="cck-save-btn" class="cck-btn cck-btn-primary">${texts.savePreferences || 'Guardar preferencias'}</button></div>
                 </div>
             </div>
         `;
@@ -107,7 +81,6 @@ document.addEventListener('DOMContentLoaded', () => {
         setCookie('cck_consent', JSON.stringify(details), 365);
         hideBanner();
         
-        // Solo muestra el icono de reabrir si no existe ya
         if (!document.getElementById('cck-reopen-trigger')) {
             buildReopenTrigger();
         }
@@ -117,10 +90,7 @@ document.addEventListener('DOMContentLoaded', () => {
         formData.append('nonce', data.nonce);
         formData.append('consent_action', action);
         formData.append('consent_details', JSON.stringify(details));
-        fetch(data.ajax_url, { 
-            method: 'POST', 
-            body: formData 
-        }).catch(error => console.error('Error logging consent:', error));
+        fetch(data.ajax_url, { method: 'POST', body: formData }).catch(error => console.error('Error logging consent:', error));
     };
 
     const showBanner = () => {
@@ -161,14 +131,11 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('cck-save-btn')?.addEventListener('click', () => saveConsent('custom_selection', consentState));
     };
 
-    // --- LÓGICA DE INICIO ---
     const existingCookie = getCookie('cck_consent');
     if (!existingCookie) {
-        // Si no hay cookie, construye y muestra el banner
         buildBanner();
         setTimeout(showBanner, 100);
     } else {
-        // Si ya hay una cookie, construye y muestra el icono para reabrir
         buildReopenTrigger();
     }
 });

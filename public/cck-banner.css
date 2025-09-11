@@ -7,6 +7,7 @@
 .cck-icon { width: 40px; height: 40px; flex-shrink: 0; }
 .cck-title { font-size: 18px; font-weight: 600; margin: 0 0 8px; color: var(--cck-text-color); }
 .cck-message { font-size: 14px; line-height: 1.5; margin: 0; color: var(--cck-text-color); }
+.cck-message a { color: var(--cck-primary-btn-bg, #000); text-decoration: underline; }
 .cck-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; flex-wrap: wrap; }
 .cck-btn { padding: 10px 18px; border-radius: 8px; font-size: 14px; font-weight: 500; cursor: pointer; border: 1px solid transparent; transition: background-color 0.2s, color 0.2s, border-color 0.2s; }
 .cck-btn-primary { background: var(--cck-primary-btn-bg); color: var(--cck-primary-btn-text); }
@@ -25,6 +26,8 @@
 input:checked + .cck-slider { background-color: var(--cck-primary-btn-bg); }
 input:disabled + .cck-slider { background-color: #e0e0e0; cursor: not-allowed; }
 input:checked + .cck-slider:before { transform: translateX(20px); }
+
+/* --- ESTILOS PARA EL ICONO DE REABRIR --- */
 #cck-reopen-trigger {
     position: fixed;
     bottom: 15px;
@@ -36,14 +39,17 @@ input:checked + .cck-slider:before { transform: translateX(20px); }
     box-shadow: 0 4px 10px rgba(0,0,0,0.2);
     cursor: pointer;
     z-index: 9997;
-    display: flex;
+    display: none; /* Oculto por defecto */
     align-items: center;
     justify-content: center;
-    transform: translateY(200%);
-    transition: transform 0.4s ease;
+    transform: scale(0.5);
+    opacity: 0;
+    transition: transform 0.3s ease, opacity 0.3s ease;
 }
 #cck-reopen-trigger.cck-visible {
-    transform: translateY(0);
+    display: flex;
+    transform: scale(1);
+    opacity: 1;
 }
 #cck-reopen-trigger img {
     width: 28px;
