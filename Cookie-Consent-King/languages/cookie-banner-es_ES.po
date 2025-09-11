@@ -1,0 +1,119 @@
+# Spanish Translation for Cookie Banner GDPR
+msgid ""
+msgstr ""
+"Project-Id-Version: Cookie Banner GDPR 1.0.0\n"
+"Language: es_ES\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+msgid "Cookie Banner Settings"
+msgstr "Configuración Cookie Banner"
+
+msgid "Cookie Banner"
+msgstr "Cookie Banner"
+
+msgid "Configuración Principal"
+msgstr "Configuración Principal"
+
+msgid "URL Política de Cookies"
+msgstr "URL Política de Cookies"
+
+msgid "URL a tu página de Política de Cookies. Aparecerá en la pestaña \"Consentimiento\"."
+msgstr "URL a tu página de Política de Cookies. Aparecerá en la pestaña \"Consentimiento\"."
+
+msgid "URL Acerca de las Cookies"
+msgstr "URL Acerca de las Cookies"
+
+msgid "URL con información detallada sobre cookies. Aparecerá en la pestaña \"Acerca de las cookies\"."
+msgstr "URL con información detallada sobre cookies. Aparecerá en la pestaña \"Acerca de las cookies\"."
+
+msgid "Google Tag Manager ID"
+msgstr "ID de Google Tag Manager"
+
+msgid "Tu ID de Google Tag Manager para integración con Consent Mode v2."
+msgstr "Tu ID de Google Tag Manager para integración con Consent Mode v2."
+
+msgid "Configuración Cookie Banner GDPR"
+msgstr "Configuración Cookie Banner GDPR"
+
+msgid "Este plugin proporciona un banner de cookies compatible con GDPR y Google Consent Mode v2."
+msgstr "Este plugin proporciona un banner de cookies compatible con GDPR y Google Consent Mode v2."
+
+msgid "Características:"
+msgstr "Características:"
+
+msgid "✓ Compatible con GDPR"
+msgstr "✓ Compatible con GDPR"
+
+msgid "✓ Google Consent Mode v2"
+msgstr "✓ Google Consent Mode v2"
+
+msgid "✓ Soporte multiidioma"
+msgstr "✓ Soporte multiidioma"
+
+msgid "✓ Enlaces personalizables"
+msgstr "✓ Enlaces personalizables"
+
+msgid "✓ Configuración granular de cookies"
+msgstr "✓ Configuración granular de cookies"
+
+msgid "Idiomas soportados:"
+msgstr "Idiomas soportados:"
+
+msgid "Español, Inglés, Francés, Italiano, Alemán"
+msgstr "Español, Inglés, Francés, Italiano, Alemán"
+
+msgid "Gestión de Cookies"
+msgstr "Gestión de Cookies"
+
+msgid "Utilizamos cookies para mejorar tu experiencia de navegación, personalizar contenido y anuncios, proporcionar funciones de redes sociales y analizar nuestro tráfico."
+msgstr "Utilizamos cookies para mejorar tu experiencia de navegación, personalizar contenido y anuncios, proporcionar funciones de redes sociales y analizar nuestro tráfico."
+
+msgid "Personalizar"
+msgstr "Personalizar"
+
+msgid "Aceptar todas"
+msgstr "Aceptar todas"
+
+msgid "Rechazar todas"
+msgstr "Rechazar todas"
+
+msgid "Configuración de Cookies"
+msgstr "Configuración de Cookies"
+
+msgid "Consentimiento"
+msgstr "Consentimiento"
+
+msgid "Detalles"
+msgstr "Detalles"
+
+msgid "Acerca de las cookies"
+msgstr "Acerca de las cookies"
+
+msgid "Necesario"
+msgstr "Necesario"
+
+msgid "Preferencias"
+msgstr "Preferencias"
+
+msgid "Estadística"
+msgstr "Estadística"
+
+msgid "Marketing"
+msgstr "Marketing"
+
+msgid "Permitir selección"
+msgstr "Permitir selección"
+
+msgid "Política de Cookies"
+msgstr "Política de Cookies"
+
+msgid "Acerca de las Cookies"
+msgstr "Acerca de las Cookies"
+
+msgid "Banner de cookies moderno con soporte completo para Google Consent Mode v2"
+msgstr "Banner de cookies moderno con soporte completo para Google Consent Mode v2"
+
+msgid "Cumplimiento GDPR"
+msgstr "Cumplimiento GDPR"

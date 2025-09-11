@@ -1,20 +1,20 @@
-#cck-banner-backdrop { position: fixed; inset: 0; background-color: rgba(0,0,0,0.5); z-index: 9998; opacity: 0; transition: opacity 0.3s ease; pointer-events: none; }
-#cck-banner-backdrop.cck-visible { opacity: 1; pointer-events: all; }
-.cck-banner { position: fixed; bottom: 20px; left: 50%; width: calc(100% - 40px); max-width: 560px; background: var(--cck-bg-color); color: var(--cck-text-color); border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); z-index: 9999; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; overflow: hidden; transform: translate(-50%, 150%); transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
-.cck-banner.cck-visible { transform: translate(-50%, 0); }
+#cck-banner-backdrop { position: fixed; inset: 0; background-color: rgba(0,0,0,0.5); z-index: 9998; opacity: 0; transition: opacity 0.3s ease; }
+#cck-banner-backdrop.cck-visible { opacity: 1; }
+.cck-banner { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); width: calc(100% - 40px); max-width: 560px; background: var(--cck-bg-color); color: var(--cck-text-color); border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); z-index: 9999; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; overflow: hidden; transform: translateY(150%); transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
+.cck-banner.cck-visible { transform: translateX(-50%) translateY(0); }
 .cck-main, .cck-settings { padding: 24px; }
 .cck-header { display: flex; align-items: flex-start; gap: 16px; }
 .cck-icon { width: 40px; height: 40px; flex-shrink: 0; }
-.cck-title { font-size: 18px; font-weight: 600; margin: 0 0 8px; color: var(--cck-text-color); }
-.cck-message { font-size: 14px; line-height: 1.5; margin: 0; color: var(--cck-text-color); }
-.cck-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; flex-wrap: wrap; }
+.cck-title { font-size: 18px; font-weight: 600; margin: 0 0 8px; }
+.cck-message { font-size: 14px; line-height: 1.5; margin: 0; }
+.cck-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; }
 .cck-btn { padding: 10px 18px; border-radius: 8px; font-size: 14px; font-weight: 500; cursor: pointer; border: 1px solid transparent; transition: background-color 0.2s, color 0.2s, border-color 0.2s; }
 .cck-btn-primary { background: var(--cck-primary-btn-bg); color: var(--cck-primary-btn-text); }
 .cck-btn-secondary { background: transparent; color: var(--cck-text-color); border: 1px solid #e0e0e0; }
 .cck-settings { display: none; }
 .cck-settings-header { display: flex; justify-content: space-between; align-items: center; }
 .cck-settings-title { font-size: 18px; font-weight: 600; }
-.cck-close-btn { background: none; border: none; font-size: 24px; cursor: pointer; padding: 0; color: #888; }
+.cck-close-btn { background: none; border: none; font-size: 24px; cursor: pointer; padding: 0; }
 .cck-options { margin-top: 20px; display: flex; flex-direction: column; gap: 15px; }
 .cck-option { display: flex; justify-content: space-between; align-items: center; padding: 12px; border: 1px solid #eee; border-radius: 8px; }
 .cck-option label { font-weight: 500; }
@@ -23,5 +23,4 @@
 .cck-slider { position: absolute; cursor: pointer; inset: 0; background-color: #ccc; transition: .4s; border-radius: 24px; }
 .cck-slider:before { position: absolute; content: ""; height: 20px; width: 20px; left: 2px; bottom: 2px; background-color: white; transition: .4s; border-radius: 50%; }
 input:checked + .cck-slider { background-color: var(--cck-primary-btn-bg); }
-input:disabled + .cck-slider { background-color: #e0e0e0; cursor: not-allowed; }
 input:checked + .cck-slider:before { transform: translateX(20px); }
