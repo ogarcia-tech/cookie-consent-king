@@ -40,11 +40,15 @@ class CCK_Admin {
 
     public function settings_init() {
         register_setting('cck_settings_group', 'cck_options', [$this, 'sanitize_options']);
+
         add_settings_section('cck_content_section', __('Content', 'cookie-consent-king'), null, 'cck-settings');
         add_settings_field('title', __('Title', 'cookie-consent-king'), [$this, 'render_field'], 'cck-settings', 'cck_content_section', ['name' => 'title', 'default' => __('Política de Cookies', 'cookie-consent-king')]);
-        add_settings_field('message', __('Message', 'cookie-consent-king'), [$this, 'render_field'], 'cck-settings', 'cck_content_section', ['name' => 'message', 'type' => 'textarea', 'default' => __('Utilizamos cookies esenciales para el funcionamiento del sitio y cookies de análisis para mejorar tu experiencia. Puedes aceptar todas, rechazarlas o personalizar tus preferencias.', 'cookie-consent-king')]);
+        add_settings_field('message', __('Message', 'cookie-consent-king'), [$this, 'render_field'], 'cck-settings', 'cck_content_section', ['name' => 'message', 'type' => 'textarea', 'default' => __('Utilizamos cookies esenciales para el funcionamiento del sitio y cookies de análisis para mejorar tu experiencia. Puedes aceptar todas, rechazarlas o personalizar tus preferencias. Lee nuestra {privacy_policy_link}.', 'cookie-consent-king')]);
+        add_settings_field('privacy_policy_url', __('Privacy Policy URL', 'cookie-consent-king'), [$this, 'render_field'], 'cck-settings', 'cck_content_section', ['name' => 'privacy_policy_url', 'type' => 'url', 'placeholder' => 'https://ejemplo.com/politica-de-privacidad']);
+        
         add_settings_section('cck_style_section', __('Appearance', 'cookie-consent-king'), null, 'cck-settings');
-        add_settings_field('icon_url', __('Icon URL', 'cookie-consent-king'), [$this, 'render_field'], 'cck-settings', 'cck_style_section', ['name' => 'icon_url', 'placeholder' => 'https://example.com/icon.svg']);
+        add_settings_field('icon_url', __('Banner Icon URL', 'cookie-consent-king'), [$this, 'render_field'], 'cck-settings', 'cck_style_section', ['name' => 'icon_url', 'placeholder' => 'https://example.com/icon.svg']);
+        add_settings_field('reopen_icon_url', __('Re-open Icon URL', 'cookie-consent-king'), [$this, 'render_field'], 'cck-settings', 'cck_style_section', ['name' => 'reopen_icon_url', 'placeholder' => 'URL a un icono de 32x32 px (opcional)']);
         add_settings_field('colors', __('Colors', 'cookie-consent-king'), [$this, 'render_color_fields'], 'cck-settings', 'cck_style_section');
     }
 
@@ -52,7 +56,9 @@ class CCK_Admin {
         $sanitized = [];
         if (isset($input['title'])) $sanitized['title'] = sanitize_text_field($input['title']);
         if (isset($input['message'])) $sanitized['message'] = sanitize_textarea_field($input['message']);
+        if (isset($input['privacy_policy_url'])) $sanitized['privacy_policy_url'] = esc_url_raw($input['privacy_policy_url']);
         if (isset($input['icon_url'])) $sanitized['icon_url'] = esc_url_raw($input['icon_url']);
+        if (isset($input['reopen_icon_url'])) $sanitized['reopen_icon_url'] = esc_url_raw($input['reopen_icon_url']);
         if (isset($input['bg_color'])) $sanitized['bg_color'] = sanitize_hex_color($input['bg_color']);
         if (isset($input['text_color'])) $sanitized['text_color'] = sanitize_hex_color($input['text_color']);
         if (isset($input['btn_primary_bg'])) $sanitized['btn_primary_bg'] = sanitize_hex_color($input['btn_primary_bg']);
@@ -62,23 +68,16 @@ class CCK_Admin {
 
     public function register_strings_for_translation($old_value, $new_value) {
         if (isset($new_value['title'])) {
-            if (function_exists('pll_register_string')) {
-                pll_register_string('cck_banner_title', $new_value['title'], 'Cookie Consent King', false);
-            }
-            if (function_exists('do_action')) {
-                do_action('wpml_register_single_string', 'Cookie Consent King', 'Banner Title', $new_value['title']);
-            }
+            if (function_exists('pll_register_string')) { pll_register_string('cck_banner_title', $new_value['title'], 'Cookie Consent King', false); }
+            if (function_exists('do_action')) { do_action('wpml_register_single_string', 'Cookie Consent King', 'Banner Title', $new_value['title']); }
         }
         if (isset($new_value['message'])) {
-            if (function_exists('pll_register_string')) {
-                pll_register_string('cck_banner_message', $new_value['message'], 'Cookie Consent King', true);
-            }
-            if (function_exists('do_action')) {
-                do_action('wpml_register_single_string', 'Cookie Consent King', 'Banner Message', $new_value['message']);
-            }
+            if (function_exists('pll_register_string')) { pll_register_string('cck_banner_message', $new_value['message'], 'Cookie Consent King', true); }
+            if (function_exists('do_action')) { do_action('wpml_register_single_string', 'Cookie Consent King', 'Banner Message', $new_value['message']); }
         }
         return $new_value;
     }
+
 
     public function render_field($args) {
         $options = get_option('cck_options', []);
