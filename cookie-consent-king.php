@@ -182,7 +182,11 @@ function cck_enqueue_admin_preview_assets($hook) {
         'message' => $default_texts['message'] ?? '',
         'cookiePolicyUrl' => $basic_config['privacy_url'] ?? '',
     ];
-
+    // Pasar los nuevos colores al script
+    wp_localize_script('cookie-consent-king-js', 'cckBannerStyles', [
+        'position' => $banner_styles['position'] ?? 'bottom',
+        'accept_bg_color' => $banner_styles['accept_bg_color'] ?? '#000000',
+        'accept_text_color' => $banner_styles['accept_text_color'] ?? '#ffffff',
     wp_localize_script('cookie-consent-king-js', 'cckOptions', $options);
     wp_add_inline_script('cookie-consent-king-js', 'window.cckPreview = true; window.cckForceShow = true;', 'before');
 }
@@ -322,6 +326,10 @@ add_action('admin_menu', 'cck_register_admin_menu');
 function cck_settings_init() {
     // Banner Styles options.
     register_setting('cck_banner_styles_group', 'cck_banner_styles_options');
+    // Nuevos campos para colores de botones
+    add_settings_field('cck_accept_button_colors', __('Accept Button Colors', 'cookie-consent-king'), 'cck_field_accept_button_colors', 'cck-banner-styles', 'cck_banner_styles_section');
+    add_settings_field('cck_reject_button_colors', __('Reject Button Colors', 'cookie-consent-king'), 'cck_field_reject_button_colors', 'cck-banner-styles', 'cck_banner_styles_section');
+    add_settings_field('cck_customize_button_colors', __('Customize Button Colors', 'cookie-consent-king'), 'cck_field_customize_button_colors', 'cck-banner-styles', 'cck_banner_styles_section');
     add_settings_section('cck_banner_styles_section', '', '__return_false', 'cck-banner-styles');
     add_settings_field(
         'cck_banner_bg_color',
@@ -387,6 +395,15 @@ function cck_settings_init() {
 }
 add_action('admin_init', 'cck_settings_init');
 
+
+function cck_field_accept_button_colors() {
+    $options = get_option('cck_banner_styles_options', []);
+    $bg_color = $options['accept_bg_color'] ?? '#000000';
+    $text_color = $options['accept_text_color'] ?? '#ffffff';
+    echo '<input type="color" name="cck_banner_styles_options[accept_bg_color]" value="' . esc_attr($bg_color) . '" /> ' . __('Background', 'cookie-consent-king');
+    echo '<input type="color" name="cck_banner_styles_options[accept_text_color]" value="' . esc_attr($text_color) . '" /> ' . __('Text', 'cookie-consent-king');
+}
+
 // -----------------------------------------------------------------------------
 // Field render callbacks
 // -----------------------------------------------------------------------------
@@ -443,37 +460,166 @@ function cck_field_cookie_list() {
     echo '<textarea name="cck_cookie_list_options[list]" rows="5" cols="50">' . esc_textarea($value) . '</textarea>';
 }
 
+¡Por supuesto! Aquí tienes la función cck_render_dashboard() completa y mejorada para tu archivo cookie-consent-king.php.
+
+Esta versión incluye las nuevas tarjetas de métricas en la parte superior para un resumen rápido y mantiene el gráfico y la tabla de registros que ya tenías.
+
+PHP
+
 /**
  * Render the Dashboard screen.
  */
 function cck_render_dashboard() {
     global $wpdb;
 
-    $table = $wpdb->prefix . 'cck_consent_logs';
-    $logs  = $wpdb->get_results("SELECT action, ip, country, created_at FROM $table ORDER BY id DESC LIMIT 100");
+    $table_name = $wpdb->prefix . 'cck_consent_logs';
 
-    $counts = [];
-    foreach ($logs as $log) {
-        $counts[$log->action] = ($counts[$log->action] ?? 0) + 1;
+    // Query for the raw logs for the table and chart
+    $logs = $wpdb->get_results( "SELECT action, ip, country, created_at FROM $table_name ORDER BY id DESC LIMIT 100" );
+
+    // --- New Metrics Calculations ---
+    $total_logs       = $wpdb->get_var( "SELECT COUNT(id) FROM $table_name" );
+    $accept_all       = $wpdb->get_var( "SELECT COUNT(id) FROM $table_name WHERE action = 'accept_all'" );
+    $reject_all       = $wpdb->get_var( "SELECT COUNT(id) FROM $table_name WHERE action = 'reject_all'" );
+    $custom_selection = $wpdb->get_var( "SELECT COUNT(id) FROM $table_name WHERE action = 'custom_selection'" );
+
+    // Calculate percentages safely
+    $acceptance_rate     = ( $total_logs > 0 ) ? ( $accept_all / $total_logs ) * 100 : 0;
+    $rejection_rate      = ( $total_logs > 0 ) ? ( $reject_all / $total_logs ) * 100 : 0;
+    $customization_rate  = ( $total_logs > 0 ) ? ( $custom_selection / $total_logs ) * 100 : 0;
+
+    // Data for the bar chart
+    $counts      = [];
+    $chart_logs = $wpdb->get_results( "SELECT action, COUNT(id) as count FROM $table_name GROUP BY action" );
+    foreach ( $chart_logs as $log ) {
+        $counts[ $log->action ] = $log->count;
     }
+    $labels = array_keys( $counts );
+    $data   = array_values( $counts );
+    ?>
+    <div class="wrap">
+        <h1><?php echo esc_html__( 'Consent Dashboard', 'cookie-consent-king' ); ?></h1>
 
-    $labels = array_keys($counts);
-    $data   = array_values($counts);
+        <div id="cck-dashboard-metrics" style="display: flex; flex-wrap: wrap; gap: 20px; margin-top: 20px; margin-bottom: 30px;">
+            <div class="postbox" style="padding: 15px; flex: 1; min-width: 200px;">
+                <h2 class="hndle"><?php esc_html_e( 'Total Interactions', 'cookie-consent-king' ); ?></h2>
+                <div class="inside" style="font-size: 2em; font-weight: bold;"><?php echo esc_html( number_format( $total_logs ) ); ?></div>
+            </div>
+            <div class="postbox" style="padding: 15px; flex: 1; min-width: 200px;">
+                <h2 class="hndle"><?php esc_html_e( 'Acceptance Rate', 'cookie-consent-king' ); ?></h2>
+                <div class="inside" style="font-size: 2em; font-weight: bold;"><?php echo esc_html( number_format( $acceptance_rate, 2 ) ); ?>%</div>
+            </div>
+            <div class="postbox" style="padding: 15px; flex: 1; min-width: 200px;">
+                <h2 class="hndle"><?php esc_html_e( 'Rejection Rate', 'cookie-consent-king' ); ?></h2>
+                <div class="inside" style="font-size: 2em; font-weight: bold;"><?php echo esc_html( number_format( $rejection_rate, 2 ) ); ?>%</div>
+            </div>
+            <div class="postbox" style="padding: 15px; flex: 1; min-width: 200px;">
+                <h2 class="hndle"><?php esc_html_e( 'Customized Selections', 'cookie-consent-king' ); ?></h2>
+                <div class="inside" style="font-size: 2em; font-weight: bold;"><?php echo esc_html( number_format( $customization_rate, 2 ) ); ?>%</div>
+            </div>
+        </div>
 
-    echo '<div class="wrap"><h1>' . esc_html__('Dashboard', 'cookie-consent-king') . '</h1>';
-    echo '<p><a class="button" href="' . esc_url(admin_url('admin-post.php?action=cck_export_logs')) . '">' . esc_html__('Export CSV', 'cookie-consent-king') . '</a></p>';
-    echo '<canvas id="cck-consent-chart" height="100"></canvas>';
-    echo '<table class="widefat"><thead><tr><th>' . esc_html__('Date', 'cookie-consent-king') . '</th><th>' . esc_html__('Action', 'cookie-consent-king') . '</th><th>IP</th><th>' . esc_html__('Country', 'cookie-consent-king') . '</th></tr></thead><tbody>';
-    if ($logs) {
-        foreach ($logs as $row) {
-            echo '<tr><td>' . esc_html($row->created_at) . '</td><td>' . esc_html($row->action) . '</td><td>' . esc_html($row->ip) . '</td><td>' . esc_html($row->country) . '</td></tr>';
-        }
-    } else {
-        echo '<tr><td colspan="4">' . esc_html__('No data', 'cookie-consent-king') . '</td></tr>';
-    }
-    echo '</tbody></table></div>';
-    echo '<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>';
-    echo '<script>const ctx=document.getElementById("cck-consent-chart");new Chart(ctx,{type:"bar",data:{labels:' . wp_json_encode($labels) . ',datasets:[{label:"Logs",data:' . wp_json_encode($data) . '}],}});</script>';
+        <hr/>
+
+        <div id="cck-charts-and-logs" style="display: flex; flex-wrap: wrap; gap: 20px; margin-top: 20px;">
+            <div id="cck-chart-container" style="flex: 1 1 500px;">
+                <h2><?php esc_html_e( 'Consent Actions Breakdown', 'cookie-consent-king' ); ?></h2>
+                <canvas id="cck-consent-chart" height="250"></canvas>
+            </div>
+
+            <div id="cck-logs-container" style="flex: 1 1 500px;">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <h2><?php esc_html_e( 'Recent Consent Logs', 'cookie-consent-king' ); ?></h2>
+                    <a class="button button-primary" href="<?php echo esc_url( admin_url( 'admin-post.php?action=cck_export_logs' ) ); ?>"><?php esc_html_e( 'Export CSV', 'cookie-consent-king' ); ?></a>
+                </div>
+                <table class="widefat striped">
+                    <thead>
+                        <tr>
+                            <th><?php esc_html_e( 'Date', 'cookie-consent-king' ); ?></th>
+                            <th><?php esc_html_e( 'Action', 'cookie-consent-king' ); ?></th>
+                            <th><?php esc_html_e( 'IP Address', 'cookie-consent-king' ); ?></th>
+                            <th><?php esc_html_e( 'Country', 'cookie-consent-king' ); ?></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php if ( ! empty( $logs ) ) : ?>
+                            <?php foreach ( $logs as $row ) : ?>
+                                <tr>
+                                    <td><?php echo esc_html( $row->created_at ); ?></td>
+                                    <td><span class="cck-action-badge action-<?php echo esc_attr( $row->action ); ?>"><?php echo esc_html( str_replace( '_', ' ', $row->action ) ); ?></span></td>
+                                    <td><?php echo esc_html( $row->ip ); ?></td>
+                                    <td><?php echo esc_html( $row->country ); ?></td>
+                                </tr>
+                            <?php endforeach; ?>
+                        <?php else : ?>
+                            <tr>
+                                <td colspan="4"><?php esc_html_e( 'No consent logs found.', 'cookie-consent-king' ); ?></td>
+                            </tr>
+                        <?php endif; ?>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <style>
+            .cck-action-badge {
+                display: inline-block;
+                padding: 4px 8px;
+                border-radius: 4px;
+                color: #fff;
+                font-size: 0.9em;
+                text-transform: capitalize;
+            }
+            .action-accept_all { background-color: #4CAF50; /* Green */ }
+            .action-reject_all { background-color: #f44336; /* Red */ }
+            .action-custom_selection { background-color: #2196F3; /* Blue */ }
+        </style>
+
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                const ctx = document.getElementById('cck-consent-chart').getContext('2d');
+                new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: <?php echo wp_json_encode( $labels ); ?>,
+                        datasets: [{
+                            label: '<?php esc_html_e( 'Total Actions', 'cookie-consent-king' ); ?>',
+                            data: <?php echo wp_json_encode( $data ); ?>,
+                            backgroundColor: [
+                                'rgba(75, 192, 192, 0.6)',
+                                'rgba(255, 99, 132, 0.6)',
+                                'rgba(54, 162, 235, 0.6)',
+                                'rgba(255, 206, 86, 0.6)',
+                                'rgba(153, 102, 255, 0.6)'
+                            ],
+                            borderColor: [
+                                'rgba(75, 192, 192, 1)',
+                                'rgba(255, 99, 132, 1)',
+                                'rgba(54, 162, 235, 1)',
+                                'rgba(255, 206, 86, 1)',
+                                'rgba(153, 102, 255, 1)'
+                            ],
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        scales: {
+                            y: {
+                                beginAtZero: true
+                            }
+                        },
+                        plugins: {
+                            legend: {
+                                display: false
+                            }
+                        }
+                    }
+                });
+            });
+        </script>
+    </div>
+    <?php
 }
 
 /**

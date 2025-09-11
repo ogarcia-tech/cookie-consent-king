@@ -94,21 +94,27 @@ export class CookieManager {
     return this.consent ? this.consent[type] : false;
   }
 
-  public saveConsent(newConsent: ConsentSettings, action: string = 'custom'): void {
+    public saveConsent(newConsent: ConsentSettings, action: string = 'custom'): void {
     this.consent = newConsent;
 
+    const cookieValue = encodeURIComponent(JSON.stringify(newConsent));
+    const domain = window.location.hostname;
+    const expirationDate = new Date();
+    expirationDate.setDate(expirationDate.getDate() + 60); // 60 dias de expiración
+
+    // Guardar en localStorage como fallback
     if (typeof window !== 'undefined') {
       try {
         localStorage.setItem('cookieConsent', JSON.stringify(newConsent));
         localStorage.setItem('cookieConsentDate', new Date().toISOString());
       } catch (error) {
-        console.error('Error saving consent:', error);
+        console.error('Error saving consent to localStorage:', error);
       }
     }
 
+    // Guardar en cookie con fecha de expiración y dominio
     if (typeof document !== 'undefined') {
-      const cookieValue = encodeURIComponent(JSON.stringify(newConsent));
-      document.cookie = `cookieConsent=${cookieValue}; path=/; max-age=31536000`;
+        document.cookie = `cookieConsent=${cookieValue}; expires=${expirationDate.toUTCString()}; path=/; domain=${domain}; SameSite=Lax`;
     }
 
     // Actualizar Google Consent Mode
