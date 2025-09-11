@@ -12,9 +12,23 @@ class CCK_Public {
 
         $options = get_option('cck_options', []);
         
+        // **MEJORA**: Cargar textos dinámicos y prepararlos para traducción
+        $title = $options['title'] ?? __('Política de Cookies', 'cookie-consent-king');
+        $message = $options['message'] ?? __('Utilizamos cookies esenciales para el funcionamiento del sitio y cookies de análisis para mejorar tu experiencia. Puedes aceptar todas, rechazarlas o personalizar tus preferencias.', 'cookie-consent-king');
+
+        // **MEJORA**: Aplicar traducciones de WPML/Polylang si existen
+        if (function_exists('pll__')) {
+            $title = pll__($title);
+            $message = pll__($message);
+        }
+        if (function_exists('do_action')) {
+            $title = apply_filters('wpml_translate_string', $title, 'Banner Title', ['domain' => 'Cookie Consent King']);
+            $message = apply_filters('wpml_translate_string', $message, 'Banner Message', ['domain' => 'Cookie Consent King']);
+        }
+        
         $texts = [
-            'title' => $options['title'] ?? __('Política de Cookies', 'cookie-consent-king'),
-            'message' => $options['message'] ?? __('Utilizamos cookies esenciales para el funcionamiento del sitio y cookies de análisis para mejorar tu experiencia. Puedes aceptar todas, rechazarlas o personalizar tus preferencias.', 'cookie-consent-king'),
+            'title' => $title,
+            'message' => $message,
             'acceptAll' => __('Aceptar todas', 'cookie-consent-king'),
             'rejectAll' => __('Rechazar todas', 'cookie-consent-king'),
             'personalize' => __('Personalizar', 'cookie-consent-king'),

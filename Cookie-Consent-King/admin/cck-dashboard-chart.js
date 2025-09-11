@@ -8,14 +8,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 datasets: [{
                     label: 'Consent Actions',
                     data: cckChartData.data,
-                    backgroundColor: ['#4CAF50', '#F44336', '#2196F3', '#FFC107'],
+                    backgroundColor: ['#4CAF50', '#2196F3', '#F44336', '#FFC107'],
+                    borderColor: '#fff',
+                    borderWidth: 2
                 }]
             },
             options: {
                 responsive: true,
                 plugins: {
                     legend: {
-                        position: 'top',
+                        position: 'right',
                     },
                 }
             }
