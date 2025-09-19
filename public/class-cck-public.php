@@ -36,9 +36,14 @@ class CCK_Public {
             'rejectAll' => __('Rechazar todas', 'cookie-consent-king'),
             'personalize' => __('Personalizar', 'cookie-consent-king'),
             'savePreferences' => __('Guardar preferencias', 'cookie-consent-king'),
+            'details' => __('Detalles', 'cookie-consent-king'),
             'preferences' => __('Preferencias', 'cookie-consent-king'),
             'analytics' => __('Análisis', 'cookie-consent-king'),
             'marketing' => __('Marketing', 'cookie-consent-king'),
+            'necessary' => __('Necesario', 'cookie-consent-king'),
+            'totalCookies' => __('Cookies detectadas', 'cookie-consent-king'),
+            'noCookiesDetected' => __('No se detectaron cookies en esta sesión.', 'cookie-consent-king'),
+            'uncategorized' => __('Sin clasificar', 'cookie-consent-king'),
         ];
 
         wp_localize_script('cck-banner', 'cckData', [

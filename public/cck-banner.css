@@ -16,6 +16,11 @@
 .cck-settings-header { display: flex; justify-content: space-between; align-items: center; }
 .cck-settings-title { font-size: 18px; font-weight: 600; }
 .cck-close-btn { background: none; border: none; font-size: 24px; cursor: pointer; padding: 0; color: #888; }
+.cck-settings-tabs { display: flex; gap: 10px; margin-top: 20px; }
+.cck-settings-tab { flex: 1; background: transparent; border: 1px solid #e0e0e0; border-radius: 8px; padding: 10px 12px; font-size: 14px; font-weight: 500; cursor: pointer; transition: background-color 0.2s, color 0.2s, border-color 0.2s; }
+.cck-settings-tab.cck-tab-active { background: var(--cck-primary-btn-bg); color: var(--cck-primary-btn-text); border-color: var(--cck-primary-btn-bg); }
+.cck-tab-content { display: none; margin-top: 20px; }
+.cck-tab-content.cck-tab-active { display: block; }
 .cck-options { margin-top: 20px; display: flex; flex-direction: column; gap: 15px; }
 .cck-option { display: flex; justify-content: space-between; align-items: center; padding: 12px; border: 1px solid #eee; border-radius: 8px; }
 .cck-option label { font-weight: 500; }
@@ -26,6 +31,11 @@
 input:checked + .cck-slider { background-color: var(--cck-primary-btn-bg); }
 input:disabled + .cck-slider { background-color: #e0e0e0; cursor: not-allowed; }
 input:checked + .cck-slider:before { transform: translateX(20px); }
+.cck-cookie-summary { font-size: 14px; margin-bottom: 12px; }
+.cck-cookie-details-list { display: flex; flex-direction: column; gap: 10px; }
+.cck-cookie-detail { display: flex; justify-content: space-between; align-items: center; padding: 10px 12px; border: 1px solid #eee; border-radius: 8px; font-size: 13px; }
+.cck-cookie-detail-count { font-weight: 600; }
+.cck-cookie-empty { font-size: 13px; color: #666; margin: 0 0 12px; display: none; }
 #cck-reopen-trigger { position: fixed; bottom: 15px; left: 15px; width: 48px; height: 48px; background-color: var(--cck-bg-color, #fff); border-radius: 50%; box-shadow: 0 4px 10px rgba(0,0,0,0.2); cursor: pointer; z-index: 9997; display: none; align-items: center; justify-content: center; transform: scale(0.5); opacity: 0; transition: transform 0.3s ease, opacity 0.3s ease; }
 #cck-reopen-trigger.cck-visible { display: flex; transform: scale(1); opacity: 1; }
 #cck-reopen-trigger img { width: 28px; height: 28px; }
