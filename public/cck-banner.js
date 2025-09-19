@@ -71,23 +71,33 @@ document.addEventListener('DOMContentLoaded', () => {
         bannerContainer.innerHTML = `
             <div id="cck-banner-backdrop"></div>
             <div id="cck-banner" class="cck-banner">
-                <div class="cck-main">
-                    <div class="cck-header">${iconHtml}<div class="cck-content"><h3 class="cck-title">${texts.title || ''}</h3><p class="cck-message">${texts.message || ''}</p></div></div>
-                    <div class="cck-actions">
-                        <button id="cck-personalize-btn" class="cck-btn cck-btn-secondary">${texts.personalize || 'Personalizar'}</button>
-                        <button id="cck-reject-btn" class="cck-btn cck-btn-primary">${texts.rejectAll || 'Rechazar todas'}</button>
-                        <button id="cck-accept-btn" class="cck-btn cck-btn-primary">${texts.acceptAll || 'Aceptar todas'}</button>
-                    </div>
+                <div class="cck-tab-nav" role="tablist">
+                    <button class="cck-tab-btn cck-active" data-tab="consent" role="tab" aria-selected="true">${texts.consentTab || 'Consentimiento'}</button>
+                    <button class="cck-tab-btn" data-tab="details" role="tab" aria-selected="false">${texts.detailsTab || 'Detalles'}</button>
+                    <button class="cck-tab-btn" data-tab="about" role="tab" aria-selected="false">${texts.aboutTab || 'Acerca de las cookies'}</button>
                 </div>
-                <div class="cck-settings">
-                    <div class="cck-settings-header"><h3 class="cck-settings-title">${texts.personalize || 'Personalizar'}</h3><button id="cck-close-btn" class="cck-close-btn">&times;</button></div>
-                    <div class="cck-options">
-                        <div class="cck-option"><label><strong>Necesario</strong> (Siempre activo)</label><label class="cck-switch"><input type="checkbox" data-consent="necessary" checked disabled><span class="cck-slider"></span></label></div>
-                        <div class="cck-option"><label>${texts.preferences || 'Preferencias'}</label><label class="cck-switch"><input type="checkbox" data-consent="preferences"><span class="cck-slider"></span></label></div>
-                        <div class="cck-option"><label>${texts.analytics || 'Análisis'}</label><label class="cck-switch"><input type="checkbox" data-consent="analytics"><span class="cck-slider"></span></label></div>
-                        <div class="cck-option"><label>${texts.marketing || 'Marketing'}</label><label class="cck-switch"><input type="checkbox" data-consent="marketing"><span class="cck-slider"></span></label></div>
-                    </div>
-                    <div class="cck-actions"><button id="cck-save-btn" class="cck-btn cck-btn-primary">${texts.savePreferences || 'Guardar preferencias'}</button></div>
+                <div class="cck-tab-panels">
+                    <section class="cck-tab-panel cck-active" data-tab-panel="consent" role="tabpanel">
+                        <div class="cck-header">${iconHtml}<div class="cck-content"><h3 class="cck-title">${texts.title || ''}</h3><p class="cck-message">${texts.message || ''}</p></div></div>
+                        <div class="cck-actions">
+                            <button id="cck-personalize-btn" class="cck-btn cck-btn-secondary">${texts.personalize || 'Personalizar'}</button>
+                            <button id="cck-reject-btn" class="cck-btn cck-btn-primary">${texts.rejectAll || 'Rechazar todas'}</button>
+                            <button id="cck-accept-btn" class="cck-btn cck-btn-primary">${texts.acceptAll || 'Aceptar todas'}</button>
+                        </div>
+                    </section>
+                    <section class="cck-tab-panel" data-tab-panel="details" role="tabpanel" aria-hidden="true">
+                        <p class="cck-tab-description">${texts.detailsDescription || ''}</p>
+                        <div class="cck-options">
+                            <div class="cck-option"><label><strong>Necesario</strong> (Siempre activo)</label><label class="cck-switch"><input type="checkbox" data-consent="necessary" checked disabled><span class="cck-slider"></span></label></div>
+                            <div class="cck-option"><label>${texts.preferences || 'Preferencias'}</label><label class="cck-switch"><input type="checkbox" data-consent="preferences"><span class="cck-slider"></span></label></div>
+                            <div class="cck-option"><label>${texts.analytics || 'Análisis'}</label><label class="cck-switch"><input type="checkbox" data-consent="analytics"><span class="cck-slider"></span></label></div>
+                            <div class="cck-option"><label>${texts.marketing || 'Marketing'}</label><label class="cck-switch"><input type="checkbox" data-consent="marketing"><span class="cck-slider"></span></label></div>
+                        </div>
+                        <div class="cck-actions"><button id="cck-save-btn" class="cck-btn cck-btn-primary">${texts.savePreferences || 'Guardar preferencias'}</button></div>
+                    </section>
+                    <section class="cck-tab-panel" data-tab-panel="about" role="tabpanel" aria-hidden="true">
+                        <p class="cck-tab-description">${texts.aboutDescription || ''}</p>
+                    </section>
                 </div>
                 <div class="cck-test-controls">
                     <button id="cck-reset-consent-btn" class="cck-btn cck-btn-tertiary">${testButtonLabel}</button>
@@ -117,13 +127,35 @@ document.addEventListener('DOMContentLoaded', () => {
         setTimeout(() => trigger?.classList.add('cck-visible'), 100);
     };
 
+    const pushConsentUpdateEvent = (details, action) => {
+        window.dataLayer = window.dataLayer || [];
+
+        const consentPayload = {
+            functionality_storage: details.necessary ? 'granted' : 'denied',
+            personalization_storage: details.preferences ? 'granted' : 'denied',
+            analytics_storage: details.analytics ? 'granted' : 'denied',
+            ad_storage: details.marketing ? 'granted' : 'denied',
+            security_storage: 'granted',
+        };
+
+        window.dataLayer.push({
+            event: 'consent_update',
+            consent: consentPayload,
+            consent_action: action,
+            timestamp: new Date().toISOString(),
+        });
+    };
+
     const saveConsent = (action, details) => {
+        window.dataLayer = window.dataLayer || [];
         setCookie('cck_consent', JSON.stringify(details), 365);
         hideBanner();
         log(`Guardando consentimiento con la acción: ${action}.`, details);
         if (!document.getElementById('cck-reopen-trigger')) {
             buildReopenTrigger();
         }
+
+        pushConsentUpdateEvent(details, action);
 
         const formData = new URLSearchParams();
         formData.append('action', 'cck_log_consent');
@@ -179,7 +211,10 @@ document.addEventListener('DOMContentLoaded', () => {
             if (settingsView) settingsView.style.display = 'none';
             if (mainView) mainView.style.display = 'block';
             log('Vista principal restaurada sin cerrar el banner.');
+
         });
+
+        document.getElementById('cck-personalize-btn')?.addEventListener('click', () => setActiveTab('details'));
 
         document.querySelectorAll('.cck-switch input').forEach(input => {
             input.addEventListener('change', (e) => {
@@ -205,6 +240,13 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         setTimeout(showBanner, 100);
     } else {
+        try {
+            const storedConsent = JSON.parse(existingCookie);
+            consentState = { ...consentState, ...storedConsent };
+            pushConsentUpdateEvent(consentState, 'load_existing');
+        } catch (error) {
+            console.error('Error parsing stored consent:', error);
+        }
         buildReopenTrigger();
         log('Cookie de consentimiento detectada, banner oculto hasta nueva interacción.');
     }
