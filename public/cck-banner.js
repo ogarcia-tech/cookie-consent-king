@@ -245,6 +245,10 @@ document.addEventListener('DOMContentLoaded', () => {
         document.cookie = name + "=" + (value || "") + expires + "; path=/; SameSite=Lax";
     };
 
+    const deleteCookie = (name) => {
+        document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/; SameSite=Lax`;
+    };
+
     const resolveFunction = (path) => {
         if (!path || typeof path !== 'string') return null;
         return path.split('.').reduce((context, segment) => {
