@@ -127,7 +127,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         const escaped = pattern
-            .replace(/[.*+?^${}()|\[\]\\]/g, '\$&')
+            .replace(/[.*+?^${}()|\[\]\\]/g, '\\$&')
             .replace(/\\\*/g, '.*');
         return new RegExp(`^${escaped}$`, 'i');
     };
