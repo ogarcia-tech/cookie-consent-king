@@ -80,12 +80,34 @@ document.addEventListener('DOMContentLoaded', () => {
         setTimeout(() => trigger?.classList.add('cck-visible'), 100);
     };
 
+    const pushConsentUpdateEvent = (details, action) => {
+        window.dataLayer = window.dataLayer || [];
+
+        const consentPayload = {
+            functionality_storage: details.necessary ? 'granted' : 'denied',
+            personalization_storage: details.preferences ? 'granted' : 'denied',
+            analytics_storage: details.analytics ? 'granted' : 'denied',
+            ad_storage: details.marketing ? 'granted' : 'denied',
+            security_storage: 'granted',
+        };
+
+        window.dataLayer.push({
+            event: 'consent_update',
+            consent: consentPayload,
+            consent_action: action,
+            timestamp: new Date().toISOString(),
+        });
+    };
+
     const saveConsent = (action, details) => {
+        window.dataLayer = window.dataLayer || [];
         setCookie('cck_consent', JSON.stringify(details), 365);
         hideBanner();
         if (!document.getElementById('cck-reopen-trigger')) {
             buildReopenTrigger();
         }
+
+        pushConsentUpdateEvent(details, action);
 
         const formData = new URLSearchParams();
         formData.append('action', 'cck_log_consent');
@@ -141,6 +163,13 @@ document.addEventListener('DOMContentLoaded', () => {
         buildBanner();
         setTimeout(showBanner, 100);
     } else {
+        try {
+            const storedConsent = JSON.parse(existingCookie);
+            consentState = { ...consentState, ...storedConsent };
+            pushConsentUpdateEvent(consentState, 'load_existing');
+        } catch (error) {
+            console.error('Error parsing stored consent:', error);
+        }
         buildReopenTrigger();
     }
 });
