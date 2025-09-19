@@ -397,21 +397,34 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const buildReopenTrigger = () => {
-        if (!data.reopen_icon_url) return;
+        const label = texts.reopenTrigger || texts.personalize || 'Reabrir preferencias';
+        const iconMarkup = data.reopen_icon_url
+            ? `<img src="${data.reopen_icon_url}" alt="${label}">`
+            : `<span class="cck-reopen-arrow" aria-hidden="true">↺</span>`;
+
         reopenContainer.innerHTML = `
-            <div id="cck-reopen-trigger">
-                <img src="${data.reopen_icon_url}" alt="${texts.personalize}">
+            <div id="cck-reopen-trigger" role="button" tabindex="0" aria-label="${label}">
+                ${iconMarkup}
+                <span class="cck-visually-hidden">${label}</span>
             </div>
         `;
         log('Renderizando disparador para reabrir el banner.');
         const trigger = document.getElementById('cck-reopen-trigger');
-        trigger.addEventListener('click', () => {
+        const activateTrigger = () => {
             if (!document.getElementById('cck-banner')) {
                 buildBanner();
             }
             setTimeout(showBanner, 50);
             syncTogglesWithState();
 
+        };
+
+        trigger.addEventListener('click', activateTrigger);
+        trigger.addEventListener('keydown', (event) => {
+            if (event.key === 'Enter' || event.key === ' ') {
+                event.preventDefault();
+                activateTrigger();
+            }
         });
         setTimeout(() => trigger?.classList.add('cck-visible'), 100);
     };
