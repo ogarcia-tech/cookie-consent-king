@@ -36,6 +36,11 @@ class CCK_Public {
         $message_processed = str_replace('{privacy_policy_link}', $privacy_link, $message);
         $rgpd_text_processed = str_replace('{privacy_policy_link}', $privacy_link, $rgpd_text);
 
+        $force_show = !empty($options['force_show']);
+        $debug_mode = !empty($options['debug']);
+        $test_button_text = $options['test_button_text'] ?? __('Limpiar y Probar', 'cookie-consent-king');
+        $test_button_url = esc_url($options['test_button_url'] ?? '');
+
         $texts = [
             'title' => $title,
             'message' => $message_processed,
@@ -46,11 +51,9 @@ class CCK_Public {
             'preferences' => __('Preferencias', 'cookie-consent-king'),
             'analytics' => __('Análisis', 'cookie-consent-king'),
             'marketing' => __('Marketing', 'cookie-consent-king'),
-            'consentTab' => __('Consentimiento', 'cookie-consent-king'),
-            'detailsTab' => __('Detalles', 'cookie-consent-king'),
-            'aboutTab' => __('Acerca de las cookies', 'cookie-consent-king'),
-            'detailsDescription' => $details_description,
-            'aboutDescription' => $rgpd_text_processed,
+            'testButton' => $test_button_text,
+            'testHelp' => __('Guía de pruebas', 'cookie-consent-king'),
+
         ];
 
         wp_localize_script('cck-banner', 'cckData', [
@@ -58,6 +61,13 @@ class CCK_Public {
             'nonce' => wp_create_nonce('cck_log_consent_nonce'),
             'icon_url' => esc_url($options['icon_url'] ?? ''),
             'reopen_icon_url' => esc_url($options['reopen_icon_url'] ?? ''),
+            'forceShow' => (bool) $force_show,
+            'debug' => (bool) $debug_mode,
+            'testButton' => [
+                'text' => $test_button_text,
+                'helpUrl' => $test_button_url,
+                'helpLabel' => __('Abrir documentación', 'cookie-consent-king'),
+            ],
             'texts'    => $texts,
         ]);
         
