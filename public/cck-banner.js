@@ -462,7 +462,12 @@ document.addEventListener('DOMContentLoaded', () => {
         scanCookies();
 
         hideBanner();
-        log(`Guardando consentimiento con la acción: ${action}.`, details);
+
+        const logDetails = {
+            action,
+            consent: consentPayload,
+        };
+        log('Guardando consentimiento.', logDetails);
         if (!document.getElementById('cck-reopen-trigger')) {
             buildReopenTrigger();
         }
