@@ -49,6 +49,31 @@ class CCK_Admin {
         add_settings_field('icon_url', __('Banner Icon URL', 'cookie-consent-king'), [$this, 'render_field'], 'cck-settings', 'cck_style_section', ['name' => 'icon_url', 'placeholder' => 'https://example.com/icon.svg']);
         add_settings_field('reopen_icon_url', __('Re-open Icon URL', 'cookie-consent-king'), [$this, 'render_field'], 'cck-settings', 'cck_style_section', ['name' => 'reopen_icon_url', 'placeholder' => 'URL a un icono de 32x32 px (opcional)']);
         add_settings_field('colors', __('Colors', 'cookie-consent-king'), [$this, 'render_color_fields'], 'cck-settings', 'cck_style_section');
+
+        add_settings_section('cck_testing_section', __('Testing tools', 'cookie-consent-king'), function () {
+            echo '<p>' . esc_html__('Útiles para validar la experiencia de consentimiento sin afectar a otros visitantes.', 'cookie-consent-king') . '</p>';
+        }, 'cck-settings');
+        add_settings_field('force_show', __('Force banner display', 'cookie-consent-king'), [$this, 'render_field'], 'cck-settings', 'cck_testing_section', [
+            'name' => 'force_show',
+            'type' => 'checkbox',
+            'label' => __('Mostrar el banner aunque ya exista un consentimiento guardado.', 'cookie-consent-king'),
+        ]);
+        add_settings_field('debug', __('Enable debug logs', 'cookie-consent-king'), [$this, 'render_field'], 'cck-settings', 'cck_testing_section', [
+            'name' => 'debug',
+            'type' => 'checkbox',
+            'label' => __('Imprimir mensajes descriptivos en la consola del navegador.', 'cookie-consent-king'),
+        ]);
+        add_settings_field('test_button_text', __('Test button text', 'cookie-consent-king'), [$this, 'render_field'], 'cck-settings', 'cck_testing_section', [
+            'name' => 'test_button_text',
+            'default' => __('Limpiar y Probar', 'cookie-consent-king'),
+            'description' => __('Texto del botón visible que reinicia las pruebas de consentimiento.', 'cookie-consent-king'),
+        ]);
+        add_settings_field('test_button_url', __('Test instructions URL', 'cookie-consent-king'), [$this, 'render_field'], 'cck-settings', 'cck_testing_section', [
+            'name' => 'test_button_url',
+            'type' => 'url',
+            'placeholder' => 'https://ejemplo.com/guia-de-pruebas',
+            'description' => __('Enlace opcional para documentación o instrucciones internas.', 'cookie-consent-king'),
+        ]);
     }
 
     public function sanitize_options($input) {
@@ -62,6 +87,10 @@ class CCK_Admin {
         if (isset($input['text_color'])) $sanitized['text_color'] = sanitize_hex_color($input['text_color']);
         if (isset($input['btn_primary_bg'])) $sanitized['btn_primary_bg'] = sanitize_hex_color($input['btn_primary_bg']);
         if (isset($input['btn_primary_text'])) $sanitized['btn_primary_text'] = sanitize_hex_color($input['btn_primary_text']);
+        $sanitized['force_show'] = !empty($input['force_show']) ? 1 : 0;
+        $sanitized['debug'] = !empty($input['debug']) ? 1 : 0;
+        if (isset($input['test_button_text'])) $sanitized['test_button_text'] = sanitize_text_field($input['test_button_text']);
+        if (isset($input['test_button_url'])) $sanitized['test_button_url'] = esc_url_raw($input['test_button_url']);
         return $sanitized;
     }
 
@@ -84,8 +113,14 @@ class CCK_Admin {
         $name = 'cck_options[' . esc_attr($args['name']) . ']';
         if ($type === 'textarea') {
             echo '<textarea name="' . $name . '" rows="4" class="large-text">' . esc_textarea($value) . '</textarea>';
+        } elseif ($type === 'checkbox') {
+            $checked = !empty($value);
+            echo '<label><input type="checkbox" name="' . $name . '" value="1" ' . checked($checked, true, false) . '> ' . esc_html($args['label'] ?? '') . '</label>';
         } else {
             echo '<input type="' . esc_attr($type) . '" name="' . $name . '" value="' . esc_attr($value) . '" class="regular-text" placeholder="' . esc_attr($args['placeholder'] ?? '') . '" />';
+        }
+        if (!empty($args['description'])) {
+            echo '<p class="description">' . esc_html($args['description']) . '</p>';
         }
     }
 
