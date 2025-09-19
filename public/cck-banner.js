@@ -514,32 +514,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const settingsView = document.querySelector('.cck-settings');
         const mainView = document.querySelector('.cck-main');
-
-        document.getElementById('cck-personalize-btn')?.addEventListener('click', () => {
-            if (mainView) mainView.style.display = 'none';
-            if (settingsView) settingsView.style.display = 'block';
-            renderCookieSummary();
-
-        });
-
-        document.getElementById('cck-close-btn')?.addEventListener('click', () => {
-            if (settingsView) settingsView.style.display = 'none';
-            if (mainView) mainView.style.display = 'block';
-            log('Vista principal restaurada sin cerrar el banner.');
-
-        });
-
-        document.getElementById('cck-personalize-btn')?.addEventListener('click', () => setActiveTab('details'));
-
-        document.querySelectorAll('.cck-switch input').forEach(input => {
-            input.addEventListener('change', (e) => {
-                if (e.target.dataset.consent !== 'necessary') {
-                    consentState[e.target.dataset.consent] = e.target.checked;
-                    log(`Preferencia modificada: ${e.target.dataset.consent} -> ${e.target.checked}`);
-                }
-            });
-        });
-
         const tabButtons = document.querySelectorAll('.cck-settings-tab');
         const tabContents = document.querySelectorAll('.cck-tab-content');
 
@@ -557,6 +531,30 @@ document.addEventListener('DOMContentLoaded', () => {
                 scanCookies();
             }
         };
+
+        document.getElementById('cck-personalize-btn')?.addEventListener('click', () => {
+            if (mainView) mainView.style.display = 'none';
+            if (settingsView) settingsView.style.display = 'block';
+            renderCookieSummary();
+            activateTab('details');
+
+        });
+
+        document.getElementById('cck-close-btn')?.addEventListener('click', () => {
+            if (settingsView) settingsView.style.display = 'none';
+            if (mainView) mainView.style.display = 'block';
+            log('Vista principal restaurada sin cerrar el banner.');
+
+        });
+
+        document.querySelectorAll('.cck-switch input').forEach(input => {
+            input.addEventListener('change', (e) => {
+                if (e.target.dataset.consent !== 'necessary') {
+                    consentState[e.target.dataset.consent] = e.target.checked;
+                    log(`Preferencia modificada: ${e.target.dataset.consent} -> ${e.target.checked}`);
+                }
+            });
+        });
 
         tabButtons.forEach((button) => {
             button.addEventListener('click', () => activateTab(button.dataset.tab));
