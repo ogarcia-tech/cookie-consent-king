@@ -43,9 +43,13 @@ input:checked + .cck-slider:before { transform: translateX(20px); }
 .cck-cookie-detail { display: flex; justify-content: space-between; align-items: center; padding: 10px 12px; border: 1px solid #eee; border-radius: 8px; font-size: 13px; }
 .cck-cookie-detail-count { font-weight: 600; }
 .cck-cookie-empty { font-size: 13px; color: #666; margin: 0 0 12px; display: none; }
-#cck-reopen-trigger { position: fixed; bottom: 15px; left: 15px; width: 48px; height: 48px; background-color: var(--cck-bg-color, #fff); border-radius: 50%; box-shadow: 0 4px 10px rgba(0,0,0,0.2); cursor: pointer; z-index: 9997; display: none; align-items: center; justify-content: center; transform: scale(0.5); opacity: 0; transition: transform 0.3s ease, opacity 0.3s ease; }
+#cck-reopen-trigger { position: fixed; bottom: 15px; left: 15px; width: 48px; height: 48px; background-color: var(--cck-bg-color, #fff); border-radius: 50%; box-shadow: 0 4px 10px rgba(0,0,0,0.2); cursor: pointer; z-index: 9997; display: none; align-items: center; justify-content: center; transform: scale(0.5); opacity: 0; transition: transform 0.3s ease, opacity 0.3s ease; outline: none; }
 #cck-reopen-trigger.cck-visible { display: flex; transform: scale(1); opacity: 1; }
-#cck-reopen-trigger img { width: 28px; height: 28px; }
+#cck-reopen-trigger:focus-visible { box-shadow: 0 0 0 3px rgba(0,0,0,0.2), 0 4px 10px rgba(0,0,0,0.2); }
+#cck-reopen-trigger img { width: 28px; height: 28px; object-fit: contain; }
+#cck-reopen-trigger .cck-reopen-arrow { display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; font-size: 20px; line-height: 1; color: var(--cck-primary-btn-bg, #000); transition: transform 0.4s ease, color 0.4s ease; }
+#cck-reopen-trigger:hover .cck-reopen-arrow, #cck-reopen-trigger:focus-visible .cck-reopen-arrow { transform: rotate(-20deg) scale(1.05); color: var(--cck-primary-btn-text, #000); }
+.cck-visually-hidden { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); border: 0; white-space: nowrap; }
 .cck-test-controls { margin: 16px 24px 24px; padding-top: 16px; border-top: 1px dashed rgba(0,0,0,0.08); display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
 .cck-btn-tertiary { background: transparent; color: var(--cck-text-color); border: 1px dashed var(--cck-primary-btn-bg, #000); }
 .cck-btn-tertiary:hover { border-style: solid; }
