@@ -351,7 +351,6 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!key || key === 'necessary') return;
             input.checked = !!consentState[key];
         });
-==
     };
 
     const buildBanner = () => {
