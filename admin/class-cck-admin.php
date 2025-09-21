@@ -19,15 +19,11 @@ class CCK_Admin {
             wp_enqueue_script('chart-js', 'https://cdn.jsdelivr.net/npm/chart.js', [], null, true);
             wp_enqueue_script('cck-dashboard-chart', plugin_dir_url(__FILE__) . 'cck-dashboard-chart.js', ['chart-js'], CCK_VERSION, true);
             
-            global $wpdb;
-            $table_name = $wpdb->prefix . 'cck_consent_logs';
-            $chart_data = $wpdb->get_results("SELECT action, COUNT(id) as count FROM $table_name GROUP BY action");
-            $labels = []; $data = [];
-            foreach ($chart_data as $row) {
-                $labels[] = ucwords(str_replace('_', ' ', $row->action));
-                $data[] = $row->count;
-            }
-            wp_localize_script('cck-dashboard-chart', 'cckChartData', ['labels' => $labels, 'data' => $data]);
+            // Pasamos los datos para los nuevos gráficos a JavaScript
+            wp_localize_script('cck-dashboard-chart', 'cckDashboardData', [
+                'trends'     => $this->get_consent_trends_data(),
+                'categories' => $this->get_category_acceptance_data(),
+            ]);
         }
     }
 
@@ -154,33 +150,46 @@ class CCK_Admin {
     }
     
     public function render_dashboard() {
-        global $wpdb;
-        $table_name = $wpdb->prefix . 'cck_consent_logs';
-        $logs = $wpdb->get_results("SELECT * FROM $table_name ORDER BY id DESC LIMIT 100");
-        $total = $wpdb->get_var("SELECT COUNT(id) FROM $table_name");
-        $accept = $wpdb->get_var("SELECT COUNT(id) FROM $table_name WHERE action = 'accept_all'");
-        $reject = $wpdb->get_var("SELECT COUNT(id) FROM $table_name WHERE action = 'reject_all'");
-        $custom = $wpdb->get_var("SELECT COUNT(id) FROM $table_name WHERE action = 'custom_selection'");
+        $stats = $this->get_dashboard_stats();
         ?>
         <div class="wrap" id="cck-dashboard">
             <h1><?php esc_html_e('Consent Dashboard', 'cookie-consent-king'); ?></h1>
+            
             <div class="cck-metrics">
-                <div class="postbox cck-metric-card"><h3><?php esc_html_e('Total Interactions', 'cookie-consent-king'); ?></h3><p class="cck-metric-value"><?php echo (int)$total; ?></p></div>
-                <div class="postbox cck-metric-card"><h3><?php esc_html_e('Acceptance Rate', 'cookie-consent-king'); ?></h3><p class="cck-metric-value"><?php echo $total > 0 ? number_format(($accept / $total) * 100, 1) : 0; ?>%</p></div>
-                <div class="postbox cck-metric-card"><h3><?php esc_html_e('Rejection Rate', 'cookie-consent-king'); ?></h3><p class="cck-metric-value"><?php echo $total > 0 ? number_format(($reject / $total) * 100, 1) : 0; ?>%</p></div>
-                <div class="postbox cck-metric-card"><h3><?php esc_html_e('Custom Selections', 'cookie-consent-king'); ?></h3><p class="cck-metric-value"><?php echo $total > 0 ? number_format(($custom / $total) * 100, 1) : 0; ?>%</p></div>
+                <div class="postbox cck-metric-card"><h3><?php esc_html_e('Acceptance Rate', 'cookie-consent-king'); ?></h3><p class="cck-metric-value"><?php echo $stats['acceptance_rate']; ?>%</p></div>
+                <div class="postbox cck-metric-card"><h3><?php esc_html_e('Rejection Rate', 'cookie-consent-king'); ?></h3><p class="cck-metric-value"><?php echo $stats['rejection_rate']; ?>%</p></div>
+                <div class="postbox cck-metric-card"><h3><?php esc_html_e('Custom Selections', 'cookie-consent-king'); ?></h3><p class="cck-metric-value"><?php echo $stats['custom_rate']; ?>%</p></div>
+                <div class="postbox cck-metric-card"><h3><?php esc_html_e('Total Interactions', 'cookie-consent-king'); ?></h3><p class="cck-metric-value"><?php echo $stats['total']; ?></p></div>
             </div>
+
             <div class="cck-main-content">
-                <div class="postbox cck-chart-container"><div class="inside"><canvas id="cck-consent-chart"></canvas></div></div>
+                <div class="postbox cck-chart-container full-width">
+                    <h3><?php esc_html_e('Consent Trends (Last 30 Days)', 'cookie-consent-king'); ?></h3>
+                    <div class="inside">
+                        <canvas id="cck-trends-chart"></canvas>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="cck-main-content">
+                 <div class="postbox cck-chart-container">
+                    <h3><?php esc_html_e('Acceptance by Category', 'cookie-consent-king'); ?></h3>
+                    <div class="inside">
+                        <canvas id="cck-categories-chart"></canvas>
+                    </div>
+                </div>
                 <div class="cck-logs-container">
-                    <div class="cck-logs-header"><h2><?php esc_html_e('Recent Logs', 'cookie-consent-king'); ?></h2><a href="<?php echo esc_url(admin_url('admin-post.php?action=cck_export_logs')); ?>" class="button button-primary"><?php esc_html_e('Export CSV', 'cookie-consent-king'); ?></a></div>
+                    <div class="cck-logs-header">
+                        <h2><?php esc_html_e('Recent Logs', 'cookie-consent-king'); ?></h2>
+                        <a href="<?php echo esc_url(admin_url('admin-post.php?action=cck_export_logs')); ?>" class="button button-primary"><?php esc_html_e('Export CSV', 'cookie-consent-king'); ?></a>
+                    </div>
                     <table class="wp-list-table widefat striped">
-                        <thead><tr><th><?php esc_html_e('Date', 'cookie-consent-king'); ?></th><th><?php esc_html_e('Action', 'cookie-consent-king'); ?></th><th><?php esc_html_e('IP', 'cookie-consent-king'); ?></th><th><?php esc_html_e('Details', 'cookie-consent-king'); ?></th></tr></thead>
+                        <thead><tr><th><?php esc_html_e('Date', 'cookie-consent-king'); ?></th><th><?php esc_html_e('Action', 'cookie-consent-king'); ?></th><th><?php esc_html_e('Details', 'cookie-consent-king'); ?></th></tr></thead>
                         <tbody>
-                            <?php if ($logs): foreach ($logs as $log): ?>
-                            <tr><td><?php echo esc_html($log->created_at); ?></td><td><?php echo esc_html($log->action); ?></td><td><?php echo esc_html($log->ip); ?></td><td><?php echo esc_html($log->consent_details); ?></td></tr>
+                            <?php if ($stats['logs']): foreach ($stats['logs'] as $log): ?>
+                            <tr><td><?php echo esc_html($log->created_at); ?></td><td><?php echo esc_html(str_replace('_', ' ', $log->action)); ?></td><td><?php echo esc_html($log->consent_details); ?></td></tr>
                             <?php endforeach; else: ?>
-                            <tr><td colspan="4"><?php esc_html_e('No logs yet.', 'cookie-consent-king'); ?></td></tr>
+                            <tr><td colspan="3"><?php esc_html_e('No logs yet.', 'cookie-consent-king'); ?></td></tr>
                             <?php endif; ?>
                         </tbody>
                     </table>
@@ -189,7 +198,94 @@ class CCK_Admin {
         </div>
         <?php
     }
+    // --- NUEVAS FUNCIONES PARA OBTENER MÉTRICAS AVANZADAS ---
 
+    private function get_dashboard_stats() {
+        global $wpdb;
+        $table_name = $wpdb->prefix . 'cck_consent_logs';
+
+        $total = $wpdb->get_var("SELECT COUNT(id) FROM $table_name");
+        $accept = $wpdb->get_var("SELECT COUNT(id) FROM $table_name WHERE action = 'accept_all'");
+        $reject = $wpdb->get_var("SELECT COUNT(id) FROM $table_name WHERE action = 'reject_all'");
+        $custom = $wpdb->get_var("SELECT COUNT(id) FROM $table_name WHERE action = 'custom_selection'");
+
+        return [
+            'total'           => (int) $total,
+            'acceptance_rate' => $total > 0 ? number_format(($accept / $total) * 100, 1) : 0,
+            'rejection_rate'  => $total > 0 ? number_format(($reject / $total) * 100, 1) : 0,
+            'custom_rate'     => $total > 0 ? number_format(($custom / $total) * 100, 1) : 0,
+            'logs'            => $wpdb->get_results("SELECT created_at, action, consent_details FROM $table_name ORDER BY id DESC LIMIT 10")
+        ];
+    }
+
+    private function get_consent_trends_data() {
+        global $wpdb;
+        $table_name = $wpdb->prefix . 'cck_consent_logs';
+        $results = $wpdb->get_results("
+            SELECT
+                DATE(created_at) as date,
+                action,
+                COUNT(id) as count
+            FROM $table_name
+            WHERE created_at >= DATE_SUB(NOW(), INTERVAL 30 DAY)
+            GROUP BY date, action
+            ORDER BY date ASC
+        ");
+
+        $trends = [];
+        $labels = [];
+        for ($i = 29; $i >= 0; $i--) {
+            $date = date('Y-m-d', strtotime("-$i days"));
+            $labels[] = $date;
+            $trends['accept_all'][$date] = 0;
+            $trends['reject_all'][$date] = 0;
+            $trends['custom_selection'][$date] = 0;
+        }
+
+        foreach ($results as $row) {
+            if (isset($trends[$row->action][$row->date])) {
+                $trends[$row->action][$row->date] = (int) $row->count;
+            }
+        }
+
+        return [
+            'labels'      => array_values($labels),
+            'accept'      => array_values($trends['accept_all']),
+            'reject'      => array_values($trends['reject_all']),
+            'custom'      => array_values($trends['custom_selection']),
+        ];
+    }
+
+    private function get_category_acceptance_data() {
+        global $wpdb;
+        $table_name = $wpdb->prefix . 'cck_consent_logs';
+        
+        $logs = $wpdb->get_results("SELECT consent_details FROM $table_name WHERE action IN ('accept_all', 'custom_selection')");
+        
+        $counts = ['preferences' => 0, 'analytics' => 0, 'marketing' => 0];
+        $total_relevant = 0;
+
+        foreach ($logs as $log) {
+            $details = json_decode($log->consent_details, true);
+            if (is_array($details)) {
+                $total_relevant++;
+                foreach ($counts as $key => &$count) {
+                    if (!empty($details[$key])) {
+                        $count++;
+                    }
+                }
+            }
+        }
+        
+        return [
+            'labels' => [__('Preferences', 'cookie-consent-king'), __('Analytics', 'cookie-consent-king'), __('Marketing', 'cookie-consent-king')],
+            'percentages' => [
+                $total_relevant > 0 ? round(($counts['preferences'] / $total_relevant) * 100) : 0,
+                $total_relevant > 0 ? round(($counts['analytics'] / $total_relevant) * 100) : 0,
+                $total_relevant > 0 ? round(($counts['marketing'] / $total_relevant) * 100) : 0,
+            ]
+        ];
+    }
     public function render_translations_page() {
         // Contenido sin cambios
     }
