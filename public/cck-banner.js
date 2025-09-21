@@ -1,7 +1,7 @@
 /**
  * Cookie Consent King Banner
  *
- * @version 2.0.0
+ * @version 2.1.0
  * @author  Oscar Garcia
  */
 document.addEventListener('DOMContentLoaded', () => {
@@ -57,7 +57,6 @@ document.addEventListener('DOMContentLoaded', () => {
             if (cookie) {
                 try {
                     const parsed = JSON.parse(decodeURIComponent(cookie));
-                    // Solo actualizamos las categorías conocidas para evitar datos corruptos
                     Object.keys(state.consent).forEach(key => {
                         if (typeof parsed[key] === 'boolean') {
                             state.consent[key] = parsed[key];
@@ -77,11 +76,9 @@ document.addEventListener('DOMContentLoaded', () => {
             this.setCookie('cck_consent', JSON.stringify(state.consent), 365);
             log('Consent saved:', { action, consent: state.consent });
             
-            // Lógica de restauración de scripts y notificación al servidor
             scriptManager.restoreBlockedScripts();
             this.logConsentToServer(action);
 
-            // Oculta el banner y muestra el botón para reabrir
             ui.hideBanner();
             if (!DOM.reopenContainer.hasChildNodes()) {
                 ui.buildReopenTrigger();
@@ -102,7 +99,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // 3. MANEJO DE SCRIPTS BLOQUEADOS
     // ----------------------------------------------------
     const scriptManager = {
-        executedCallbacks: new Set(),
         isCategoryAllowed(category) {
             return category === 'necessary' || state.consent[category] === true;
         },
@@ -118,7 +114,6 @@ document.addEventListener('DOMContentLoaded', () => {
         },
         unblockScript(blockedScript) {
             const replacement = document.createElement('script');
-            // Copiamos todos los atributos excepto los de control
             ['src', 'id', 'class', 'async', 'defer'].forEach(attr => {
                 if(blockedScript.dataset[attr]) {
                     replacement[attr] = blockedScript.dataset[attr];
@@ -129,7 +124,7 @@ document.addEventListener('DOMContentLoaded', () => {
             replacement.type = blockedScript.dataset.cckOrigType || 'text/javascript';
 
             blockedScript.parentNode.replaceChild(replacement, blockedScript);
-            blockedScript.dataset.cckRestored = 'true'; // Marcamos como restaurado
+            blockedScript.dataset.cckRestored = 'true';
         }
     };
 
@@ -164,7 +159,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <div id="cck-settings-view" style="display: none;">
                         <h3 class="cck-settings-title">${config.texts.settingsTitle}</h3>
                         <div class="cck-options">
-                            <div class="cck-option"><label><strong>${config.texts.necessary}</strong> (Siempre activo)</label><label class="cck-switch"><input type="checkbox" data-consent="necessary" checked disabled><span class="cck-slider"></span></label></div>
+                            <div class.cck-option"><label><strong>${config.texts.necessary}</strong> (Siempre activo)</label><label class="cck-switch"><input type="checkbox" data-consent="necessary" checked disabled><span class="cck-slider"></span></label></div>
                             <div class="cck-option"><label>${config.texts.preferences}</label><label class="cck-switch"><input type="checkbox" data-consent="preferences"><span class="cck-slider"></span></label></div>
                             <div class="cck-option"><label>${config.texts.analytics}</label><label class="cck-switch"><input type="checkbox" data-consent="analytics"><span class="cck-slider"></span></label></div>
                             <div class="cck-option"><label>${config.texts.marketing}</label><label class="cck-switch"><input type="checkbox" data-consent="marketing"><span class="cck-slider"></span></label></div>
@@ -181,7 +176,7 @@ document.addEventListener('DOMContentLoaded', () => {
         },
         buildReopenTrigger() {
             const label = config.texts.reopenTrigger;
-            const iconMarkup = config.reopen_icon_url ? `<img src="${config.reopen_icon_url}" alt="${label}">` : `<span class="cck-reopen-arrow" aria-hidden="true">🍪</span>`;
+            const iconMarkup = `<span class="cck-reopen-arrow" aria-hidden="true">↑</span>`;
             DOM.reopenContainer.innerHTML = `<div id="cck-reopen-trigger" role="button" tabindex="0" aria-label="${label}">${iconMarkup}</div>`;
 
             DOM.reopenContainer.querySelector('#cck-reopen-trigger').addEventListener('click', () => {
@@ -192,7 +187,6 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         },
         addBannerEventListeners() {
-            // Botones de acción principal
             document.getElementById('cck-accept-btn')?.addEventListener('click', () => {
                 Object.keys(state.consent).forEach(key => state.consent[key] = true);
                 consentManager.saveConsent('accept_all');
@@ -205,11 +199,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 consentManager.saveConsent('custom_selection');
             });
 
-            // Navegación entre vistas
             document.getElementById('cck-personalize-btn')?.addEventListener('click', () => this.toggleView(true));
             document.getElementById('cck-back-btn')?.addEventListener('click', () => this.toggleView(false));
 
-            // Toggles de consentimiento
             document.querySelectorAll('#cck-settings-view .cck-switch input').forEach(input => {
                 input.addEventListener('change', (e) => {
                     const consentKey = e.target.dataset.consent;
@@ -220,7 +212,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
             });
             
-            // Controles de prueba
             document.getElementById('cck-test-btn')?.addEventListener('click', () => {
                 log('Resetting consent for testing.');
                 consentManager.deleteCookie('cck_consent');
@@ -253,7 +244,6 @@ document.addEventListener('DOMContentLoaded', () => {
             if (banner) {
                 document.getElementById('cck-banner-backdrop')?.classList.remove('cck-visible');
                 banner.classList.remove('cck-visible');
-                // Opcional: eliminar el banner del DOM después de ocultarlo para limpiar
                 setTimeout(() => {
                     if(!config.forceShow) DOM.bannerContainer.innerHTML = '';
                 }, 500);
@@ -279,7 +269,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // Arrancamos el script
     if (DOM.bannerContainer && DOM.reopenContainer) {
         init();
     } else {
