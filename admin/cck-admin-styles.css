@@ -11,26 +11,56 @@
 #cck-dashboard .cck-metric-card h3 {
     margin: 0 0 10px;
     font-size: 1em;
+    color: #555;
 }
 #cck-dashboard .cck-metric-value {
-    font-size: 2em;
+    font-size: 2.5em;
     font-weight: bold;
     margin: 0;
+    line-height: 1;
 }
 #cck-dashboard .cck-main-content {
     display: grid;
-    grid-template-columns: 1fr 2fr;
+    grid-template-columns: 1fr 1fr; /* Dos columnas por defecto */
     gap: 20px;
     align-items: flex-start;
+    margin-bottom: 20px;
 }
+
+/* El gráfico de tendencias ocupará el ancho completo */
+#cck-dashboard .cck-chart-container.full-width {
+    grid-column: 1 / -1;
+}
+
+#cck-dashboard .cck-chart-container .inside,
+#cck-dashboard .cck-logs-container {
+    padding: 12px;
+}
+
+/* Hacemos los gráficos responsivos */
+#cck-trends-chart {
+    height: 300px;
+    width: 100%;
+}
+#cck-categories-chart {
+    height: 250px;
+    width: 100%;
+}
+
 @media (max-width: 960px) {
     #cck-dashboard .cck-main-content {
-        grid-template-columns: 1fr;
+        grid-template-columns: 1fr; /* Apilamos en una columna en pantallas pequeñas */
     }
 }
+
 #cck-dashboard .cck-logs-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
     margin-bottom: 10px;
+    padding: 0 12px;
+}
+
+#cck-dashboard .wp-list-table {
+    margin-top: 0;
 }
