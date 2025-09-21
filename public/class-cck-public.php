@@ -178,6 +178,13 @@ class CCK_Public {
             'reopen_icon_url' => esc_url($options['reopen_icon_url'] ?? ''),
             'consentState' => $this->get_user_consent_state(),
             'blockedScripts' => [],
+            'forceShow' => (bool) $force_show,
+            'debug' => (bool) $debug_mode,
+            'testButton' => [
+                'text' => $test_button_text,
+                'helpUrl' => $test_button_url,
+                'helpLabel' => '',
+            ],
 
             'texts'    => $texts,
         ]);

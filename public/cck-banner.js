@@ -584,6 +584,8 @@ document.addEventListener('DOMContentLoaded', () => {
     scanCookies();
 
     const existingCookie = getCookie('cck_consent');
+    const shouldForceShow = Boolean(data.forceShow);
+
     if (existingCookie) {
         const parsed = parseJSON(existingCookie);
         if (parsed) {
@@ -591,10 +593,11 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    if (!existingCookie) {
+    const shouldDisplayBanner = !existingCookie || shouldForceShow;
 
+    if (shouldDisplayBanner) {
         buildBanner();
-        if (existingCookie && data.forceShow) {
+        if (shouldForceShow && existingCookie) {
             log('Banner forzado a mostrarse ignorando la cookie previa.');
         }
         setTimeout(showBanner, 100);
