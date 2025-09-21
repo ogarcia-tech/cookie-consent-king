@@ -1,6 +1,6 @@
 /**
  * Cookie Consent King Banner
- * @version 2.2.0
+ * @version 2.3.0 Final
  */
 document.addEventListener('DOMContentLoaded', () => {
     const config = window.cckData || {};
@@ -71,7 +71,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const isNecessary = key === 'necessary';
             const switchHtml = isNecessary ? '' : `<label class="cck-switch"><input type="checkbox" data-consent="${key}"><span class="cck-slider"></span></label>`;
             const descriptionHtml = description ? `<div class="cck-option-description">${description}</div>` : '';
-            const toggleHtml = description ? `<button class="cck-option-toggle" aria-expanded="false">+</button>` : `<span class="cck-option-toggle-placeholder"></span>`;
+            const toggleHtml = description ? `<button class="cck-option-toggle" aria-expanded="false"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg></button>` : `<span class="cck-option-toggle-placeholder"></span>`;
 
             return `
                 <div class="cck-option">
@@ -86,16 +86,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>`;
         },
         buildBanner() {
-            const testControlsHtml = config.testButton.text ? `<div class="cck-test-controls"><button id="cck-test-btn" class="cck-btn cck-btn-tertiary">${config.testButton.text}</button></div>` : '';
+            const testControlsHtml = config.testButton.text ? `<div class="cck-test-controls"><button id="cck-test-btn" class="cck-btn cck-btn-secondary">${config.testButton.text}</button></div>` : '';
             DOM.bannerContainer.innerHTML = `
                 <div id="cck-banner-backdrop"></div>
                 <div id="cck-banner" class="cck-banner">
                     <div class="cck-header"><h2 class="cck-title">${config.texts.title}</h2><p class="cck-message">${config.texts.message}</p></div>
                     <div id="cck-main-view">
                         <div class="cck-actions">
-                            <button id="cck-personalize-btn" class="cck-btn cck-btn-secondary">${config.texts.personalize}</button>
-                            <button id="cck-reject-btn" class="cck-btn cck-btn-secondary">${config.texts.rejectAll}</button>
-                            <button id="cck-accept-btn" class="cck-btn cck-btn-primary">${config.texts.acceptAll}</button>
+                            <button id="cck-personalize-btn" class="cck-btn">${config.texts.personalize}</button>
+                            <button id="cck-reject-btn" class="cck-btn">${config.texts.rejectAll}</button>
+                            <button id="cck-accept-btn" class="cck-btn">${config.texts.acceptAll}</button>
                         </div>
                     </div>
                     <div id="cck-settings-view" style="display: none;">
@@ -108,7 +108,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         </div>
                         <div class="cck-actions">
                              <button id="cck-back-btn" class="cck-btn cck-btn-secondary">${config.texts.back}</button>
-                             <button id="cck-save-btn" class="cck-btn cck-btn-primary">${config.texts.savePreferences}</button>
+                             <button id="cck-save-btn" class="cck-btn">${config.texts.savePreferences}</button>
                         </div>
                     </div>
                     ${testControlsHtml}
@@ -147,11 +147,12 @@ document.addEventListener('DOMContentLoaded', () => {
             });
             document.querySelectorAll('.cck-option-toggle').forEach(toggle => {
                 toggle.addEventListener('click', (e) => {
-                    const desc = e.target.closest('.cck-option').querySelector('.cck-option-description');
+                    const button = e.currentTarget;
+                    const desc = button.closest('.cck-option').querySelector('.cck-option-description');
                     if(desc) {
-                        const isExpanded = desc.style.maxHeight;
-                        e.target.setAttribute('aria-expanded', !isExpanded);
-                        e.target.textContent = isExpanded ? '+' : '−';
+                        const isExpanded = button.getAttribute('aria-expanded') === 'true';
+                        button.setAttribute('aria-expanded', !isExpanded);
+                        button.classList.toggle('expanded', !isExpanded);
                         desc.style.maxHeight = isExpanded ? null : desc.scrollHeight + "px";
                     }
                 });
