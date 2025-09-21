@@ -232,15 +232,39 @@ class CCK_Admin {
     
     public function log_consent() {
         check_ajax_referer('cck_log_consent_nonce', 'nonce');
+        
         global $wpdb;
+        $table_name = $wpdb->prefix . 'cck_consent_logs';
+        
         $action = isset($_POST['consent_action']) ? sanitize_text_field($_POST['consent_action']) : '';
-        if (empty($action)) { wp_send_json_error('Action is missing.', 400); }
-        $wpdb->insert($wpdb->prefix . 'cck_consent_logs', [
-            'action' => $action,
-            'ip' => $this->get_user_ip_address(),
-            'consent_details' => isset($_POST['consent_details']) ? sanitize_text_field($_POST['consent_details']) : '',
-            'created_at' => current_time('mysql', 1)
+        if (empty($action)) {
+            wp_send_json_error('Action is missing.', 400);
+            return;
+        }
+
+        // --- INICIO DE LA MEJORA ---
+        // Decodificamos y volvemos a codificar el JSON para asegurar que esté bien formado
+        // y para eliminar cualquier dato no esperado que no corresponda a nuestro objeto de consentimiento.
+        $details_json = isset($_POST['consent_details']) ? stripslashes($_POST['consent_details']) : '{}';
+        $details_array = json_decode($details_json, true);
+        
+        $clean_details = [
+            'necessary'   => !empty($details_array['necessary']),
+            'preferences' => !empty($details_array['preferences']),
+            'analytics'   => !empty($details_array['analytics']),
+            'marketing'   => !empty($details_array['marketing']),
+        ];
+
+        $consent_details_to_store = wp_json_encode($clean_details);
+        // --- FIN DE LA MEJORA ---
+
+        $wpdb->insert($table_name, [
+            'action'          => $action,
+            'ip'              => $this->get_user_ip_address(),
+            'consent_details' => $consent_details_to_store, // Usamos la variable limpia
+            'created_at'      => current_time('mysql', 1)
         ]);
+
         wp_send_json_success('Consent logged.');
     }
     
