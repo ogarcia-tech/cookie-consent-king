@@ -184,6 +184,7 @@ class CCK_Public {
                 'text' => $test_button_text,
                 'helpUrl' => $test_button_url,
                 'helpLabel' => '',
+
             ],
 
             'texts'    => $texts,

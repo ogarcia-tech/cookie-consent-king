@@ -126,10 +126,18 @@ document.addEventListener('DOMContentLoaded', () => {
             return null;
         }
 
-        const escaped = pattern
-            .replace(/[.*+?^${}()|\[\]\\]/g, '\\$&')
-            .replace(/\\\*/g, '.*');
-        return new RegExp(`^${escaped}$`, 'i');
+        const escapeRegExp = (segment) => segment.replace(/[.*+?^${}()|[\\]\]/g, '\$&');
+        const normalizedPattern = pattern
+            .split('*')
+            .map(escapeRegExp)
+            .join('.*');
+
+        try {
+            return new RegExp(`^${normalizedPattern}$`, 'i');
+        } catch (error) {
+            log('Error creando RegExp para el patrón con comodines', pattern, error);
+            return null;
+        }
     };
 
     const patternMatches = (pattern, cookieName) => {
@@ -369,6 +377,11 @@ document.addEventListener('DOMContentLoaded', () => {
         const iconHtml = data.icon_url ? `<img src="${data.icon_url}" alt="Icon" class="cck-icon">` : '';
         log('Construyendo banner principal.');
 
+        const helpLinkHtml = testButtonHelpUrl
+            ? `<a href="${testButtonHelpUrl}" class="cck-test-link" target="_blank" rel="noopener noreferrer">${testButtonHelpLabel || testButtonHelpUrl}</a>`
+            : '';
+        const showTestControls = Boolean(testButtonLabel);
+
         bannerContainer.innerHTML = `
             <div id="cck-banner-backdrop"></div>
             <div id="cck-banner" class="cck-banner">
@@ -377,7 +390,25 @@ document.addEventListener('DOMContentLoaded', () => {
                     <button class="cck-tab-btn" data-tab="details" role="tab" aria-selected="false">${texts.detailsTab || 'Detalles'}</button>
                     <button class="cck-tab-btn" data-tab="about" role="tab" aria-selected="false">${texts.aboutTab || 'Acerca de las cookies'}</button>
                 </div>
-                <div class="cck-settings">
+                <div class="cck-main" data-tab-panel="consent">
+                    <div class="cck-tab-panels">
+                        <div class="cck-tab-panel cck-active" data-panel="consent">
+                            <div class="cck-header">
+                                ${iconHtml}
+                                <div>
+                                    <h2 class="cck-title">${texts.title || 'Política de Cookies'}</h2>
+                                    <p class="cck-message">${texts.message || ''}</p>
+                                </div>
+                            </div>
+                            <div class="cck-actions">
+                                <button id="cck-reject-btn" class="cck-btn cck-btn-secondary">${texts.rejectAll || 'Rechazar todas'}</button>
+                                <button id="cck-personalize-btn" class="cck-btn cck-btn-secondary">${texts.personalize || 'Personalizar'}</button>
+                                <button id="cck-accept-btn" class="cck-btn cck-btn-primary">${texts.acceptAll || 'Aceptar todas'}</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="cck-settings" data-tab-panel="settings" style="display: none;">
                     <div class="cck-settings-header"><h3 class="cck-settings-title">${texts.personalize || 'Personalizar'}</h3><button id="cck-close-btn" class="cck-close-btn">&times;</button></div>
                     <div class="cck-settings-tabs">
                         <button class="cck-settings-tab" data-tab="preferences" type="button">${texts.personalize || 'Personalizar'}</button>
@@ -399,6 +430,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     </div>
 
                 </div>
+                ${showTestControls ? `
+                <div class="cck-test-controls">
+                    <button id="cck-test-btn" class="cck-btn cck-btn-tertiary" type="button">${testButtonLabel}</button>
+                    ${helpLinkHtml}
+                </div>` : ''}
             </div>
         `;
         addEventListeners();
@@ -532,6 +568,13 @@ document.addEventListener('DOMContentLoaded', () => {
         const tabButtons = document.querySelectorAll('.cck-settings-tab');
         const tabContents = document.querySelectorAll('.cck-tab-content');
 
+        if (settingsView) {
+            settingsView.style.display = 'none';
+        }
+        if (mainView) {
+            mainView.style.display = 'block';
+        }
+
         const activateTab = (tabName) => {
             tabButtons.forEach((button) => {
                 const isActive = button.dataset.tab === tabName;
@@ -561,6 +604,8 @@ document.addEventListener('DOMContentLoaded', () => {
             log('Vista principal restaurada sin cerrar el banner.');
 
         });
+
+        document.getElementById('cck-test-btn')?.addEventListener('click', resetConsentForTesting);
 
         document.querySelectorAll('.cck-switch input').forEach(input => {
             input.addEventListener('change', (e) => {
