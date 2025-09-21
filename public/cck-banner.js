@@ -44,63 +44,30 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const defaultCookieCategories = {
-        necessary: {
-            label: texts.necessary || 'Necesario',
-            patterns: ['cck_consent', 'wordpress_logged_in_*', 'wp-settings-*', 'wp-settings-time-*'],
-            showInDetails: true,
-            fallback: false,
-        },
-        preferences: {
-            label: texts.preferences || 'Preferencias',
-            patterns: [],
-            showInDetails: true,
-        },
-        analytics: {
-            label: texts.analytics || 'Análisis',
-            patterns: ['_ga', '_gid', '_gat', '_gcl_au', '__utma', '__utmb', '__utmc', '__utmt', '__utmz'],
-            showInDetails: true,
-        },
-        marketing: {
-            label: texts.marketing || 'Marketing',
-            patterns: ['_fbp', 'fr', 'IDE', 'test_cookie', 'YSC', 'VISITOR_INFO1_LIVE', 'CONSENT', 'PREF'],
-            showInDetails: true,
-        },
-        uncategorized: {
-            label: texts.uncategorized || 'Sin clasificar',
-            patterns: [],
-            showInDetails: true,
-            fallback: true,
-        }
+        necessary: { label: texts.necessary || 'Necesario', patterns: ['cck_consent', 'wordpress_logged_in_*', 'wp-settings-*', 'wp-settings-time-*'], showInDetails: true, fallback: false },
+        preferences: { label: texts.preferences || 'Preferencias', patterns: [], showInDetails: true },
+        analytics: { label: texts.analytics || 'Análisis', patterns: ['_ga', '_gid', '_gat', '_gcl_au', '__utma', '__utmb', '__utmc', '__utmt', '__utmz'], showInDetails: true },
+        marketing: { label: texts.marketing || 'Marketing', patterns: ['_fbp', 'fr', 'IDE', 'test_cookie', 'YSC', 'VISITOR_INFO1_LIVE', 'CONSENT', 'PREF'], showInDetails: true },
+        uncategorized: { label: texts.uncategorized || 'Sin clasificar', patterns: [], showInDetails: true, fallback: true }
     };
 
     const mergeCookieCategories = () => {
         const categoriesFromData = data.cookieCategories || {};
-        const merged = {};
-        Object.entries(defaultCookieCategories).forEach(([key, value]) => {
-            merged[key] = {
-                ...value,
-                patterns: [...(value.patterns || [])]
-            };
-        });
+        const merged = JSON.parse(JSON.stringify(defaultCookieCategories));
 
         Object.entries(categoriesFromData).forEach(([key, value]) => {
+            if (!value || typeof value !== 'object') return;
             const base = merged[key] || {};
-            const normalizedValue = (value && typeof value === 'object') ? value : {};
-            const overridePatterns = Array.isArray(normalizedValue.patterns) ? normalizedValue.patterns : null;
+            const overridePatterns = Array.isArray(value.patterns) ? value.patterns : null;
             merged[key] = {
                 ...base,
-                ...normalizedValue,
+                ...value,
                 patterns: overridePatterns ? [...overridePatterns] : [...(base.patterns || [])]
             };
         });
 
         if (!Object.values(merged).some(category => category.fallback)) {
-            merged.uncategorized = merged.uncategorized || {
-                label: texts.uncategorized || 'Sin clasificar',
-                patterns: [],
-                showInDetails: true,
-                fallback: true,
-            };
+            merged.uncategorized = merged.uncategorized || { label: texts.uncategorized || 'Sin clasificar', patterns: [], showInDetails: true, fallback: true };
             merged.uncategorized.fallback = true;
         }
 
@@ -122,16 +89,9 @@ document.addEventListener('DOMContentLoaded', () => {
     let cookieSummary = buildEmptySummary();
 
     const wildcardToRegExp = (pattern) => {
-        if (typeof pattern !== 'string') {
-            return null;
-        }
-
-        const escapeRegExp = (segment) => segment.replace(/[.*+?^${}()|[\\]\]/g, '\$&');
-        const normalizedPattern = pattern
-            .split('*')
-            .map(escapeRegExp)
-            .join('.*');
-
+        if (typeof pattern !== 'string') return null;
+        const escapeRegExp = (segment) => segment.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const normalizedPattern = pattern.split('*').map(escapeRegExp).join('.*');
         try {
             return new RegExp(`^${normalizedPattern}$`, 'i');
         } catch (error) {
@@ -142,9 +102,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const patternMatches = (pattern, cookieName) => {
         if (!pattern) return false;
-        if (pattern instanceof RegExp) {
-            return pattern.test(cookieName);
-        }
+        if (pattern instanceof RegExp) return pattern.test(cookieName);
         if (typeof pattern === 'string') {
             if (pattern.includes('*')) {
                 const wildcardRegex = wildcardToRegExp(pattern);
@@ -155,10 +113,7 @@ document.addEventListener('DOMContentLoaded', () => {
         return false;
     };
 
-    const getFallbackCategoryKey = () => {
-        const fallbackEntry = Object.entries(cookieCategories).find(([, config]) => config.fallback);
-        return fallbackEntry ? fallbackEntry[0] : Object.keys(cookieCategories)[0];
-    };
+    const getFallbackCategoryKey = () => Object.entries(cookieCategories).find(([, config]) => config.fallback)?.[0] || Object.keys(cookieCategories)[0];
 
     const categorizeCookie = (cookieName) => {
         const normalizedName = cookieName.trim();
@@ -178,7 +133,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
         totalElement.textContent = cookieSummary.total.toString();
         listElement.innerHTML = '';
-
         let hasVisibleCategory = false;
 
         Object.entries(cookieCategories).forEach(([categoryKey, config]) => {
@@ -188,22 +142,12 @@ document.addEventListener('DOMContentLoaded', () => {
             const label = config.label || categoryKey;
             const row = document.createElement('div');
             row.className = 'cck-cookie-detail';
-            const labelElement = document.createElement('span');
-            labelElement.className = 'cck-cookie-detail-label';
-            labelElement.textContent = label;
-            const countElement = document.createElement('span');
-            countElement.className = 'cck-cookie-detail-count';
-            countElement.textContent = count.toString();
-            row.append(labelElement, countElement);
+            row.innerHTML = `<span class="cck-cookie-detail-label">${label}</span><span class="cck-cookie-detail-count">${count}</span>`;
             listElement.appendChild(row);
         });
 
         if (emptyElement) {
-            if (!cookieSummary.total && hasVisibleCategory) {
-                emptyElement.style.display = 'block';
-            } else {
-                emptyElement.style.display = 'none';
-            }
+            emptyElement.style.display = (!cookieSummary.total && hasVisibleCategory) ? 'block' : 'none';
         }
     };
 
@@ -266,12 +210,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const resolveFunction = (path) => {
         if (!path || typeof path !== 'string') return null;
-        return path.split('.').reduce((context, segment) => {
-            if (!context || typeof context !== 'object') {
-                return null;
-            }
-            return context[segment];
-        }, window);
+        return path.split('.').reduce((context, segment) => context?.[segment], window);
     };
 
     const isCategoryAllowed = (category, state) => {
@@ -281,11 +220,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const runConsentCallback = (callbackName, meta, state) => {
         if (!callbackName) return;
-
         const token = [callbackName, meta?.handle || '', meta?.category || ''].join('|');
-        if (executedCallbackTokens.has(token)) {
-            return;
-        }
+        if (executedCallbackTokens.has(token)) return;
 
         const callback = resolveFunction(callbackName);
         if (typeof callback === 'function') {
@@ -297,16 +233,13 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
             console.warn(`Cookie Consent King: callback "${callbackName}" not found in window scope.`);
         }
-
         executedCallbackTokens.add(token);
     };
 
     const restoreScriptNode = (blockedNode, state) => {
         if (!blockedNode || blockedNode.dataset.cckRestored === '1') return;
         const category = blockedNode.dataset.cckConsent;
-        if (!isCategoryAllowed(category, state)) {
-            return;
-        }
+        if (!isCategoryAllowed(category, state)) return;
 
         const parent = blockedNode.parentNode;
         if (!parent) return;
@@ -315,34 +248,21 @@ document.addEventListener('DOMContentLoaded', () => {
         const originalAttrs = blockedNode.dataset.cckOrigAttrs ? parseJSON(blockedNode.dataset.cckOrigAttrs, {}) : {};
         const originalType = blockedNode.dataset.cckOrigType || originalAttrs?.type || '';
 
-        if (blockedNode.dataset.cckSrc) {
-            replacement.src = blockedNode.dataset.cckSrc;
-        } else {
-            replacement.textContent = blockedNode.textContent;
-        }
+        if (blockedNode.dataset.cckSrc) replacement.src = blockedNode.dataset.cckSrc;
+        else replacement.textContent = blockedNode.textContent;
 
-        if (originalType) {
-            replacement.type = originalType;
-        } else {
-            replacement.removeAttribute('type');
-        }
+        if (originalType) replacement.type = originalType;
+        else replacement.removeAttribute('type');
 
         Object.entries(originalAttrs || {}).forEach(([name, value]) => {
-            if (['src', 'type'].includes(name)) {
-                return;
-            }
-            if (value === '') {
-                replacement.setAttribute(name, '');
-            } else {
-                replacement.setAttribute(name, value);
-            }
+            if (['src', 'type'].includes(name)) return;
+            replacement.setAttribute(name, value === '' ? '' : value);
         });
 
         blockedNode.dataset.cckRestored = '1';
         parent.replaceChild(replacement, blockedNode);
 
-        const callbackName = blockedNode.dataset.cckCallback;
-        runConsentCallback(callbackName, {
+        runConsentCallback(blockedNode.dataset.cckCallback, {
             handle: blockedNode.dataset.cckHandle,
             category,
             type: blockedNode.dataset.cckSrc ? 'external' : 'inline',
@@ -350,25 +270,21 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const restoreBlockedScripts = (state) => {
-        const blockedNodes = document.querySelectorAll('script[data-cck-blocked="1"]');
-        blockedNodes.forEach(node => restoreScriptNode(node, state));
-
-        const stored = (window.cckData && Array.isArray(window.cckData.blockedScripts)) ? window.cckData.blockedScripts : [];
-        stored.forEach(item => {
-            if (!item || !isCategoryAllowed(item.category, state)) {
-                return;
+        document.querySelectorAll('script[data-cck-blocked="1"]').forEach(node => restoreScriptNode(node, state));
+        (window.cckData?.blockedScripts || []).forEach(item => {
+            if (item && isCategoryAllowed(item.category, state)) {
+                runConsentCallback(item.callback, item, state);
             }
-            runConsentCallback(item.callback, item, state);
         });
-
         document.dispatchEvent(new CustomEvent('cck:consent-applied', { detail: { consent: state } }));
     };
 
     const syncTogglesWithState = () => {
         document.querySelectorAll('.cck-switch input').forEach(input => {
             const key = input.dataset.consent;
-            if (!key || key === 'necessary') return;
-            input.checked = !!consentState[key];
+            if (key && key !== 'necessary') {
+                input.checked = !!consentState[key];
+            }
         });
     };
 
@@ -377,9 +293,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const iconHtml = data.icon_url ? `<img src="${data.icon_url}" alt="Icon" class="cck-icon">` : '';
         log('Construyendo banner principal.');
 
-        const helpLinkHtml = testButtonHelpUrl
-            ? `<a href="${testButtonHelpUrl}" class="cck-test-link" target="_blank" rel="noopener noreferrer">${testButtonHelpLabel || testButtonHelpUrl}</a>`
-            : '';
+        const helpLinkHtml = testButtonHelpUrl ? `<a href="${testButtonHelpUrl}" class="cck-test-link" target="_blank" rel="noopener noreferrer">${testButtonHelpLabel || testButtonHelpUrl}</a>` : '';
         const showTestControls = Boolean(testButtonLabel);
 
         bannerContainer.innerHTML = `
@@ -417,9 +331,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     <div class="cck-tab-content" data-tab="preferences">
                         <div class="cck-options">
                             <div class="cck-option"><label><strong>${texts.necessary || 'Necesario'}</strong> (Siempre activo)</label><label class="cck-switch"><input type="checkbox" data-consent="necessary" checked disabled><span class="cck-slider"></span></label></div>
-                            <div class="cck-option"><label>${texts.preferences || 'Preferencias'}</label><label class="cck-switch"><input type="checkbox" data-consent="preferences" ${consentState.preferences ? 'checked' : ''}><span class="cck-slider"></span></label></div>
-                            <div class="cck-option"><label>${texts.analytics || 'Análisis'}</label><label class="cck-switch"><input type="checkbox" data-consent="analytics" ${consentState.analytics ? 'checked' : ''}><span class="cck-slider"></span></label></div>
-                            <div class="cck-option"><label>${texts.marketing || 'Marketing'}</label><label class="cck-switch"><input type="checkbox" data-consent="marketing" ${consentState.marketing ? 'checked' : ''}><span class="cck-slider"></span></label></div>
+                            <div class="cck-option"><label>${texts.preferences || 'Preferencias'}</label><label class="cck-switch"><input type="checkbox" data-consent="preferences"><span class="cck-slider"></span></label></div>
+                            <div class="cck-option"><label>${texts.analytics || 'Análisis'}</label><label class="cck-switch"><input type="checkbox" data-consent="analytics"><span class="cck-slider"></span></label></div>
+                            <div class="cck-option"><label>${texts.marketing || 'Marketing'}</label><label class="cck-switch"><input type="checkbox" data-consent="marketing"><span class="cck-slider"></span></label></div>
                         </div>
                         <div class="cck-actions"><button id="cck-save-btn" class="cck-btn cck-btn-primary">${texts.savePreferences || 'Guardar preferencias'}</button></div>
                     </div>
@@ -428,7 +342,6 @@ document.addEventListener('DOMContentLoaded', () => {
                         <p id="cck-cookie-empty" class="cck-cookie-empty">${texts.noCookiesDetected || 'No se detectaron cookies en esta sesión.'}</p>
                         <div id="cck-cookie-details-list" class="cck-cookie-details-list"></div>
                     </div>
-
                 </div>
                 ${showTestControls ? `
                 <div class="cck-test-controls">
@@ -438,15 +351,13 @@ document.addEventListener('DOMContentLoaded', () => {
             </div>
         `;
         addEventListeners();
+        syncTogglesWithState();
         renderCookieSummary();
-
     };
 
     const buildReopenTrigger = () => {
         const label = texts.reopenTrigger || texts.personalize || 'Reabrir preferencias';
-        const iconMarkup = data.reopen_icon_url
-            ? `<img src="${data.reopen_icon_url}" alt="${label}">`
-            : `<span class="cck-reopen-arrow" aria-hidden="true">↺</span>`;
+        const iconMarkup = data.reopen_icon_url ? `<img src="${data.reopen_icon_url}" alt="${label}">` : `<span class="cck-reopen-arrow" aria-hidden="true">↺</span>`;
 
         reopenContainer.innerHTML = `
             <div id="cck-reopen-trigger" role="button" tabindex="0" aria-label="${label}">
@@ -457,12 +368,8 @@ document.addEventListener('DOMContentLoaded', () => {
         log('Renderizando disparador para reabrir el banner.');
         const trigger = document.getElementById('cck-reopen-trigger');
         const activateTrigger = () => {
-            if (!document.getElementById('cck-banner')) {
-                buildBanner();
-            }
+            if (!document.getElementById('cck-banner')) buildBanner();
             setTimeout(showBanner, 50);
-            syncTogglesWithState();
-
         };
 
         trigger.addEventListener('click', activateTrigger);
@@ -476,61 +383,27 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const saveConsent = (action, updatedState) => {
-        if (updatedState) {
-            consentState = { ...consentState, ...updatedState };
-        }
-
+        consentState = { ...consentState, ...updatedState };
         const summary = scanCookies();
-        const cookiesByCategory = Object.entries(summary.cookies).reduce((accumulator, [category, cookies]) => {
-            accumulator[category] = Array.isArray(cookies) ? [...cookies] : [];
-            return accumulator;
-        }, {});
+        const cookiesByCategory = Object.entries(summary.cookies).reduce((acc, [cat, cookies]) => ({ ...acc, [cat]: [...(cookies || [])] }), {});
+        const categoriesMetadata = Object.entries(cookieCategories).reduce((acc, [cat, conf]) => ({ ...acc, [cat]: { label: conf.label, showInDetails: conf.showInDetails !== false } }), {});
 
-        const categoriesMetadata = Object.entries(cookieCategories).reduce((accumulator, [category, config]) => {
-            accumulator[category] = {
-                label: config.label,
-                showInDetails: config.showInDetails !== false,
-            };
-            return accumulator;
-        }, {});
-
-        const consentPayload = {
-            ...consentState,
-            detectedCookies: {
-                total: summary.total,
-                counts: { ...summary.counts },
-                cookiesByCategory,
-                categories: categoriesMetadata,
-            }
-        };
-
+        const consentPayload = { ...consentState, detectedCookies: { total: summary.total, counts: { ...summary.counts }, cookiesByCategory, categories: categoriesMetadata } };
         setCookie('cck_consent', JSON.stringify(consentPayload), 365);
-        scanCookies();
-
         hideBanner();
 
-        const logDetails = {
-            action,
-            consent: consentPayload,
-        };
-        log('Guardando consentimiento.', logDetails);
-        if (!document.getElementById('cck-reopen-trigger')) {
-            buildReopenTrigger();
-        }
-
+        log('Guardando consentimiento.', { action, consent: consentPayload });
+        if (!document.getElementById('cck-reopen-trigger')) buildReopenTrigger();
         restoreBlockedScripts(consentState);
 
+        const formData = new URLSearchParams({
+            action: 'cck_log_consent',
+            nonce: data.nonce,
+            consent_action: action,
+            consent_details: JSON.stringify(consentPayload)
+        });
 
-        const formData = new URLSearchParams();
-        formData.append('action', 'cck_log_consent');
-        formData.append('nonce', data.nonce);
-        formData.append('consent_action', action);
-        formData.append('consent_details', JSON.stringify(consentPayload));
-
-        fetch(data.ajax_url, {
-            method: 'POST',
-            body: formData
-        }).catch(error => console.error('Error logging consent:', error));
+        fetch(data.ajax_url, { method: 'POST', body: formData }).catch(error => console.error('Error logging consent:', error));
     };
 
     const showBanner = () => {
@@ -546,14 +419,8 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const resetConsentForTesting = () => {
-        log('Limpiando cookies/localStorage para pruebas manuales.');
+        log('Limpiando cookies para pruebas manuales.');
         deleteCookie('cck_consent');
-        try {
-            localStorage.removeItem('cck_consent');
-            log('Clave "cck_consent" eliminada de localStorage.');
-        } catch (error) {
-            log('No fue posible acceder a localStorage:', error);
-        }
         reopenContainer.innerHTML = '';
         buildBanner();
         setTimeout(showBanner, 50);
@@ -565,47 +432,31 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const settingsView = document.querySelector('.cck-settings');
         const mainView = document.querySelector('.cck-main');
-        const tabButtons = document.querySelectorAll('.cck-settings-tab');
-        const tabContents = document.querySelectorAll('.cck-tab-content');
-
-        if (settingsView) {
-            settingsView.style.display = 'none';
-        }
-        if (mainView) {
-            mainView.style.display = 'block';
-        }
+        const personalizeBtn = document.getElementById('cck-personalize-btn');
+        const closeBtn = document.getElementById('cck-close-btn');
+        const saveBtn = document.getElementById('cck-save-btn');
+        const testBtn = document.getElementById('cck-test-btn');
 
         const activateTab = (tabName) => {
-            tabButtons.forEach((button) => {
-                const isActive = button.dataset.tab === tabName;
-                button.classList.toggle('cck-tab-active', isActive);
-                button.setAttribute('aria-selected', isActive ? 'true' : 'false');
-            });
-            tabContents.forEach((content) => {
-                const isActive = content.dataset.tab === tabName;
-                content.classList.toggle('cck-tab-active', isActive);
-            });
-            if (tabName === 'details') {
-                scanCookies();
-            }
+            settingsView.querySelectorAll('.cck-settings-tab').forEach(btn => btn.classList.toggle('cck-tab-active', btn.dataset.tab === tabName));
+            settingsView.querySelectorAll('.cck-tab-content').forEach(content => content.classList.toggle('cck-tab-active', content.dataset.tab === tabName));
+            if (tabName === 'details') scanCookies();
         };
 
-        document.getElementById('cck-personalize-btn')?.addEventListener('click', () => {
+        personalizeBtn?.addEventListener('click', () => {
             if (mainView) mainView.style.display = 'none';
             if (settingsView) settingsView.style.display = 'block';
-            renderCookieSummary();
-            activateTab('details');
-
+            activateTab('preferences');
         });
 
-        document.getElementById('cck-close-btn')?.addEventListener('click', () => {
+        closeBtn?.addEventListener('click', () => {
             if (settingsView) settingsView.style.display = 'none';
             if (mainView) mainView.style.display = 'block';
-            log('Vista principal restaurada sin cerrar el banner.');
-
         });
 
-        document.getElementById('cck-test-btn')?.addEventListener('click', resetConsentForTesting);
+        settingsView?.querySelectorAll('.cck-settings-tab').forEach(button => {
+            button.addEventListener('click', () => activateTab(button.dataset.tab));
+        });
 
         document.querySelectorAll('.cck-switch input').forEach(input => {
             input.addEventListener('change', (e) => {
@@ -616,47 +467,33 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         });
 
-        tabButtons.forEach((button) => {
-            button.addEventListener('click', () => activateTab(button.dataset.tab));
-        });
-
-        activateTab('preferences');
-
-        document.getElementById('cck-save-btn')?.addEventListener('click', () => saveConsent('custom_selection'));
-
+        saveBtn?.addEventListener('click', () => saveConsent('custom_selection', {}));
+        testBtn?.addEventListener('click', resetConsentForTesting);
     };
 
-    scanCookies();
+    const init = () => {
+        scanCookies();
+        const existingCookie = getCookie('cck_consent');
+        const hasConsent = existingCookie !== null;
 
-    const existingCookie = getCookie('cck_consent');
-    if (existingCookie) {
-        const parsed = parseJSON(existingCookie);
-        if (parsed) {
-            consentState = Object.assign({}, consentState, parsed);
+        if (hasConsent) {
+            const initialConsentState = parseJSON(existingCookie, {});
+            consentState = { ...consentState, ...initialConsentState };
         }
-    }
 
-    if (!existingCookie) {
-
-        buildBanner();
-        if (existingCookie && data.forceShow) {
-            log('Banner forzado a mostrarse ignorando la cookie previa.');
+        if (hasConsent && !data.forceShow) {
+            log('Consentimiento previo encontrado. Aplicando scripts.', consentState);
+            restoreBlockedScripts(consentState);
+            buildReopenTrigger();
+        } else {
+            log('No hay consentimiento previo o se ha forzado la visualización. Mostrando banner.');
+            buildBanner();
+            if (hasConsent && data.forceShow) {
+                syncTogglesWithState();
+            }
+            setTimeout(showBanner, 100);
         }
-        setTimeout(showBanner, 100);
-    } else {
-        try {
-            const parsedConsent = JSON.parse(existingCookie);
-            ['preferences', 'analytics', 'marketing'].forEach((key) => {
-                if (typeof parsedConsent[key] === 'boolean') {
-                    consentState[key] = parsedConsent[key];
-                }
-            });
-        } catch (error) {
-            console.warn('Cookie Consent King: Unable to parse stored consent.', error);
+    };
 
-        }
-        buildReopenTrigger();
-        log('Cookie de consentimiento detectada, banner oculto hasta nueva interacción.');
-    }
-
+    init();
 });
