@@ -40,70 +40,84 @@ class CCK_Admin {
 
     public function settings_init() {
         register_setting('cck_settings_group', 'cck_options', [$this, 'sanitize_options']);
+        
+        // Sección de Contenido Principal
         add_settings_section('cck_content_section', __('Content', 'cookie-consent-king'), null, 'cck-settings');
         add_settings_field('title', __('Title', 'cookie-consent-king'), [$this, 'render_field'], 'cck-settings', 'cck_content_section', ['name' => 'title', 'default' => __('Política de Cookies', 'cookie-consent-king')]);
         add_settings_field('message', __('Message', 'cookie-consent-king'), [$this, 'render_field'], 'cck-settings', 'cck_content_section', ['name' => 'message', 'type' => 'textarea', 'default' => __('Utilizamos cookies esenciales para el funcionamiento del sitio y cookies de análisis para mejorar tu experiencia. Puedes aceptar todas, rechazarlas o personalizar tus preferencias. Lee nuestra {privacy_policy_link}.', 'cookie-consent-king')]);
         add_settings_field('privacy_policy_url', __('Privacy Policy URL', 'cookie-consent-king'), [$this, 'render_field'], 'cck-settings', 'cck_content_section', ['name' => 'privacy_policy_url', 'type' => 'url', 'placeholder' => 'https://ejemplo.com/politica-de-privacidad']);
         
+        // --- INICIO NUEVA SECCIÓN ---
+        // Sección de Descripciones de Cookies
+        add_settings_section('cck_descriptions_section', __('Cookie Category Descriptions', 'cookie-consent-king'), function() {
+            echo '<p>' . esc_html__('Explain what each cookie category is for. This text will appear in a collapsible section in the banner.', 'cookie-consent-king') . '</p>';
+        }, 'cck-settings');
+        add_settings_field('description_necessary', __('Necessary Cookies', 'cookie-consent-king'), [$this, 'render_field'], 'cck-settings', 'cck_descriptions_section', ['name' => 'description_necessary', 'type' => 'textarea', 'placeholder' => __('e.g., These cookies are essential for the website to function properly.', 'cookie-consent-king')]);
+        add_settings_field('description_preferences', __('Preferences Cookies', 'cookie-consent-king'), [$this, 'render_field'], 'cck-settings', 'cck_descriptions_section', ['name' => 'description_preferences', 'type' => 'textarea', 'placeholder' => __('e.g., These cookies remember your preferences, such as language or region.', 'cookie-consent-king')]);
+        add_settings_field('description_analytics', __('Analytics Cookies', 'cookie-consent-king'), [$this, 'render_field'], 'cck-settings', 'cck_descriptions_section', ['name' => 'description_analytics', 'type' => 'textarea', 'placeholder' => __('e.g., These cookies help us understand how visitors interact with the website.', 'cookie-consent-king')]);
+        add_settings_field('description_marketing', __('Marketing Cookies', 'cookie-consent-king'), [$this, 'render_field'], 'cck-settings', 'cck_descriptions_section', ['name' => 'description_marketing', 'type' => 'textarea', 'placeholder' => __('e.g., These cookies are used to track visitors across websites to display relevant ads.', 'cookie-consent-king')]);
+        // --- FIN NUEVA SECCIÓN ---
+
+        // Sección de Apariencia
         add_settings_section('cck_style_section', __('Appearance', 'cookie-consent-king'), null, 'cck-settings');
         add_settings_field('icon_url', __('Banner Icon URL', 'cookie-consent-king'), [$this, 'render_field'], 'cck-settings', 'cck_style_section', ['name' => 'icon_url', 'placeholder' => 'https://example.com/icon.svg']);
-        add_settings_field('reopen_icon_url', __('Re-open Icon URL', 'cookie-consent-king'), [$this, 'render_field'], 'cck-settings', 'cck_style_section', ['name' => 'reopen_icon_url', 'placeholder' => 'URL a un icono de 32x32 px (opcional)']);
+        add_settings_field('reopen_icon_url', __('Re-open Icon URL', 'cookie-consent-king'), [$this, 'render_field'], 'cck-settings', 'cck_style_section', ['name' => 'reopen_icon_url', 'placeholder' => __('Overrides the default arrow icon', 'cookie-consent-king')]);
         add_settings_field('colors', __('Colors', 'cookie-consent-king'), [$this, 'render_color_fields'], 'cck-settings', 'cck_style_section');
 
-        add_settings_section('cck_testing_section', __('Testing tools', 'cookie-consent-king'), function () {
-            echo '<p>' . esc_html__('Útiles para validar la experiencia de consentimiento sin afectar a otros visitantes.', 'cookie-consent-king') . '</p>';
-        }, 'cck-settings');
-        add_settings_field('force_show', __('Force banner display', 'cookie-consent-king'), [$this, 'render_field'], 'cck-settings', 'cck_testing_section', [
-            'name' => 'force_show',
-            'type' => 'checkbox',
-            'label' => __('Mostrar el banner aunque ya exista un consentimiento guardado.', 'cookie-consent-king'),
-        ]);
-        add_settings_field('debug', __('Enable debug logs', 'cookie-consent-king'), [$this, 'render_field'], 'cck-settings', 'cck_testing_section', [
-            'name' => 'debug',
-            'type' => 'checkbox',
-            'label' => __('Imprimir mensajes descriptivos en la consola del navegador.', 'cookie-consent-king'),
-        ]);
-        add_settings_field('test_button_text', __('Test button text', 'cookie-consent-king'), [$this, 'render_field'], 'cck-settings', 'cck_testing_section', [
-            'name' => 'test_button_text',
-            'default' => __('Limpiar y Probar', 'cookie-consent-king'),
-            'description' => __('Texto del botón visible que reinicia las pruebas de consentimiento.', 'cookie-consent-king'),
-        ]);
-        add_settings_field('test_button_url', __('Test instructions URL', 'cookie-consent-king'), [$this, 'render_field'], 'cck-settings', 'cck_testing_section', [
-            'name' => 'test_button_url',
-            'type' => 'url',
-            'placeholder' => 'https://ejemplo.com/guia-de-pruebas',
-            'description' => __('Enlace opcional para documentación o instrucciones internas.', 'cookie-consent-king'),
-        ]);
+        // Sección de Herramientas de Prueba
+        add_settings_section('cck_testing_section', __('Testing tools', 'cookie-consent-king'), null, 'cck-settings');
+        add_settings_field('force_show', __('Force banner display', 'cookie-consent-king'), [$this, 'render_field'], 'cck-settings', 'cck_testing_section', ['name' => 'force_show', 'type' => 'checkbox', 'label' => __('Show the banner even if consent has been given.', 'cookie-consent-king')]);
+        add_settings_field('debug', __('Enable debug logs', 'cookie-consent-king'), [$this, 'render_field'], 'cck-settings', 'cck_testing_section', ['name' => 'debug', 'type' => 'checkbox', 'label' => __('Print descriptive messages in the browser console.', 'cookie-consent-king')]);
+        add_settings_field('test_button_text', __('Test button text', 'cookie-consent-king'), [$this, 'render_field'], 'cck-settings', 'cck_testing_section', ['name' => 'test_button_text', 'placeholder' => __('Leave empty to hide', 'cookie-consent-king')]);
+        add_settings_field('test_button_url', __('Test instructions URL', 'cookie-consent-king'), [$this, 'render_field'], 'cck-settings', 'cck_testing_section', ['name' => 'test_button_url', 'type' => 'url', 'placeholder' => __('Optional link to internal testing guides', 'cookie-consent-king')]);
     }
 
     public function sanitize_options($input) {
         $sanitized = [];
-        if (isset($input['title'])) $sanitized['title'] = sanitize_text_field($input['title']);
-        if (isset($input['message'])) $sanitized['message'] = sanitize_textarea_field($input['message']);
-        if (isset($input['privacy_policy_url'])) $sanitized['privacy_policy_url'] = esc_url_raw($input['privacy_policy_url']);
-        if (isset($input['icon_url'])) $sanitized['icon_url'] = esc_url_raw($input['icon_url']);
-        if (isset($input['reopen_icon_url'])) $sanitized['reopen_icon_url'] = esc_url_raw($input['reopen_icon_url']);
-        if (isset($input['bg_color'])) $sanitized['bg_color'] = sanitize_hex_color($input['bg_color']);
-        if (isset($input['text_color'])) $sanitized['text_color'] = sanitize_hex_color($input['text_color']);
-        if (isset($input['btn_primary_bg'])) $sanitized['btn_primary_bg'] = sanitize_hex_color($input['btn_primary_bg']);
-        if (isset($input['btn_primary_text'])) $sanitized['btn_primary_text'] = sanitize_hex_color($input['btn_primary_text']);
+        // Sanitiza campos existentes
+        $sanitized['title'] = isset($input['title']) ? sanitize_text_field($input['title']) : '';
+        $sanitized['message'] = isset($input['message']) ? sanitize_textarea_field($input['message']) : '';
+        $sanitized['privacy_policy_url'] = isset($input['privacy_policy_url']) ? esc_url_raw($input['privacy_policy_url']) : '';
+        $sanitized['icon_url'] = isset($input['icon_url']) ? esc_url_raw($input['icon_url']) : '';
+        $sanitized['reopen_icon_url'] = isset($input['reopen_icon_url']) ? esc_url_raw($input['reopen_icon_url']) : '';
+        $sanitized['bg_color'] = isset($input['bg_color']) ? sanitize_hex_color($input['bg_color']) : '';
+        $sanitized['text_color'] = isset($input['text_color']) ? sanitize_hex_color($input['text_color']) : '';
+        $sanitized['btn_primary_bg'] = isset($input['btn_primary_bg']) ? sanitize_hex_color($input['btn_primary_bg']) : '';
+        $sanitized['btn_primary_text'] = isset($input['btn_primary_text']) ? sanitize_hex_color($input['btn_primary_text']) : '';
         $sanitized['force_show'] = !empty($input['force_show']) ? 1 : 0;
         $sanitized['debug'] = !empty($input['debug']) ? 1 : 0;
-        if (isset($input['test_button_text'])) $sanitized['test_button_text'] = sanitize_text_field($input['test_button_text']);
-        if (isset($input['test_button_url'])) $sanitized['test_button_url'] = esc_url_raw($input['test_button_url']);
+        $sanitized['test_button_text'] = isset($input['test_button_text']) ? sanitize_text_field($input['test_button_text']) : '';
+        $sanitized['test_button_url'] = isset($input['test_button_url']) ? esc_url_raw($input['test_button_url']) : '';
+
+        // --- INICIO SANITIZACIÓN NUEVOS CAMPOS ---
+        $sanitized['description_necessary'] = isset($input['description_necessary']) ? sanitize_textarea_field($input['description_necessary']) : '';
+        $sanitized['description_preferences'] = isset($input['description_preferences']) ? sanitize_textarea_field($input['description_preferences']) : '';
+        $sanitized['description_analytics'] = isset($input['description_analytics']) ? sanitize_textarea_field($input['description_analytics']) : '';
+        $sanitized['description_marketing'] = isset($input['description_marketing']) ? sanitize_textarea_field($input['description_marketing']) : '';
+        // --- FIN SANITIZACIÓN NUEVOS CAMPOS ---
+
         return $sanitized;
     }
 
     public function register_strings_for_translation($old_value, $new_value) {
-        if (isset($new_value['title'])) {
-            if (function_exists('pll_register_string')) { pll_register_string('cck_banner_title', $new_value['title'], 'Cookie Consent King', false); }
-            if (function_exists('do_action')) { do_action('wpml_register_single_string', 'Cookie Consent King', 'Banner Title', $new_value['title']); }
+        if (isset($new_value['title'])) { $this->register_string('Banner Title', $new_value['title']); }
+        if (isset($new_value['message'])) { $this->register_string('Banner Message', $new_value['message'], true); }
+        
+        // --- INICIO REGISTRO NUEVOS CAMPOS ---
+        if (isset($new_value['description_necessary'])) { $this->register_string('Description Necessary', $new_value['description_necessary'], true); }
+        if (isset($new_value['description_preferences'])) { $this->register_string('Description Preferences', $new_value['description_preferences'], true); }
+        if (isset($new_value['description_analytics'])) { $this->register_string('Description Analytics', $new_value['description_analytics'], true); }
+        if (isset($new_value['description_marketing'])) { $this->register_string('Description Marketing', $new_value['description_marketing'], true); }
+        // --- FIN REGISTRO NUEVOS CAMPOS ---
+    }
+    
+    private function register_string($name, $value, $multiline = false) {
+        if (function_exists('pll_register_string')) {
+            pll_register_string($name, $value, 'Cookie Consent King', $multiline);
         }
-        if (isset($new_value['message'])) {
-            if (function_exists('pll_register_string')) { pll_register_string('cck_banner_message', $new_value['message'], 'Cookie Consent King', true); }
-            if (function_exists('do_action')) { do_action('wpml_register_single_string', 'Cookie Consent King', 'Banner Message', $new_value['message']); }
+        if (function_exists('do_action')) {
+            do_action('wpml_register_single_string', 'Cookie Consent King', $name, $value);
         }
-        return $new_value;
     }
 
     public function render_field($args) {
@@ -111,16 +125,14 @@ class CCK_Admin {
         $value = $options[$args['name']] ?? ($args['default'] ?? '');
         $type = $args['type'] ?? 'text';
         $name = 'cck_options[' . esc_attr($args['name']) . ']';
+        $placeholder = $args['placeholder'] ?? '';
+
         if ($type === 'textarea') {
-            echo '<textarea name="' . $name . '" rows="4" class="large-text">' . esc_textarea($value) . '</textarea>';
+            echo '<textarea name="' . $name . '" rows="4" class="large-text" placeholder="' . esc_attr($placeholder) . '">' . esc_textarea($value) . '</textarea>';
         } elseif ($type === 'checkbox') {
-            $checked = !empty($value);
-            echo '<label><input type="checkbox" name="' . $name . '" value="1" ' . checked($checked, true, false) . '> ' . esc_html($args['label'] ?? '') . '</label>';
+            echo '<label><input type="checkbox" name="' . $name . '" value="1" ' . checked(!empty($value), true, false) . '> ' . esc_html($args['label'] ?? '') . '</label>';
         } else {
-            echo '<input type="' . esc_attr($type) . '" name="' . $name . '" value="' . esc_attr($value) . '" class="regular-text" placeholder="' . esc_attr($args['placeholder'] ?? '') . '" />';
-        }
-        if (!empty($args['description'])) {
-            echo '<p class="description">' . esc_html($args['description']) . '</p>';
+            echo '<input type="' . esc_attr($type) . '" name="' . $name . '" value="' . esc_attr($value) . '" class="regular-text" placeholder="' . esc_attr($placeholder) . '" />';
         }
     }
 
@@ -132,7 +144,6 @@ class CCK_Admin {
             'btn_primary_bg' => ['label' => __('Primary Button Background', 'cookie-consent-king'), 'default' => '#000000'],
             'btn_primary_text' => ['label' => __('Primary Button Text', 'cookie-consent-king'), 'default' => '#FFFFFF']
         ];
-        echo '<p><em>' . __('Applies to "Accept", "Reject", and "Save". The "Personalize" button uses a secondary style.', 'cookie-consent-king') . '</em></p>';
         foreach ($colors as $name => $field) {
             $value = $options[$name] ?? $field['default'];
             echo '<div style="margin-bottom:10px;"><label style="display:inline-block;width:200px;">' . esc_html($field['label']) . '</label><input type="color" name="cck_options[' . esc_attr($name) . ']" value="' . esc_attr($value) . '"></div>';
@@ -242,9 +253,6 @@ class CCK_Admin {
             return;
         }
 
-        // --- INICIO DE LA MEJORA ---
-        // Decodificamos y volvemos a codificar el JSON para asegurar que esté bien formado
-        // y para eliminar cualquier dato no esperado que no corresponda a nuestro objeto de consentimiento.
         $details_json = isset($_POST['consent_details']) ? stripslashes($_POST['consent_details']) : '{}';
         $details_array = json_decode($details_json, true);
         
@@ -256,12 +264,11 @@ class CCK_Admin {
         ];
 
         $consent_details_to_store = wp_json_encode($clean_details);
-        // --- FIN DE LA MEJORA ---
 
         $wpdb->insert($table_name, [
             'action'          => $action,
             'ip'              => $this->get_user_ip_address(),
-            'consent_details' => $consent_details_to_store, // Usamos la variable limpia
+            'consent_details' => $consent_details_to_store,
             'created_at'      => current_time('mysql', 1)
         ]);
 
