@@ -126,10 +126,18 @@ document.addEventListener('DOMContentLoaded', () => {
             return null;
         }
 
-        const escaped = pattern
-            .replace(/[.*+?^${}()|\[\]\\]/g, '\\$&')
-            .replace(/\\\*/g, '.*');
-        return new RegExp(`^${escaped}$`, 'i');
+        const escapeRegExp = (segment) => segment.replace(/[.*+?^${}()|[\\]\]/g, '\$&');
+        const normalizedPattern = pattern
+            .split('*')
+            .map(escapeRegExp)
+            .join('.*');
+
+        try {
+            return new RegExp(`^${normalizedPattern}$`, 'i');
+        } catch (error) {
+            log('Error creando RegExp para el patrón con comodines', pattern, error);
+            return null;
+        }
     };
 
     const patternMatches = (pattern, cookieName) => {
