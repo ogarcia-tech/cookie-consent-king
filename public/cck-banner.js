@@ -1,6 +1,6 @@
 /**
  * Cookie Consent King Banner
- * @version 2.3.0 Final
+ * @version 2.4.0 Debugging & Reliability Update
  */
 document.addEventListener('DOMContentLoaded', () => {
     const config = window.cckData || {};
@@ -43,8 +43,32 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!DOM.reopenContainer.hasChildNodes()) ui.buildReopenTrigger();
         },
         logConsentToServer(action) {
-            const formData = new URLSearchParams({ action: 'cck_log_consent', nonce: config.nonce, consent_action: action, consent_details: JSON.stringify(state.consent) });
-            fetch(config.ajax_url, { method: 'POST', body: formData }).catch(error => console.error('Error logging consent:', error));
+            const formData = new URLSearchParams({ 
+                action: 'cck_log_consent', 
+                nonce: config.nonce, 
+                consent_action: action, 
+                consent_details: JSON.stringify(state.consent) 
+            });
+
+            fetch(config.ajax_url, {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`Server responded with status: ${response.status}. This often indicates a security nonce failure, possibly due to page caching.`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (!data.success) {
+                    throw new Error(`Server returned an error: ${data.data.message || 'Unknown error'}`);
+                }
+                log('Consent successfully logged on the server.', data);
+            })
+            .catch(error => {
+                console.error('Cookie Consent King: Failed to log consent.', error);
+            });
         }
     };
 
@@ -65,7 +89,7 @@ document.addEventListener('DOMContentLoaded', () => {
             blockedScript.dataset.cckRestored = 'true';
         }
     };
-
+    
     const ui = {
         buildOption(key, title, info = '', description = '') {
             const isNecessary = key === 'necessary';
