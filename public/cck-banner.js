@@ -476,10 +476,35 @@ document.addEventListener('DOMContentLoaded', () => {
         const existingCookie = getCookie('cck_consent');
         const hasConsent = existingCookie !== null;
 
-        if (hasConsent) {
-            const initialConsentState = parseJSON(existingCookie, {});
-            consentState = { ...consentState, ...initialConsentState };
+    const existingCookie = getCookie('cck_consent');
+    const shouldForceShow = Boolean(data.forceShow);
+
+    if (existingCookie) {
+        const parsed = parseJSON(existingCookie);
+        if (parsed) {
+            consentState = Object.assign({}, consentState, parsed);
         }
+    }
+
+    const shouldDisplayBanner = !existingCookie || shouldForceShow;
+
+    if (shouldDisplayBanner) {
+        buildBanner();
+        if (shouldForceShow && existingCookie) {
+            log('Banner forzado a mostrarse ignorando la cookie previa.');
+        }
+        setTimeout(showBanner, 100);
+    } else {
+        try {
+            const parsedConsent = JSON.parse(existingCookie);
+            ['preferences', 'analytics', 'marketing'].forEach((key) => {
+                if (typeof parsedConsent[key] === 'boolean') {
+                    consentState[key] = parsedConsent[key];
+                }
+            });
+        } catch (error) {
+            console.warn('Cookie Consent King: Unable to parse stored consent.', error);
+
 
         if (hasConsent && !data.forceShow) {
             log('Consentimiento previo encontrado. Aplicando scripts.', consentState);
