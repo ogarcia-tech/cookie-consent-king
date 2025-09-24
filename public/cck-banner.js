@@ -147,7 +147,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         <div class="cck-actions cck-actions-main">
                             <button id="cck-accept-btn" class="cck-btn">${config.texts.acceptAll}</button>
                             <button id="cck-reject-btn" class="cck-btn">${config.texts.rejectAll}</button>
-                            <button id="cck-personalize-btn" class="">${config.texts.personalize}</button>
+                            <button id="cck-personalize-btn">${config.texts.personalize}</button>
                         </div>
                     </div>
                     <div id="cck-settings-view" style="display: none;">
@@ -186,10 +186,18 @@ document.addEventListener('DOMContentLoaded', () => {
                 consentManager.saveConsent('reject_all');
             });
             document.getElementById('cck-save-btn')?.addEventListener('click', () => consentManager.saveConsent('custom_selection'));
-            document.getElementById('cck-personalize-btn')?.addEventListener('click', () => this.toggleView(true));
+            document.getElementById('cck-personalize-btn')?.addEventListener('click', () => {
+                this.toggleView(true);
+                dataLayerManager.push('open_personalize');
+            });
             document.getElementById('cck-back-btn')?.addEventListener('click', () => this.toggleView(false));
             document.querySelectorAll('#cck-settings-view .cck-switch input').forEach(input => {
-                input.addEventListener('change', (e) => state.consent[e.target.dataset.consent] = e.target.checked);
+                input.addEventListener('change', (e) => {
+                    const { consent } = e.target.dataset;
+                    if (!consent) return;
+                    state.consent[consent] = e.target.checked;
+                    dataLayerManager.push(`toggle_${consent}`);
+                });
             });
             document.getElementById('cck-test-btn')?.addEventListener('click', () => {
                 consentManager.deleteCookie('cck_consent');
