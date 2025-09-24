@@ -13,6 +13,24 @@ document.addEventListener('DOMContentLoaded', () => {
     const DOM = { bannerContainer: document.getElementById('cck-banner-container'), reopenContainer: document.getElementById('cck-reopen-trigger-container') };
     const log = (...args) => { if (config.debug) console.log('[Cookie Consent King]', ...args); };
 
+    const dataLayerManager = {
+        push(action) {
+            if (typeof window === 'undefined') return;
+            if (!Array.isArray(window.dataLayer)) window.dataLayer = [];
+            const granted = Object.entries(state.consent).filter(([, allowed]) => allowed).map(([key]) => key);
+            const denied = Object.entries(state.consent).filter(([, allowed]) => !allowed).map(([key]) => key);
+            const payload = {
+                event: 'cck_consent_update',
+                consent_action: action,
+                consent: { ...state.consent },
+                granted_categories: granted,
+                denied_categories: denied
+            };
+            window.dataLayer.push(payload);
+            log('DataLayer event pushed.', payload);
+        }
+    };
+
     const consentManager = {
         getCookie(name) {
             const value = `; ${document.cookie}`;
@@ -38,6 +56,7 @@ document.addEventListener('DOMContentLoaded', () => {
         saveConsent(action) {
             this.setCookie('cck_consent', JSON.stringify(state.consent), 365);
             scriptManager.restoreBlockedScripts();
+            dataLayerManager.push(action);
             this.logConsentToServer(action);
             ui.hideBanner();
             if (!DOM.reopenContainer.hasChildNodes()) ui.buildReopenTrigger();
@@ -116,10 +135,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 <div id="cck-banner" class="cck-banner">
                     <div class="cck-header"><h2 class="cck-title">${config.texts.title}</h2><p class="cck-message">${config.texts.message}</p></div>
                     <div id="cck-main-view">
-                        <div class="cck-actions">
-                            <button id="cck-personalize-btn" class="cck-btn">${config.texts.personalize}</button>
-                            <button id="cck-reject-btn" class="cck-btn">${config.texts.rejectAll}</button>
+                        <div class="cck-actions cck-actions-main">
                             <button id="cck-accept-btn" class="cck-btn">${config.texts.acceptAll}</button>
+                            <button id="cck-reject-btn" class="cck-btn">${config.texts.rejectAll}</button>
+                            <button id="cck-personalize-btn" class="cck-link-btn">${config.texts.personalize}</button>
                         </div>
                     </div>
                     <div id="cck-settings-view" style="display: none;">
