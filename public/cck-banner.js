@@ -14,17 +14,26 @@ document.addEventListener('DOMContentLoaded', () => {
     const log = (...args) => { if (config.debug) console.log('[Cookie Consent King]', ...args); };
 
     const dataLayerManager = {
+        formatConsentStatus() {
+            const asLabel = (allowed) => allowed ? 'granted' : 'denied';
+            return {
+                ad_storage: asLabel(state.consent.marketing),
+                analytics_storage: asLabel(state.consent.analytics),
+                functionality_storage: asLabel(state.consent.necessary),
+                personalization_storage: asLabel(state.consent.preferences),
+                security_storage: 'granted',
+                ad_user_data: asLabel(state.consent.marketing),
+                ad_personalization: asLabel(state.consent.marketing)
+            };
+        },
         push(action) {
             if (typeof window === 'undefined') return;
             if (!Array.isArray(window.dataLayer)) window.dataLayer = [];
-            const granted = Object.entries(state.consent).filter(([, allowed]) => allowed).map(([key]) => key);
-            const denied = Object.entries(state.consent).filter(([, allowed]) => !allowed).map(([key]) => key);
             const payload = {
-                event: 'cck_consent_update',
+                event: 'consent_update',
+                consent: this.formatConsentStatus(),
                 consent_action: action,
-                consent: { ...state.consent },
-                granted_categories: granted,
-                denied_categories: denied
+                timestamp: new Date().toISOString()
             };
             window.dataLayer.push(payload);
             log('DataLayer event pushed.', payload);
@@ -138,7 +147,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         <div class="cck-actions cck-actions-main">
                             <button id="cck-accept-btn" class="cck-btn">${config.texts.acceptAll}</button>
                             <button id="cck-reject-btn" class="cck-btn">${config.texts.rejectAll}</button>
-                            <button id="cck-personalize-btn" class="cck-link-btn">${config.texts.personalize}</button>
+                            <button id="cck-personalize-btn" class="">${config.texts.personalize}</button>
                         </div>
                     </div>
                     <div id="cck-settings-view" style="display: none;">
