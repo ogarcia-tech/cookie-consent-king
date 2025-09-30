@@ -1,6 +1,6 @@
 /**
  * Cookie Consent King Banner
- * @version 2.4.0 Debugging & Reliability Update
+ * @version 2.4.1 Hotfix for dataLayer recursion
  */
 document.addEventListener('DOMContentLoaded', () => {
     const config = window.cckData || {};
@@ -35,7 +35,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 consent_action: action,
                 timestamp: new Date().toISOString()
             };
-            window.dataLayer.push(payload);
+            // FIX: Use Array.prototype.push to avoid recursive calls from a modified dataLayer.push
+            Array.prototype.push.call(window.dataLayer, payload);
             log('DataLayer event pushed.', payload);
         }
     };
@@ -196,7 +197,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     const { consent } = e.target.dataset;
                     if (!consent) return;
                     state.consent[consent] = e.target.checked;
-                    dataLayerManager.push(`toggle_${consent}`);
+                    dataLayerManager.push(`toggle_${consent}');
                 });
             });
             document.getElementById('cck-test-btn')?.addEventListener('click', () => {
