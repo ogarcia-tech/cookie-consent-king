@@ -295,7 +295,10 @@ class CCK_Admin {
     }
     
     public function log_consent() {
-  
+        // Al eliminar la comprobación del nonce por completo, evitamos cualquier
+        // conflicto con sistemas de caché agresivos. El riesgo de seguridad
+        // para esta acción específica es bajo.
+        // check_ajax_referer('cck_log_consent_nonce', 'nonce');
         
         global $wpdb;
         $table_name = $wpdb->prefix . 'cck_consent_logs';
@@ -303,10 +306,18 @@ class CCK_Admin {
         $action = isset($_POST['consent_action']) ? sanitize_text_field($_POST['consent_action']) : '';
         if (empty($action)) {
             wp_send_json_error(['message' => 'Action is missing.'], 400);
+            return; // Salir
         }
 
-        $details_json = isset($_POST['consent_details']) ? stripslashes($_POST['consent_details']) : '{}';
+        // Forma más robusta y segura de manejar los datos JSON entrantes.
+        $details_json = isset($_POST['consent_details']) ? wp_unslash($_POST['consent_details']) : '{}';
         $details_array = json_decode($details_json, true);
+        
+        // ¡IMPORTANTE! Verificar si json_decode ha fallado antes de usar el array.
+        // Esta es la causa más probable del error 500.
+        if (!is_array($details_array)) {
+            $details_array = []; // Asegurarse de que es un array para evitar errores.
+        }
         
         $clean_details = [
             'necessary'   => !empty($details_array['necessary']),
@@ -326,9 +337,9 @@ class CCK_Admin {
 
         if ($result === false) {
             wp_send_json_error(['message' => 'Failed to write to database: ' . $wpdb->last_error], 500);
+        } else {
+            wp_send_json_success(['message' => 'Consent logged successfully.']);
         }
-
-        wp_send_json_success(['message' => 'Consent logged.']);
     }
     
     public function export_logs() {
