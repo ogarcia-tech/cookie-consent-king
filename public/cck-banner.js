@@ -1,6 +1,6 @@
 /**
  * Cookie Consent King Banner
- * @version 2.4.1 Hotfix for dataLayer recursion
+ * @version 2.4.2 Syntax Hotfix
  */
 document.addEventListener('DOMContentLoaded', () => {
     const config = window.cckData || {};
@@ -72,11 +72,11 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!DOM.reopenContainer.hasChildNodes()) ui.buildReopenTrigger();
         },
         logConsentToServer(action) {
-            const formData = new URLSearchParams({ 
-                action: 'cck_log_consent', 
-                nonce: config.nonce, 
-                consent_action: action, 
-                consent_details: JSON.stringify(state.consent) 
+            const formData = new URLSearchParams({
+                action: 'cck_log_consent',
+                nonce: config.nonce,
+                consent_action: action,
+                consent_details: JSON.stringify(state.consent)
             });
 
             fetch(config.ajax_url, {
@@ -118,7 +118,7 @@ document.addEventListener('DOMContentLoaded', () => {
             blockedScript.dataset.cckRestored = 'true';
         }
     };
-    
+
     const ui = {
         buildOption(key, title, info = '', description = '') {
             const isNecessary = key === 'necessary';
@@ -197,7 +197,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     const { consent } = e.target.dataset;
                     if (!consent) return;
                     state.consent[consent] = e.target.checked;
-                    dataLayerManager.push(`toggle_${consent}');
+                    dataLayerManager.push('toggle_${consent}');
                 });
             });
             document.getElementById('cck-test-btn')?.addEventListener('click', () => {
