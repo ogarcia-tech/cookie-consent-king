@@ -295,9 +295,7 @@ class CCK_Admin {
     }
     
     public function log_consent() {
-        if (is_user_logged_in()) {
-            check_ajax_referer('cck_log_consent_nonce', 'nonce');
-        }
+  
         
         global $wpdb;
         $table_name = $wpdb->prefix . 'cck_consent_logs';
