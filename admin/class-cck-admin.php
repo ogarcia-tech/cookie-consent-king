@@ -19,7 +19,6 @@ class CCK_Admin {
             wp_enqueue_script('chart-js', 'https://cdn.jsdelivr.net/npm/chart.js', [], null, true);
             wp_enqueue_script('cck-dashboard-chart', plugin_dir_url(__FILE__) . 'cck-dashboard-chart.js', ['chart-js'], CCK_VERSION, true);
             
-            // Pasamos los datos para los nuevos gráficos a JavaScript
             wp_localize_script('cck-dashboard-chart', 'cckDashboardData', [
                 'trends'     => $this->get_consent_trends_data(),
                 'categories' => $this->get_category_acceptance_data(),
@@ -37,13 +36,11 @@ class CCK_Admin {
     public function settings_init() {
         register_setting('cck_settings_group', 'cck_options', [$this, 'sanitize_options']);
         
-        // Sección de Contenido Principal
         add_settings_section('cck_content_section', __('Content', 'cookie-consent-king'), null, 'cck-settings');
         add_settings_field('title', __('Title', 'cookie-consent-king'), [$this, 'render_field'], 'cck-settings', 'cck_content_section', ['name' => 'title', 'default' => __('Política de Cookies', 'cookie-consent-king')]);
         add_settings_field('message', __('Message', 'cookie-consent-king'), [$this, 'render_field'], 'cck-settings', 'cck_content_section', ['name' => 'message', 'type' => 'textarea', 'default' => __('Utilizamos cookies esenciales para el funcionamiento del sitio y cookies de análisis para mejorar tu experiencia. Puedes aceptar todas, rechazarlas o personalizar tus preferencias. Lee nuestra {privacy_policy_link}.', 'cookie-consent-king')]);
         add_settings_field('privacy_policy_url', __('Privacy Policy URL', 'cookie-consent-king'), [$this, 'render_field'], 'cck-settings', 'cck_content_section', ['name' => 'privacy_policy_url', 'type' => 'url', 'placeholder' => 'https://ejemplo.com/politica-de-privacidad']);
         
-        // Sección de Descripciones de Cookies
         add_settings_section('cck_descriptions_section', __('Cookie Category Descriptions', 'cookie-consent-king'), function() {
             echo '<p>' . esc_html__('Explain what each cookie category is for. This text will appear in a collapsible section in the banner.', 'cookie-consent-king') . '</p>';
         }, 'cck-settings');
@@ -52,13 +49,11 @@ class CCK_Admin {
         add_settings_field('description_analytics', __('Analytics Cookies', 'cookie-consent-king'), [$this, 'render_field'], 'cck-settings', 'cck_descriptions_section', ['name' => 'description_analytics', 'type' => 'textarea', 'placeholder' => __('e.g., These cookies help us understand how visitors interact with the website.', 'cookie-consent-king')]);
         add_settings_field('description_marketing', __('Marketing Cookies', 'cookie-consent-king'), [$this, 'render_field'], 'cck-settings', 'cck_descriptions_section', ['name' => 'description_marketing', 'type' => 'textarea', 'placeholder' => __('e.g., These cookies are used to track visitors across websites to display relevant ads.', 'cookie-consent-king')]);
 
-        // Sección de Apariencia
         add_settings_section('cck_style_section', __('Appearance', 'cookie-consent-king'), null, 'cck-settings');
         add_settings_field('icon_url', __('Banner Icon URL', 'cookie-consent-king'), [$this, 'render_field'], 'cck-settings', 'cck_style_section', ['name' => 'icon_url', 'placeholder' => 'https://example.com/icon.svg']);
         add_settings_field('reopen_icon_url', __('Re-open Icon URL', 'cookie-consent-king'), [$this, 'render_field'], 'cck-settings', 'cck_style_section', ['name' => 'reopen_icon_url', 'placeholder' => __('Overrides the default arrow icon', 'cookie-consent-king')]);
         add_settings_field('colors', __('Colors', 'cookie-consent-king'), [$this, 'render_color_fields'], 'cck-settings', 'cck_style_section');
 
-        // Sección de Herramientas de Prueba
         add_settings_section('cck_testing_section', __('Testing tools', 'cookie-consent-king'), null, 'cck-settings');
         add_settings_field('force_show', __('Force banner display', 'cookie-consent-king'), [$this, 'render_field'], 'cck-settings', 'cck_testing_section', ['name' => 'force_show', 'type' => 'checkbox', 'label' => __('Show the banner even if consent has been given.', 'cookie-consent-king')]);
         add_settings_field('debug', __('Enable debug logs', 'cookie-consent-king'), [$this, 'render_field'], 'cck-settings', 'cck_testing_section', ['name' => 'debug', 'type' => 'checkbox', 'label' => __('Print descriptive messages in the browser console.', 'cookie-consent-king')]);
@@ -198,7 +193,6 @@ class CCK_Admin {
         </div>
         <?php
     }
-    // --- NUEVAS FUNCIONES PARA OBTENER MÉTRICAS AVANZADAS ---
 
     private function get_dashboard_stats() {
         global $wpdb;
@@ -286,8 +280,9 @@ class CCK_Admin {
             ]
         ];
     }
+    
     public function render_translations_page() {
-        // Contenido sin cambios
+        // Dummy function for the menu
     }
 
     private function get_user_ip_address() {
@@ -300,7 +295,9 @@ class CCK_Admin {
     }
     
     public function log_consent() {
-        check_ajax_referer('cck_log_consent_nonce', 'nonce');
+        if (is_user_logged_in()) {
+            check_ajax_referer('cck_log_consent_nonce', 'nonce');
+        }
         
         global $wpdb;
         $table_name = $wpdb->prefix . 'cck_consent_logs';
@@ -337,10 +334,44 @@ class CCK_Admin {
     }
     
     public function export_logs() {
-        // Contenido sin cambios
+        if (!current_user_can('manage_options')) {
+            wp_die(__('You do not have sufficient permissions to access this page.'));
+        }
+
+        global $wpdb;
+        $table_name = $wpdb->prefix . 'cck_consent_logs';
+        $logs = $wpdb->get_results("SELECT * FROM $table_name ORDER BY id DESC", ARRAY_A);
+
+        header('Content-Type: text/csv; charset=utf-8');
+        header('Content-Disposition: attachment; filename=cck-consent-logs-' . date('Y-m-d') . '.csv');
+
+        $output = fopen('php://output', 'w');
+        fputcsv($output, array('ID', 'Action', 'IP Address', 'Consent Details', 'Date'));
+
+        if ($logs) {
+            foreach ($logs as $log) {
+                fputcsv($output, $log);
+            }
+        }
+        fclose($output);
+        exit;
     }
     
     public static function activate() {
-        // Contenido sin cambios
+        global $wpdb;
+        $table_name = $wpdb->prefix . 'cck_consent_logs';
+        $charset_collate = $wpdb->get_charset_collate();
+
+        $sql = "CREATE TABLE $table_name (
+            id mediumint(9) NOT NULL AUTO_INCREMENT,
+            action varchar(50) NOT NULL,
+            ip varchar(100) NOT NULL,
+            consent_details text NOT NULL,
+            created_at datetime DEFAULT '0000-00-00 00:00:00' NOT NULL,
+            PRIMARY KEY  (id)
+        ) $charset_collate;";
+
+        require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
+        dbDelta($sql);
     }
 }
