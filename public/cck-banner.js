@@ -36,7 +36,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 timestamp: new Date().toISOString()
             };
             // FIX: Use Array.prototype.push to avoid recursive calls from a modified dataLayer.push
-            Array.prototype.push.call(window.dataLayer, payload);
+            window.dataLayer.push(payload);
             log('DataLayer event pushed.', payload);
         }
     };
