@@ -329,7 +329,27 @@ class CCK_Admin {
     }
     
     public function render_translations_page() {
-        // Dummy function for the menu
+        ?>
+        <div class="wrap">
+            <h1><?php esc_html_e('Translate Cookie Consent King', 'cookie-consent-king'); ?></h1>
+            <p><?php esc_html_e('All banner button labels, headings and descriptions can be customised per site from the Banner Settings screen.', 'cookie-consent-king'); ?></p>
+            <ol>
+                <li>
+                    <?php
+                    printf(
+                        esc_html__('Open %1$sConsent King → Banner Settings%2$s and scroll to the “Banner texts” section.', 'cookie-consent-king'),
+                        '<strong>',
+                        '</strong>'
+                    );
+                    ?>
+                </li>
+                <li><?php esc_html_e('Fill in the fields for Accept/Reject buttons, personalise view headings, cookie category titles and descriptions.', 'cookie-consent-king'); ?></li>
+                <li><?php esc_html_e('Save the changes on each site (or language) so every network site can have its own copy.', 'cookie-consent-king'); ?></li>
+            </ol>
+            <p><?php esc_html_e('If you prefer using a translation plugin such as Loco Translate, Polylang or WPML, edit the strings registered under the “Cookie Consent King” domain after saving your custom text.', 'cookie-consent-king'); ?></p>
+            <p><?php esc_html_e('Remember to provide the privacy policy URL in Banner Settings so the dynamic link inside the main message points to the correct page.', 'cookie-consent-king'); ?></p>
+        </div>
+        <?php
     }
 
     private function get_user_ip_address() {
