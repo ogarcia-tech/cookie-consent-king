@@ -3,7 +3,7 @@
  * Plugin Name: Cookie Consent King
  * Plugin URI:  https://www.metricaweb.es
  * Description: Un banner de consentimiento de cookies avanzado y personalizable, nativo de WordPress.
- * Version:   4.3 Professional
+ * Version:   4.3.1 Professional
  * Requires at least: 5.2
  * Requires PHP: 7.4
  * Author:    David Adell (Metricaweb) & Oscar Garcia
@@ -15,7 +15,7 @@ if (!defined('ABSPATH')) {
     exit; // Salir si se accede directamente.
 }
 
-define('CCK_VERSION', '4.3');
+define('CCK_VERSION', '4.3.1');
 define('CCK_PLUGIN_DIR', plugin_dir_path(__FILE__));
 
 // Cargar las clases principales del plugin
