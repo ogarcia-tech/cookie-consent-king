@@ -40,6 +40,7 @@ class CCK_Admin {
         add_settings_field('title', __('Title', 'cookie-consent-king'), [$this, 'render_field'], 'cck-settings', 'cck_content_section', ['name' => 'title', 'default' => __('Política de Cookies', 'cookie-consent-king')]);
         add_settings_field('message', __('Message', 'cookie-consent-king'), [$this, 'render_field'], 'cck-settings', 'cck_content_section', ['name' => 'message', 'type' => 'textarea', 'default' => __('Utilizamos cookies esenciales para el funcionamiento del sitio y cookies de análisis para mejorar tu experiencia. Puedes aceptar todas, rechazarlas o personalizar tus preferencias. Lee nuestra {privacy_policy_link}.', 'cookie-consent-king')]);
         add_settings_field('privacy_policy_url', __('Privacy Policy URL', 'cookie-consent-king'), [$this, 'render_field'], 'cck-settings', 'cck_content_section', ['name' => 'privacy_policy_url', 'type' => 'url', 'placeholder' => 'https://ejemplo.com/politica-de-privacidad']);
+        add_settings_field('privacy_link_label', __('Privacy policy link label', 'cookie-consent-king'), [$this, 'render_field'], 'cck-settings', 'cck_content_section', ['name' => 'privacy_link_label', 'default' => __('política de privacidad', 'cookie-consent-king')]);
         
         add_settings_section('cck_descriptions_section', __('Cookie Category Descriptions', 'cookie-consent-king'), function() {
             echo '<p>' . esc_html__('Explain what each cookie category is for. This text will appear in a collapsible section in the banner.', 'cookie-consent-king') . '</p>';
@@ -48,6 +49,24 @@ class CCK_Admin {
         add_settings_field('description_preferences', __('Preferences Cookies', 'cookie-consent-king'), [$this, 'render_field'], 'cck-settings', 'cck_descriptions_section', ['name' => 'description_preferences', 'type' => 'textarea', 'placeholder' => __('e.g., These cookies remember your preferences, such as language or region.', 'cookie-consent-king')]);
         add_settings_field('description_analytics', __('Analytics Cookies', 'cookie-consent-king'), [$this, 'render_field'], 'cck-settings', 'cck_descriptions_section', ['name' => 'description_analytics', 'type' => 'textarea', 'placeholder' => __('e.g., These cookies help us understand how visitors interact with the website.', 'cookie-consent-king')]);
         add_settings_field('description_marketing', __('Marketing Cookies', 'cookie-consent-king'), [$this, 'render_field'], 'cck-settings', 'cck_descriptions_section', ['name' => 'description_marketing', 'type' => 'textarea', 'placeholder' => __('e.g., These cookies are used to track visitors across websites to display relevant ads.', 'cookie-consent-king')]);
+
+        add_settings_section('cck_labels_section', __('Banner texts', 'cookie-consent-king'), function () {
+            echo '<p>' . esc_html__('Configure every button and heading shown in the public banner.', 'cookie-consent-king') . '</p>';
+        }, 'cck-settings');
+        add_settings_field('label_accept_all', __('"Accept all" button', 'cookie-consent-king'), [$this, 'render_field'], 'cck-settings', 'cck_labels_section', ['name' => 'label_accept_all', 'default' => __('Aceptar todas', 'cookie-consent-king')]);
+        add_settings_field('label_reject_all', __('"Reject all" button', 'cookie-consent-king'), [$this, 'render_field'], 'cck-settings', 'cck_labels_section', ['name' => 'label_reject_all', 'default' => __('Rechazar todas', 'cookie-consent-king')]);
+        add_settings_field('label_personalize', __('"Personalize" button', 'cookie-consent-king'), [$this, 'render_field'], 'cck-settings', 'cck_labels_section', ['name' => 'label_personalize', 'default' => __('Personalizar', 'cookie-consent-king')]);
+        add_settings_field('label_save_preferences', __('"Save preferences" button', 'cookie-consent-king'), [$this, 'render_field'], 'cck-settings', 'cck_labels_section', ['name' => 'label_save_preferences', 'default' => __('Guardar preferencias', 'cookie-consent-king')]);
+        add_settings_field('label_back', __('"Back" button', 'cookie-consent-king'), [$this, 'render_field'], 'cck-settings', 'cck_labels_section', ['name' => 'label_back', 'default' => __('Volver', 'cookie-consent-king')]);
+        add_settings_field('label_settings_title', __('Personalize view heading', 'cookie-consent-king'), [$this, 'render_field'], 'cck-settings', 'cck_labels_section', ['name' => 'label_settings_title', 'default' => __('Configuración de Cookies', 'cookie-consent-king')]);
+        add_settings_field('label_reopen_trigger', __('Re-open trigger label', 'cookie-consent-king'), [$this, 'render_field'], 'cck-settings', 'cck_labels_section', ['name' => 'label_reopen_trigger', 'default' => __('Gestionar consentimiento', 'cookie-consent-king')]);
+        add_settings_field('label_test_help', __('Testing helper link text', 'cookie-consent-king'), [$this, 'render_field'], 'cck-settings', 'cck_labels_section', ['name' => 'label_test_help', 'default' => __('Ver guía de pruebas', 'cookie-consent-king')]);
+
+        add_settings_field('label_necessary_title', __('Necessary cookies title', 'cookie-consent-king'), [$this, 'render_field'], 'cck-settings', 'cck_labels_section', ['name' => 'label_necessary_title', 'default' => __('Cookies necesarias', 'cookie-consent-king')]);
+        add_settings_field('label_necessary_info', __('Necessary cookies badge', 'cookie-consent-king'), [$this, 'render_field'], 'cck-settings', 'cck_labels_section', ['name' => 'label_necessary_info', 'default' => __('(siempre activas)', 'cookie-consent-king')]);
+        add_settings_field('label_preferences_title', __('Preferences cookies title', 'cookie-consent-king'), [$this, 'render_field'], 'cck-settings', 'cck_labels_section', ['name' => 'label_preferences_title', 'default' => __('Preferencias', 'cookie-consent-king')]);
+        add_settings_field('label_analytics_title', __('Analytics cookies title', 'cookie-consent-king'), [$this, 'render_field'], 'cck-settings', 'cck_labels_section', ['name' => 'label_analytics_title', 'default' => __('Análisis', 'cookie-consent-king')]);
+        add_settings_field('label_marketing_title', __('Marketing cookies title', 'cookie-consent-king'), [$this, 'render_field'], 'cck-settings', 'cck_labels_section', ['name' => 'label_marketing_title', 'default' => __('Marketing', 'cookie-consent-king')]);
 
         add_settings_section('cck_style_section', __('Appearance', 'cookie-consent-king'), null, 'cck-settings');
         add_settings_field('icon_url', __('Banner Icon URL', 'cookie-consent-king'), [$this, 'render_field'], 'cck-settings', 'cck_style_section', ['name' => 'icon_url', 'placeholder' => 'https://example.com/icon.svg']);
@@ -66,6 +85,7 @@ class CCK_Admin {
         $sanitized['title'] = isset($input['title']) ? sanitize_text_field($input['title']) : '';
         $sanitized['message'] = isset($input['message']) ? sanitize_textarea_field($input['message']) : '';
         $sanitized['privacy_policy_url'] = isset($input['privacy_policy_url']) ? esc_url_raw($input['privacy_policy_url']) : '';
+        $sanitized['privacy_link_label'] = isset($input['privacy_link_label']) ? sanitize_text_field($input['privacy_link_label']) : '';
         $sanitized['icon_url'] = isset($input['icon_url']) ? esc_url_raw($input['icon_url']) : '';
         $sanitized['reopen_icon_url'] = isset($input['reopen_icon_url']) ? esc_url_raw($input['reopen_icon_url']) : '';
         $sanitized['bg_color'] = isset($input['bg_color']) ? sanitize_hex_color($input['bg_color']) : '';
@@ -80,16 +100,43 @@ class CCK_Admin {
         $sanitized['description_preferences'] = isset($input['description_preferences']) ? sanitize_textarea_field($input['description_preferences']) : '';
         $sanitized['description_analytics'] = isset($input['description_analytics']) ? sanitize_textarea_field($input['description_analytics']) : '';
         $sanitized['description_marketing'] = isset($input['description_marketing']) ? sanitize_textarea_field($input['description_marketing']) : '';
+        $sanitized['label_accept_all'] = isset($input['label_accept_all']) ? sanitize_text_field($input['label_accept_all']) : '';
+        $sanitized['label_reject_all'] = isset($input['label_reject_all']) ? sanitize_text_field($input['label_reject_all']) : '';
+        $sanitized['label_personalize'] = isset($input['label_personalize']) ? sanitize_text_field($input['label_personalize']) : '';
+        $sanitized['label_save_preferences'] = isset($input['label_save_preferences']) ? sanitize_text_field($input['label_save_preferences']) : '';
+        $sanitized['label_back'] = isset($input['label_back']) ? sanitize_text_field($input['label_back']) : '';
+        $sanitized['label_settings_title'] = isset($input['label_settings_title']) ? sanitize_text_field($input['label_settings_title']) : '';
+        $sanitized['label_reopen_trigger'] = isset($input['label_reopen_trigger']) ? sanitize_text_field($input['label_reopen_trigger']) : '';
+        $sanitized['label_test_help'] = isset($input['label_test_help']) ? sanitize_text_field($input['label_test_help']) : '';
+        $sanitized['label_necessary_title'] = isset($input['label_necessary_title']) ? sanitize_text_field($input['label_necessary_title']) : '';
+        $sanitized['label_necessary_info'] = isset($input['label_necessary_info']) ? sanitize_text_field($input['label_necessary_info']) : '';
+        $sanitized['label_preferences_title'] = isset($input['label_preferences_title']) ? sanitize_text_field($input['label_preferences_title']) : '';
+        $sanitized['label_analytics_title'] = isset($input['label_analytics_title']) ? sanitize_text_field($input['label_analytics_title']) : '';
+        $sanitized['label_marketing_title'] = isset($input['label_marketing_title']) ? sanitize_text_field($input['label_marketing_title']) : '';
         return $sanitized;
     }
 
     public function register_strings_for_translation($old_value, $new_value) {
         if (isset($new_value['title'])) { $this->register_string('Banner Title', $new_value['title']); }
         if (isset($new_value['message'])) { $this->register_string('Banner Message', $new_value['message'], true); }
+        if (isset($new_value['privacy_link_label'])) { $this->register_string('Privacy Link Label', $new_value['privacy_link_label']); }
         if (isset($new_value['description_necessary'])) { $this->register_string('Description Necessary', $new_value['description_necessary'], true); }
         if (isset($new_value['description_preferences'])) { $this->register_string('Description Preferences', $new_value['description_preferences'], true); }
         if (isset($new_value['description_analytics'])) { $this->register_string('Description Analytics', $new_value['description_analytics'], true); }
         if (isset($new_value['description_marketing'])) { $this->register_string('Description Marketing', $new_value['description_marketing'], true); }
+        if (isset($new_value['label_accept_all'])) { $this->register_string('Accept All Button', $new_value['label_accept_all']); }
+        if (isset($new_value['label_reject_all'])) { $this->register_string('Reject All Button', $new_value['label_reject_all']); }
+        if (isset($new_value['label_personalize'])) { $this->register_string('Personalize Button', $new_value['label_personalize']); }
+        if (isset($new_value['label_save_preferences'])) { $this->register_string('Save Preferences Button', $new_value['label_save_preferences']); }
+        if (isset($new_value['label_back'])) { $this->register_string('Back Button', $new_value['label_back']); }
+        if (isset($new_value['label_settings_title'])) { $this->register_string('Settings Title', $new_value['label_settings_title']); }
+        if (isset($new_value['label_reopen_trigger'])) { $this->register_string('Reopen Trigger', $new_value['label_reopen_trigger']); }
+        if (isset($new_value['label_test_help'])) { $this->register_string('Test Help Label', $new_value['label_test_help']); }
+        if (isset($new_value['label_necessary_title'])) { $this->register_string('Necessary Title', $new_value['label_necessary_title']); }
+        if (isset($new_value['label_necessary_info'])) { $this->register_string('Necessary Badge', $new_value['label_necessary_info']); }
+        if (isset($new_value['label_preferences_title'])) { $this->register_string('Preferences Title', $new_value['label_preferences_title']); }
+        if (isset($new_value['label_analytics_title'])) { $this->register_string('Analytics Title', $new_value['label_analytics_title']); }
+        if (isset($new_value['label_marketing_title'])) { $this->register_string('Marketing Title', $new_value['label_marketing_title']); }
     }
     
     private function register_string($name, $value, $multiline = false) {
@@ -282,7 +329,27 @@ class CCK_Admin {
     }
     
     public function render_translations_page() {
-        // Dummy function for the menu
+        ?>
+        <div class="wrap">
+            <h1><?php esc_html_e('Translate Cookie Consent King', 'cookie-consent-king'); ?></h1>
+            <p><?php esc_html_e('All banner button labels, headings and descriptions can be customised per site from the Banner Settings screen.', 'cookie-consent-king'); ?></p>
+            <ol>
+                <li>
+                    <?php
+                    printf(
+                        esc_html__('Open %1$sConsent King → Banner Settings%2$s and scroll to the “Banner texts” section.', 'cookie-consent-king'),
+                        '<strong>',
+                        '</strong>'
+                    );
+                    ?>
+                </li>
+                <li><?php esc_html_e('Fill in the fields for Accept/Reject buttons, personalise view headings, cookie category titles and descriptions.', 'cookie-consent-king'); ?></li>
+                <li><?php esc_html_e('Save the changes on each site (or language) so every network site can have its own copy.', 'cookie-consent-king'); ?></li>
+            </ol>
+            <p><?php esc_html_e('If you prefer using a translation plugin such as Loco Translate, Polylang or WPML, edit the strings registered under the “Cookie Consent King” domain after saving your custom text.', 'cookie-consent-king'); ?></p>
+            <p><?php esc_html_e('Remember to provide the privacy policy URL in Banner Settings so the dynamic link inside the main message points to the correct page.', 'cookie-consent-king'); ?></p>
+        </div>
+        <?php
     }
 
     private function get_user_ip_address() {
