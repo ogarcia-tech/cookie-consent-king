@@ -9,19 +9,42 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
     }
 
+    const defaultEvents = {
+        dataLayerEvent: 'consent_update',
+        actions: {
+            acceptAll: 'accept_all',
+            rejectAll: 'reject_all',
+            customSelection: 'custom_selection',
+            openPersonalize: 'open_personalize'
+        },
+        toggles: {
+            preferences: 'toggle_preferences',
+            analytics: 'toggle_analytics',
+            marketing: 'toggle_marketing'
+        },
+        states: {
+            granted: 'granted',
+            denied: 'denied'
+        }
+    };
+    const events = Object.assign({}, defaultEvents, config.events || {});
+    events.actions = Object.assign({}, defaultEvents.actions, events.actions || {});
+    events.toggles = Object.assign({}, defaultEvents.toggles, events.toggles || {});
+    events.states = Object.assign({}, defaultEvents.states, events.states || {});
+
     const state = { consent: { necessary: true, preferences: false, analytics: false, marketing: false }, hasInitialConsent: false };
     const DOM = { bannerContainer: document.getElementById('cck-banner-container'), reopenContainer: document.getElementById('cck-reopen-trigger-container') };
     const log = (...args) => { if (config.debug) console.log('[Cookie Consent King]', ...args); };
 
     const dataLayerManager = {
         formatConsentStatus() {
-            const asLabel = (allowed) => allowed ? 'granted' : 'denied';
+            const asLabel = (allowed) => allowed ? (events.states.granted || 'granted') : (events.states.denied || 'denied');
             return {
                 ad_storage: asLabel(state.consent.marketing),
                 analytics_storage: asLabel(state.consent.analytics),
                 functionality_storage: asLabel(state.consent.necessary),
                 personalization_storage: asLabel(state.consent.preferences),
-                security_storage: 'granted',
+                security_storage: events.states.granted || 'granted',
                 ad_user_data: asLabel(state.consent.marketing),
                 ad_personalization: asLabel(state.consent.marketing)
             };
@@ -30,7 +53,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (typeof window === 'undefined') return;
             if (!Array.isArray(window.dataLayer)) window.dataLayer = [];
             const payload = {
-                event: 'consent_update',
+                event: events.dataLayerEvent || 'consent_update',
                 consent: this.formatConsentStatus(),
                 consent_action: action,
                 timestamp: new Date().toISOString()
@@ -178,18 +201,23 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         },
         addBannerEventListeners() {
+            const acceptAction = events.actions.acceptAll || 'accept_all';
+            const rejectAction = events.actions.rejectAll || 'reject_all';
+            const saveAction = events.actions.customSelection || 'custom_selection';
+            const openPersonalizeAction = events.actions.openPersonalize || 'open_personalize';
+
             document.getElementById('cck-accept-btn')?.addEventListener('click', () => {
                 Object.keys(state.consent).forEach(key => state.consent[key] = true);
-                consentManager.saveConsent('accept_all');
+                consentManager.saveConsent(acceptAction);
             });
             document.getElementById('cck-reject-btn')?.addEventListener('click', () => {
                 Object.keys(state.consent).forEach(key => state.consent[key] = (key === 'necessary'));
-                consentManager.saveConsent('reject_all');
+                consentManager.saveConsent(rejectAction);
             });
-            document.getElementById('cck-save-btn')?.addEventListener('click', () => consentManager.saveConsent('custom_selection'));
+            document.getElementById('cck-save-btn')?.addEventListener('click', () => consentManager.saveConsent(saveAction));
             document.getElementById('cck-personalize-btn')?.addEventListener('click', () => {
                 this.toggleView(true);
-                dataLayerManager.push('open_personalize');
+                dataLayerManager.push(openPersonalizeAction);
             });
             document.getElementById('cck-back-btn')?.addEventListener('click', () => this.toggleView(false));
             document.querySelectorAll('#cck-settings-view .cck-switch input').forEach(input => {
@@ -197,7 +225,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     const { consent } = e.target.dataset;
                     if (!consent) return;
                     state.consent[consent] = e.target.checked;
-                    dataLayerManager.push('toggle_${consent}');
+                    dataLayerManager.push(events.toggles?.[consent] || `toggle_${consent}`);
                 });
             });
             document.getElementById('cck-test-btn')?.addEventListener('click', () => {

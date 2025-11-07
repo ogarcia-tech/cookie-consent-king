@@ -25,6 +25,7 @@ class CCK_Public {
 
         $options = get_option('cck_options', []);
         $texts = $this->get_translated_texts($options);
+        $events = $this->get_event_identifiers($options);
 
         wp_localize_script('cck-banner', 'cckData', [
             'ajax_url' => admin_url('admin-ajax.php'),
@@ -39,6 +40,7 @@ class CCK_Public {
                 'helpLabel' => $texts['testHelp'],
             ],
             'texts' => $texts,
+            'events' => $events,
         ]);
         
         $dynamic_css = ":root {
@@ -51,48 +53,153 @@ class CCK_Public {
     }
 
     private function get_translated_texts($options) {
-        $privacy_url = $options['privacy_policy_url'] ?? '';
-        $privacy_link_text = __('política de privacidad', 'cookie-consent-king');
-        $privacy_link = !empty($privacy_url) 
-            ? "<a href='" . esc_url($privacy_url) . "' target='_blank' rel='noopener noreferrer'>$privacy_link_text</a>" 
-            : $privacy_link_text;
-
-        $raw_texts = [
-            'title'           => $options['title'] ?? __('Política de Cookies', 'cookie-consent-king'),
-            'message'         => $options['message'] ?? sprintf(__('Utilizamos cookies esenciales para el funcionamiento del sitio y cookies de análisis para mejorar tu experiencia. Puedes aceptar todas, rechazarlas o personalizar tus preferencias. Lee nuestra %s.', 'cookie-consent-king'), '{privacy_policy_link}'),
-            'acceptAll'       => __('Aceptar todas', 'cookie-consent-king'),
-            'rejectAll'       => __('Rechazar todas', 'cookie-consent-king'),
-            'personalize'     => __('Personalizar', 'cookie-consent-king'),
-            'savePreferences' => __('Guardar preferencias', 'cookie-consent-king'),
-            'settingsTitle'   => __('Configuración de Cookies', 'cookie-consent-king'),
-            'back'            => __('Volver', 'cookie-consent-king'),
-            // --- INICIO CAMBIOS DE TEXTO ---
-            'necessary'       => __('Cookies necesarias', 'cookie-consent-king'),
-            'necessaryInfo'   => __('(siempre activas)', 'cookie-consent-king'),
-            'desc_necessary'  => $options['description_necessary'] ?? '',
+        $defaults = [
+            'title'            => __('Política de Cookies', 'cookie-consent-king'),
+            'message'          => sprintf(__('Utilizamos cookies esenciales para el funcionamiento del sitio y cookies de análisis para mejorar tu experiencia. Puedes aceptar todas, rechazarlas o personalizar tus preferencias. Lee nuestra %s.', 'cookie-consent-king'), '{privacy_policy_link}'),
+            'privacyLinkText'  => __('política de privacidad', 'cookie-consent-king'),
+            'acceptAll'        => __('Aceptar todas', 'cookie-consent-king'),
+            'rejectAll'        => __('Rechazar todas', 'cookie-consent-king'),
+            'personalize'      => __('Personalizar', 'cookie-consent-king'),
+            'savePreferences'  => __('Guardar preferencias', 'cookie-consent-king'),
+            'settingsTitle'    => __('Configuración de Cookies', 'cookie-consent-king'),
+            'back'             => __('Volver', 'cookie-consent-king'),
+            'necessary'        => __('Cookies necesarias', 'cookie-consent-king'),
+            'necessaryInfo'    => __('(siempre activas)', 'cookie-consent-king'),
+            'preferences'      => __('Preferencias', 'cookie-consent-king'),
+            'analytics'        => __('Análisis', 'cookie-consent-king'),
+            'marketing'        => __('Marketing', 'cookie-consent-king'),
+            'reopenTrigger'    => __('Gestionar consentimiento', 'cookie-consent-king'),
+            'testHelp'         => __('Ver guía de pruebas', 'cookie-consent-king'),
+            'desc_necessary'   => $options['description_necessary'] ?? '',
             'desc_preferences' => $options['description_preferences'] ?? '',
-            'desc_analytics'  => $options['description_analytics'] ?? '',
-            'desc_marketing'  => $options['description_marketing'] ?? '',
-            // --- FIN CAMBIOS DE TEXTO ---
-            'preferences'     => __('Preferencias', 'cookie-consent-king'),
-            'analytics'       => __('Análisis', 'cookie-consent-king'),
-            'marketing'       => __('Marketing', 'cookie-consent-king'),
-            'reopenTrigger'   => __('Gestionar consentimiento', 'cookie-consent-king'),
-            'testHelp'        => __('Ver guía de pruebas', 'cookie-consent-king'),
+            'desc_analytics'   => $options['description_analytics'] ?? '',
+            'desc_marketing'   => $options['description_marketing'] ?? '',
         ];
 
-        // Aplicar traducciones de Polylang/WPML si existen
-        $translatable = ['title', 'message', 'desc_necessary', 'desc_preferences', 'desc_analytics', 'desc_marketing'];
-        foreach($translatable as $key) {
-             if (function_exists('pll__')) { $raw_texts[$key] = pll__($raw_texts[$key]); }
-             if (function_exists('apply_filters')) {
-                $raw_texts[$key] = apply_filters('wpml_translate_string', $raw_texts[$key], 'cck-' . $key, ['domain' => 'Cookie Consent King']);
-             }
+        $raw_texts = $defaults;
+
+        $option_map = [
+            'title'                   => 'title',
+            'message'                 => 'message',
+            'privacy_link_label'      => 'privacyLinkText',
+            'label_accept_all'        => 'acceptAll',
+            'label_reject_all'        => 'rejectAll',
+            'label_personalize'       => 'personalize',
+            'label_save_preferences'  => 'savePreferences',
+            'label_settings_title'    => 'settingsTitle',
+            'label_back'              => 'back',
+            'label_necessary_title'   => 'necessary',
+            'label_necessary_info'    => 'necessaryInfo',
+            'label_preferences_title' => 'preferences',
+            'label_analytics_title'   => 'analytics',
+            'label_marketing_title'   => 'marketing',
+            'label_reopen_trigger'    => 'reopenTrigger',
+            'label_test_help'         => 'testHelp',
+        ];
+
+        foreach ($option_map as $option_key => $text_key) {
+            if (!empty($options[$option_key])) {
+                $raw_texts[$text_key] = $options[$option_key];
+            }
         }
-        
+
+        $privacy_url = $options['privacy_policy_url'] ?? '';
+
+        // Aplicar traducciones de Polylang/WPML si existen
+        $translatable = [
+            'title',
+            'message',
+            'privacyLinkText',
+            'acceptAll',
+            'rejectAll',
+            'personalize',
+            'savePreferences',
+            'settingsTitle',
+            'back',
+            'necessary',
+            'necessaryInfo',
+            'desc_necessary',
+            'desc_preferences',
+            'desc_analytics',
+            'desc_marketing',
+            'preferences',
+            'analytics',
+            'marketing',
+            'reopenTrigger',
+            'testHelp',
+        ];
+
+        foreach ($translatable as $key) {
+            if (!isset($raw_texts[$key]) || $raw_texts[$key] === '') {
+                continue;
+            }
+            if (function_exists('pll__')) {
+                $raw_texts[$key] = pll__($raw_texts[$key]);
+            }
+            if (function_exists('apply_filters')) {
+                $raw_texts[$key] = apply_filters('wpml_translate_string', $raw_texts[$key], 'cck-' . $key, ['domain' => 'Cookie Consent King']);
+            }
+        }
+
+        $privacy_link_text = $raw_texts['privacyLinkText'];
+        $privacy_link = !empty($privacy_url)
+            ? "<a href='" . esc_url($privacy_url) . "' target='_blank' rel='noopener noreferrer'>$privacy_link_text</a>"
+            : $privacy_link_text;
+
         $raw_texts['message'] = str_replace('{privacy_policy_link}', $privacy_link, $raw_texts['message']);
 
         return $raw_texts;
+    }
+
+    private function get_event_identifiers($options) {
+        $events = [
+            'dataLayerEvent' => !empty($options['event_consent_update']) ? $options['event_consent_update'] : 'consent_update',
+            'actions'        => [
+                'acceptAll'       => !empty($options['event_accept_all']) ? $options['event_accept_all'] : 'accept_all',
+                'rejectAll'       => !empty($options['event_reject_all']) ? $options['event_reject_all'] : 'reject_all',
+                'customSelection' => !empty($options['event_custom_selection']) ? $options['event_custom_selection'] : 'custom_selection',
+                'openPersonalize' => !empty($options['event_open_personalize']) ? $options['event_open_personalize'] : 'open_personalize',
+            ],
+            'toggles'        => [
+                'preferences' => !empty($options['event_toggle_preferences']) ? $options['event_toggle_preferences'] : 'toggle_preferences',
+                'analytics'   => !empty($options['event_toggle_analytics']) ? $options['event_toggle_analytics'] : 'toggle_analytics',
+                'marketing'   => !empty($options['event_toggle_marketing']) ? $options['event_toggle_marketing'] : 'toggle_marketing',
+            ],
+            'states'         => [
+                'granted' => !empty($options['event_state_granted']) ? $options['event_state_granted'] : 'granted',
+                'denied'  => !empty($options['event_state_denied']) ? $options['event_state_denied'] : 'denied',
+            ],
+        ];
+
+        $translatable = [
+            ['ref' => &$events['dataLayerEvent'], 'label' => 'Data Layer Event Name'],
+            ['ref' => &$events['actions']['acceptAll'], 'label' => 'Accept All Event Action'],
+            ['ref' => &$events['actions']['rejectAll'], 'label' => 'Reject All Event Action'],
+            ['ref' => &$events['actions']['customSelection'], 'label' => 'Custom Selection Event Action'],
+            ['ref' => &$events['actions']['openPersonalize'], 'label' => 'Open Personalize Event Action'],
+            ['ref' => &$events['toggles']['preferences'], 'label' => 'Toggle Preferences Event'],
+            ['ref' => &$events['toggles']['analytics'], 'label' => 'Toggle Analytics Event'],
+            ['ref' => &$events['toggles']['marketing'], 'label' => 'Toggle Marketing Event'],
+            ['ref' => &$events['states']['granted'], 'label' => 'Consent State Granted'],
+            ['ref' => &$events['states']['denied'], 'label' => 'Consent State Denied'],
+        ];
+
+        foreach ($translatable as &$entry) {
+            $value = $entry['ref'];
+            if ($value === '') {
+                continue;
+            }
+            if (function_exists('pll__')) {
+                $value = pll__($value);
+            }
+            if (function_exists('apply_filters')) {
+                $value = apply_filters('wpml_translate_single_string', $value, 'Cookie Consent King', $entry['label']);
+            }
+            $entry['ref'] = $value;
+        }
+        unset($entry);
+
+        return $events;
     }
     
     public function render_banner_html() {
