@@ -25,6 +25,7 @@ class CCK_Public {
 
         $options = get_option('cck_options', []);
         $texts = $this->get_translated_texts($options);
+        $events = $this->get_event_identifiers($options);
 
         wp_localize_script('cck-banner', 'cckData', [
             'ajax_url' => admin_url('admin-ajax.php'),
@@ -39,6 +40,7 @@ class CCK_Public {
                 'helpLabel' => $texts['testHelp'],
             ],
             'texts' => $texts,
+            'events' => $events,
         ]);
         
         $dynamic_css = ":root {
@@ -147,6 +149,57 @@ class CCK_Public {
         $raw_texts['message'] = str_replace('{privacy_policy_link}', $privacy_link, $raw_texts['message']);
 
         return $raw_texts;
+    }
+
+    private function get_event_identifiers($options) {
+        $events = [
+            'dataLayerEvent' => !empty($options['event_consent_update']) ? $options['event_consent_update'] : 'consent_update',
+            'actions'        => [
+                'acceptAll'       => !empty($options['event_accept_all']) ? $options['event_accept_all'] : 'accept_all',
+                'rejectAll'       => !empty($options['event_reject_all']) ? $options['event_reject_all'] : 'reject_all',
+                'customSelection' => !empty($options['event_custom_selection']) ? $options['event_custom_selection'] : 'custom_selection',
+                'openPersonalize' => !empty($options['event_open_personalize']) ? $options['event_open_personalize'] : 'open_personalize',
+            ],
+            'toggles'        => [
+                'preferences' => !empty($options['event_toggle_preferences']) ? $options['event_toggle_preferences'] : 'toggle_preferences',
+                'analytics'   => !empty($options['event_toggle_analytics']) ? $options['event_toggle_analytics'] : 'toggle_analytics',
+                'marketing'   => !empty($options['event_toggle_marketing']) ? $options['event_toggle_marketing'] : 'toggle_marketing',
+            ],
+            'states'         => [
+                'granted' => !empty($options['event_state_granted']) ? $options['event_state_granted'] : 'granted',
+                'denied'  => !empty($options['event_state_denied']) ? $options['event_state_denied'] : 'denied',
+            ],
+        ];
+
+        $translatable = [
+            ['ref' => &$events['dataLayerEvent'], 'label' => 'Data Layer Event Name'],
+            ['ref' => &$events['actions']['acceptAll'], 'label' => 'Accept All Event Action'],
+            ['ref' => &$events['actions']['rejectAll'], 'label' => 'Reject All Event Action'],
+            ['ref' => &$events['actions']['customSelection'], 'label' => 'Custom Selection Event Action'],
+            ['ref' => &$events['actions']['openPersonalize'], 'label' => 'Open Personalize Event Action'],
+            ['ref' => &$events['toggles']['preferences'], 'label' => 'Toggle Preferences Event'],
+            ['ref' => &$events['toggles']['analytics'], 'label' => 'Toggle Analytics Event'],
+            ['ref' => &$events['toggles']['marketing'], 'label' => 'Toggle Marketing Event'],
+            ['ref' => &$events['states']['granted'], 'label' => 'Consent State Granted'],
+            ['ref' => &$events['states']['denied'], 'label' => 'Consent State Denied'],
+        ];
+
+        foreach ($translatable as &$entry) {
+            $value = $entry['ref'];
+            if ($value === '') {
+                continue;
+            }
+            if (function_exists('pll__')) {
+                $value = pll__($value);
+            }
+            if (function_exists('apply_filters')) {
+                $value = apply_filters('wpml_translate_single_string', $value, 'Cookie Consent King', $entry['label']);
+            }
+            $entry['ref'] = $value;
+        }
+        unset($entry);
+
+        return $events;
     }
     
     public function render_banner_html() {

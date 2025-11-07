@@ -68,6 +68,20 @@ class CCK_Admin {
         add_settings_field('label_analytics_title', __('Analytics cookies title', 'cookie-consent-king'), [$this, 'render_field'], 'cck-settings', 'cck_labels_section', ['name' => 'label_analytics_title', 'default' => __('Análisis', 'cookie-consent-king')]);
         add_settings_field('label_marketing_title', __('Marketing cookies title', 'cookie-consent-king'), [$this, 'render_field'], 'cck-settings', 'cck_labels_section', ['name' => 'label_marketing_title', 'default' => __('Marketing', 'cookie-consent-king')]);
 
+        add_settings_section('cck_events_section', __('Event identifiers', 'cookie-consent-king'), function () {
+            echo '<p>' . esc_html__('Adjust the event names sent to the data layer and stored in the consent logs.', 'cookie-consent-king') . '</p>';
+        }, 'cck-settings');
+        add_settings_field('event_consent_update', __('Data layer event name', 'cookie-consent-king'), [$this, 'render_field'], 'cck-settings', 'cck_events_section', ['name' => 'event_consent_update', 'default' => 'consent_update']);
+        add_settings_field('event_accept_all', __('"Accept all" action key', 'cookie-consent-king'), [$this, 'render_field'], 'cck-settings', 'cck_events_section', ['name' => 'event_accept_all', 'default' => 'accept_all']);
+        add_settings_field('event_reject_all', __('"Reject all" action key', 'cookie-consent-king'), [$this, 'render_field'], 'cck-settings', 'cck_events_section', ['name' => 'event_reject_all', 'default' => 'reject_all']);
+        add_settings_field('event_custom_selection', __('"Save preferences" action key', 'cookie-consent-king'), [$this, 'render_field'], 'cck-settings', 'cck_events_section', ['name' => 'event_custom_selection', 'default' => 'custom_selection']);
+        add_settings_field('event_open_personalize', __('"Open personalize" event key', 'cookie-consent-king'), [$this, 'render_field'], 'cck-settings', 'cck_events_section', ['name' => 'event_open_personalize', 'default' => 'open_personalize']);
+        add_settings_field('event_toggle_preferences', __('Toggle preferences event key', 'cookie-consent-king'), [$this, 'render_field'], 'cck-settings', 'cck_events_section', ['name' => 'event_toggle_preferences', 'default' => 'toggle_preferences']);
+        add_settings_field('event_toggle_analytics', __('Toggle analytics event key', 'cookie-consent-king'), [$this, 'render_field'], 'cck-settings', 'cck_events_section', ['name' => 'event_toggle_analytics', 'default' => 'toggle_analytics']);
+        add_settings_field('event_toggle_marketing', __('Toggle marketing event key', 'cookie-consent-king'), [$this, 'render_field'], 'cck-settings', 'cck_events_section', ['name' => 'event_toggle_marketing', 'default' => 'toggle_marketing']);
+        add_settings_field('event_state_granted', __('Consent status "granted" label', 'cookie-consent-king'), [$this, 'render_field'], 'cck-settings', 'cck_events_section', ['name' => 'event_state_granted', 'default' => 'granted']);
+        add_settings_field('event_state_denied', __('Consent status "denied" label', 'cookie-consent-king'), [$this, 'render_field'], 'cck-settings', 'cck_events_section', ['name' => 'event_state_denied', 'default' => 'denied']);
+
         add_settings_section('cck_style_section', __('Appearance', 'cookie-consent-king'), null, 'cck-settings');
         add_settings_field('icon_url', __('Banner Icon URL', 'cookie-consent-king'), [$this, 'render_field'], 'cck-settings', 'cck_style_section', ['name' => 'icon_url', 'placeholder' => 'https://example.com/icon.svg']);
         add_settings_field('reopen_icon_url', __('Re-open Icon URL', 'cookie-consent-king'), [$this, 'render_field'], 'cck-settings', 'cck_style_section', ['name' => 'reopen_icon_url', 'placeholder' => __('Overrides the default arrow icon', 'cookie-consent-king')]);
@@ -113,6 +127,16 @@ class CCK_Admin {
         $sanitized['label_preferences_title'] = isset($input['label_preferences_title']) ? sanitize_text_field($input['label_preferences_title']) : '';
         $sanitized['label_analytics_title'] = isset($input['label_analytics_title']) ? sanitize_text_field($input['label_analytics_title']) : '';
         $sanitized['label_marketing_title'] = isset($input['label_marketing_title']) ? sanitize_text_field($input['label_marketing_title']) : '';
+        $sanitized['event_consent_update'] = isset($input['event_consent_update']) ? sanitize_text_field($input['event_consent_update']) : '';
+        $sanitized['event_accept_all'] = isset($input['event_accept_all']) ? sanitize_text_field($input['event_accept_all']) : '';
+        $sanitized['event_reject_all'] = isset($input['event_reject_all']) ? sanitize_text_field($input['event_reject_all']) : '';
+        $sanitized['event_custom_selection'] = isset($input['event_custom_selection']) ? sanitize_text_field($input['event_custom_selection']) : '';
+        $sanitized['event_open_personalize'] = isset($input['event_open_personalize']) ? sanitize_text_field($input['event_open_personalize']) : '';
+        $sanitized['event_toggle_preferences'] = isset($input['event_toggle_preferences']) ? sanitize_text_field($input['event_toggle_preferences']) : '';
+        $sanitized['event_toggle_analytics'] = isset($input['event_toggle_analytics']) ? sanitize_text_field($input['event_toggle_analytics']) : '';
+        $sanitized['event_toggle_marketing'] = isset($input['event_toggle_marketing']) ? sanitize_text_field($input['event_toggle_marketing']) : '';
+        $sanitized['event_state_granted'] = isset($input['event_state_granted']) ? sanitize_text_field($input['event_state_granted']) : '';
+        $sanitized['event_state_denied'] = isset($input['event_state_denied']) ? sanitize_text_field($input['event_state_denied']) : '';
         return $sanitized;
     }
 
@@ -137,6 +161,23 @@ class CCK_Admin {
         if (isset($new_value['label_preferences_title'])) { $this->register_string('Preferences Title', $new_value['label_preferences_title']); }
         if (isset($new_value['label_analytics_title'])) { $this->register_string('Analytics Title', $new_value['label_analytics_title']); }
         if (isset($new_value['label_marketing_title'])) { $this->register_string('Marketing Title', $new_value['label_marketing_title']); }
+        $event_strings = [
+            'event_consent_update'     => 'Data Layer Event Name',
+            'event_accept_all'        => 'Accept All Event Action',
+            'event_reject_all'        => 'Reject All Event Action',
+            'event_custom_selection'  => 'Custom Selection Event Action',
+            'event_open_personalize'  => 'Open Personalize Event Action',
+            'event_toggle_preferences'=> 'Toggle Preferences Event',
+            'event_toggle_analytics'  => 'Toggle Analytics Event',
+            'event_toggle_marketing'  => 'Toggle Marketing Event',
+            'event_state_granted'     => 'Consent State Granted',
+            'event_state_denied'      => 'Consent State Denied',
+        ];
+        foreach ($event_strings as $option_key => $label) {
+            if (isset($new_value[$option_key])) {
+                $this->register_string($label, $new_value[$option_key]);
+            }
+        }
     }
     
     private function register_string($name, $value, $multiline = false) {
@@ -332,7 +373,7 @@ class CCK_Admin {
         ?>
         <div class="wrap">
             <h1><?php esc_html_e('Translate Cookie Consent King', 'cookie-consent-king'); ?></h1>
-            <p><?php esc_html_e('All banner button labels, headings and descriptions can be customised per site from the Banner Settings screen.', 'cookie-consent-king'); ?></p>
+            <p><?php esc_html_e('All banner button labels, headings, descriptions and event identifiers can be customised per site from the Banner Settings screen.', 'cookie-consent-king'); ?></p>
             <ol>
                 <li>
                     <?php
@@ -343,7 +384,7 @@ class CCK_Admin {
                     );
                     ?>
                 </li>
-                <li><?php esc_html_e('Fill in the fields for Accept/Reject buttons, personalise view headings, cookie category titles and descriptions.', 'cookie-consent-king'); ?></li>
+                <li><?php esc_html_e('Fill in the fields for Accept/Reject buttons, personalise view headings, cookie category titles, descriptions and the event keys fired to the data layer.', 'cookie-consent-king'); ?></li>
                 <li><?php esc_html_e('Save the changes on each site (or language) so every network site can have its own copy.', 'cookie-consent-king'); ?></li>
             </ol>
             <p><?php esc_html_e('If you prefer using a translation plugin such as Loco Translate, Polylang or WPML, edit the strings registered under the “Cookie Consent King” domain after saving your custom text.', 'cookie-consent-king'); ?></p>
